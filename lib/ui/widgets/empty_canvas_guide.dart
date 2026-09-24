@@ -53,8 +53,8 @@ class EmptyCanvasGuide extends StatelessWidget {
           // 2. Top-Left Annotation Text
           if (showAnnotations)
             Positioned(
-              top: 72,
-              left: 36,
+              top: 76,
+              left: 48,
               child: IgnorePointer(
                 child: Text(
                   'Export, preferences, boards...',
@@ -69,37 +69,65 @@ class EmptyCanvasGuide extends StatelessWidget {
               ),
             ),
 
-          // 3. Top-Center Annotation Text & Hint
+          // 3. Top-Center Navigation Hint (below toolbar)
           if (showAnnotations)
             Positioned(
-              top: 66,
+              top: 58,
               left: 0,
               right: 0,
               child: IgnorePointer(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'To move canvas, hold  Space  while dragging, or use the hand tool',
-                      style: TextStyle(
-                        color: annotationColor.withValues(alpha: 0.8),
-                        fontSize: 12.sp.clamp(10.0, 14.0),
-                        letterSpacing: 0.2,
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'To move canvas, hold ',
+                        style: TextStyle(
+                          color: annotationColor.withValues(alpha: 0.85),
+                          fontSize: 12.sp.clamp(10.0, 14.0),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Pick a tool &\nStart drawing!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: annotationColor,
-                        fontSize: 14.5.sp.clamp(12.0, 18.0),
-                        fontWeight: FontWeight.w500,
-                        fontStyle: FontStyle.italic,
-                        height: 1.25,
+                      _HintKeyBadge('Scroll wheel', annotationColor, isDark),
+                      Text(
+                        ' or ',
+                        style: TextStyle(
+                          color: annotationColor.withValues(alpha: 0.85),
+                          fontSize: 12.sp.clamp(10.0, 14.0),
+                        ),
                       ),
+                      _HintKeyBadge('Space', annotationColor, isDark),
+                      Text(
+                        ' while dragging, or use the hand tool',
+                        style: TextStyle(
+                          color: annotationColor.withValues(alpha: 0.85),
+                          fontSize: 12.sp.clamp(10.0, 14.0),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // 3b. Top-Center "Pick a tool & Start drawing!"
+          if (showAnnotations)
+            Positioned(
+              top: 92,
+              left: 0,
+              right: 90,
+              child: IgnorePointer(
+                child: Center(
+                  child: Text(
+                    'Pick a tool &\nStart drawing!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: annotationColor,
+                      fontSize: 14.5.sp.clamp(12.0, 18.0),
+                      fontWeight: FontWeight.w500,
+                      fontStyle: FontStyle.italic,
+                      height: 1.25,
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -107,8 +135,8 @@ class EmptyCanvasGuide extends StatelessWidget {
           // 4. Bottom-Right Annotation Text
           if (showAnnotations)
             Positioned(
-              bottom: 64,
-              right: 28,
+              bottom: 36,
+              right: 84,
               child: IgnorePointer(
                 child: Text(
                   'Shortcuts &\nhelp',
@@ -136,14 +164,30 @@ class EmptyCanvasGuide extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'assets/images/logo.png',
+                        Container(
                           width: 44.r.clamp(32.0, 52.0),
                           height: 44.r.clamp(32.0, 52.0),
-                          errorBuilder: (_, __, ___) => Icon(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF4C6EF5), Color(0xFF15AABF)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(10.r.clamp(8.0, 14.0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4C6EF5)
+                                    .withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
                             Icons.draw_rounded,
-                            size: 40.r.clamp(28.0, 48.0),
-                            color: scheme.primary,
+                            size: 26.r.clamp(20.0, 32.0),
+                            color: Colors.white,
                           ),
                         ),
                         SizedBox(width: 14.w.clamp(8.0, 18.0)),
@@ -163,12 +207,14 @@ class EmptyCanvasGuide extends StatelessWidget {
                     // Storage description notice
                     Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w.clamp(10.0, 20.0), vertical: 12.h.clamp(8.0, 16.0)),
+                          horizontal: 16.w.clamp(10.0, 20.0),
+                          vertical: 12.h.clamp(8.0, 16.0)),
                       decoration: BoxDecoration(
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.04)
                             : Colors.black.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(12.r.clamp(8.0, 14.0)),
+                        borderRadius:
+                            BorderRadius.circular(12.r.clamp(8.0, 14.0)),
                       ),
                       child: Column(
                         children: [
@@ -235,6 +281,40 @@ class EmptyCanvasGuide extends StatelessWidget {
   }
 }
 
+class _HintKeyBadge extends StatelessWidget {
+  const _HintKeyBadge(this.label, this.color, this.isDark);
+  final String label;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: color.withValues(alpha: 0.35),
+          width: 0.8,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11.sp.clamp(9.5, 13.0),
+          fontWeight: FontWeight.w600,
+          fontFamily: 'monospace',
+        ),
+      ),
+    );
+  }
+}
+
 class _QuickActionButton extends StatefulWidget {
   const _QuickActionButton({
     required this.icon,
@@ -269,7 +349,8 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(
-              horizontal: 16.w.clamp(10.0, 20.0), vertical: 10.h.clamp(6.0, 12.0)),
+              horizontal: 16.w.clamp(10.0, 20.0),
+              vertical: 10.h.clamp(6.0, 12.0)),
           decoration: BoxDecoration(
             color: _isHovered
                 ? (isDark
@@ -338,27 +419,27 @@ class _GuideAnnotationPainter extends CustomPainter {
     // 1. Top-Left Menu Arrow: curves up & left towards top-left board tabs
     _drawSketchyCurvedArrow(
       canvas,
-      start: const Offset(120, 68),
-      control: const Offset(65, 55),
-      end: const Offset(20, 24),
+      start: const Offset(36, 76),
+      control: const Offset(18, 60),
+      end: const Offset(20, 36),
       paint: paint,
     );
 
-    // 2. Top-Center Toolbar Arrow: curves up towards the central tools
+    // 2. Top-Center Toolbar Arrow: curves from right of "Start drawing!" up to tools
     final centerX = size.width / 2;
     _drawSketchyCurvedArrow(
       canvas,
-      start: Offset(centerX + 50, 116),
-      control: Offset(centerX + 75, 80),
-      end: Offset(centerX + 35, 48),
+      start: Offset(centerX + 36, 110),
+      control: Offset(centerX + 78, 86),
+      end: Offset(centerX + 64, 46),
       paint: paint,
     );
 
-    // 3. Bottom-Right Arrow: curves down towards bottom-right shortcuts & theme
+    // 3. Bottom-Right Arrow: curves from right of "Shortcuts & help" down to ? icon
     _drawSketchyCurvedArrow(
       canvas,
-      start: Offset(size.width - 95, size.height - 68),
-      control: Offset(size.width - 55, size.height - 52),
+      start: Offset(size.width - 70, size.height - 38),
+      control: Offset(size.width - 42, size.height - 42),
       end: Offset(size.width - 24, size.height - 24),
       paint: paint,
     );
