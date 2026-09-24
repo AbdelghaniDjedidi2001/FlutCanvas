@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../models/board_colors.dart';
 import '../../models/tool.dart';
@@ -59,7 +60,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                   'Export, preferences, boards...',
                   style: TextStyle(
                     color: annotationColor,
-                    fontSize: 13.5,
+                    fontSize: 13.5.sp.clamp(11.0, 16.0),
                     fontStyle: FontStyle.italic,
                     letterSpacing: 0.2,
                     fontFamily: 'sans-serif',
@@ -82,7 +83,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                       'To move canvas, hold  Space  while dragging, or use the hand tool',
                       style: TextStyle(
                         color: annotationColor.withValues(alpha: 0.8),
-                        fontSize: 12,
+                        fontSize: 12.sp.clamp(10.0, 14.0),
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -92,7 +93,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: annotationColor,
-                        fontSize: 14.5,
+                        fontSize: 14.5.sp.clamp(12.0, 18.0),
                         fontWeight: FontWeight.w500,
                         fontStyle: FontStyle.italic,
                         height: 1.25,
@@ -114,7 +115,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     color: annotationColor,
-                    fontSize: 13.5,
+                    fontSize: 13.5.sp.clamp(11.0, 16.0),
                     fontStyle: FontStyle.italic,
                     height: 1.2,
                   ),
@@ -126,8 +127,8 @@ class EmptyCanvasGuide extends StatelessWidget {
           Center(
             child: SingleChildScrollView(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 480),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                constraints: BoxConstraints(maxWidth: 480.w.clamp(320.0, 520.0)),
+                padding: EdgeInsets.symmetric(horizontal: 24.w.clamp(16.0, 32.0), vertical: 20.h.clamp(12.0, 24.0)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -137,19 +138,19 @@ class EmptyCanvasGuide extends StatelessWidget {
                       children: [
                         Image.asset(
                           'assets/images/logo.png',
-                          width: 44,
-                          height: 44,
+                          width: 44.r.clamp(32.0, 52.0),
+                          height: 44.r.clamp(32.0, 52.0),
                           errorBuilder: (_, __, ___) => Icon(
                             Icons.draw_rounded,
-                            size: 40,
+                            size: 40.r.clamp(28.0, 48.0),
                             color: scheme.primary,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        SizedBox(width: 14.w.clamp(8.0, 18.0)),
                         Text(
                           'FLUTCANVAS',
                           style: TextStyle(
-                            fontSize: 32,
+                            fontSize: 32.sp.clamp(22.0, 38.0),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 2.5,
                             color: colors.ink,
@@ -157,17 +158,17 @@ class EmptyCanvasGuide extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 18),
+                    SizedBox(height: 18.h.clamp(10.0, 22.0)),
 
                     // Storage description notice
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 16.w.clamp(10.0, 20.0), vertical: 12.h.clamp(8.0, 16.0)),
                       decoration: BoxDecoration(
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.04)
                             : Colors.black.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r.clamp(8.0, 14.0)),
                       ),
                       child: Column(
                         children: [
@@ -175,7 +176,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                             'Your drawings are saved in your browser’s storage.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 13.5.sp.clamp(11.0, 15.0),
                               color: annotationColor,
                               fontStyle: FontStyle.italic,
                             ),
@@ -185,7 +186,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                             'Save your work to a file regularly to avoid losing it.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 13.5,
+                              fontSize: 13.5.sp.clamp(11.0, 15.0),
                               color: annotationColor,
                               fontStyle: FontStyle.italic,
                             ),
@@ -193,7 +194,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 22.h.clamp(14.0, 26.0)),
 
                     // Quick Action Menu Rows
                     _QuickActionButton(
@@ -202,21 +203,21 @@ class EmptyCanvasGuide extends StatelessWidget {
                       shortcut: 'Cmd+O',
                       onTap: onOpenImport,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h.clamp(4.0, 10.0)),
                     _QuickActionButton(
                       icon: Icons.auto_awesome_mosaic_outlined,
                       label: 'Pre-built Templates',
                       shortcut: 'Flowchart, Kanban...',
                       onTap: onOpenTemplates,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h.clamp(4.0, 10.0)),
                     _QuickActionButton(
                       icon: Icons.help_outline_rounded,
                       label: 'Keyboard shortcuts & Help',
                       shortcut: '?',
                       onTap: onOpenHelp,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h.clamp(4.0, 10.0)),
                     _QuickActionButton(
                       icon: Icons.image_outlined,
                       label: 'Insert an Image',
@@ -267,14 +268,15 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: EdgeInsets.symmetric(
+              horizontal: 16.w.clamp(10.0, 20.0), vertical: 10.h.clamp(6.0, 12.0)),
           decoration: BoxDecoration(
             color: _isHovered
                 ? (isDark
                     ? Colors.white.withValues(alpha: 0.08)
                     : Colors.black.withValues(alpha: 0.05))
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r.clamp(6.0, 12.0)),
             border: Border.all(
               color: _isHovered
                   ? scheme.primary.withValues(alpha: 0.3)
@@ -285,15 +287,15 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
             children: [
               Icon(
                 widget.icon,
-                size: 20,
+                size: 20.r.clamp(16.0, 24.0),
                 color: _isHovered ? scheme.primary : scheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 14.w.clamp(8.0, 16.0)),
               Expanded(
                 child: Text(
                   widget.label,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14.sp.clamp(11.5, 16.0),
                     fontWeight:
                         _isHovered ? FontWeight.w600 : FontWeight.w500,
                     color: _isHovered ? scheme.primary : scheme.onSurface,
@@ -303,7 +305,7 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
               Text(
                 widget.shortcut,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12.sp.clamp(10.0, 14.0),
                   fontFamily: 'monospace',
                   color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),

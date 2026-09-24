@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ShortcutsHelpDialog extends StatelessWidget {
   const ShortcutsHelpDialog({super.key});
@@ -6,13 +8,16 @@ class ShortcutsHelpDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final mq = MediaQuery.of(context).size;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r.clamp(10.0, 20.0))),
       child: Container(
-        width: 680,
-        constraints: const BoxConstraints(maxHeight: 640),
-        padding: const EdgeInsets.all(24),
+        width: math.min(680.w.clamp(320.0, 720.0), mq.width - 32),
+        constraints: BoxConstraints(
+          maxHeight: math.min(640.h.clamp(400.0, 700.0), mq.height - 48),
+        ),
+        padding: EdgeInsets.all(20.r.clamp(12.0, 24.0)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -20,14 +25,14 @@ class ShortcutsHelpDialog extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(8.r.clamp(6.0, 10.0)),
                   decoration: BoxDecoration(
                     color: scheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(10.r.clamp(6.0, 12.0)),
                   ),
-                  child: Icon(Icons.keyboard_outlined, color: scheme.primary, size: 24),
+                  child: Icon(Icons.keyboard_outlined, color: scheme.primary, size: 24.r.clamp(18.0, 28.0)),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: 14.w.clamp(8.0, 16.0)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,13 +41,14 @@ class ShortcutsHelpDialog extends StatelessWidget {
                         'Keyboard Shortcuts',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontSize: 18.sp.clamp(15.0, 22.0),
                             ),
                       ),
                       Text(
                         'Quick reference guide for navigating and creating in FlutCanvas',
                         style: TextStyle(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 13,
+                          fontSize: 13.sp.clamp(10.5, 14.5),
                         ),
                       ),
                     ],
@@ -55,9 +61,9 @@ class ShortcutsHelpDialog extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            SizedBox(height: 16.h.clamp(8.0, 20.0)),
             const Divider(height: 1),
-            const SizedBox(height: 12),
+            SizedBox(height: 10.h.clamp(6.0, 14.0)),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -139,11 +145,11 @@ class ShortcutsHelpDialog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 8, top: 4),
+          padding: EdgeInsets.only(bottom: 8.h.clamp(4.0, 10.0), top: 4.h.clamp(2.0, 8.0)),
           child: Text(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 14.sp.clamp(12.0, 16.0),
               fontWeight: FontWeight.bold,
               color: scheme.primary,
             ),
@@ -152,7 +158,7 @@ class ShortcutsHelpDialog extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r.clamp(6.0, 12.0)),
             border: Border.all(
               color: scheme.outlineVariant.withValues(alpha: 0.3),
             ),
@@ -161,13 +167,14 @@ class ShortcutsHelpDialog extends StatelessWidget {
             children: [
               for (var i = 0; i < items.length; i++) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 14.w.clamp(8.0, 16.0), vertical: 7.h.clamp(4.0, 9.0)),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           items[i].action,
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13.sp.clamp(11.0, 14.5)),
                         ),
                       ),
                       _KeyBadge(items[i].keyCombo),
@@ -204,15 +211,17 @@ class _KeyBadge extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final parts = keys.split(' / ');
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      alignment: WrapAlignment.end,
       children: parts.map((part) {
         return Container(
-          margin: const EdgeInsets.only(left: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          padding: EdgeInsets.symmetric(
+              horizontal: 7.w.clamp(5.0, 9.0), vertical: 3.h.clamp(2.0, 5.0)),
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(6.r.clamp(4.0, 8.0)),
             border: Border.all(
               color: scheme.outline.withValues(alpha: 0.25),
               width: 1,
@@ -228,7 +237,7 @@ class _KeyBadge extends StatelessWidget {
           child: Text(
             part,
             style: TextStyle(
-              fontSize: 11.5,
+              fontSize: 11.5.sp.clamp(10.0, 13.0),
               fontWeight: FontWeight.w600,
               fontFamily: 'monospace',
               color: scheme.onSurface,

@@ -72,7 +72,7 @@ class PropertiesPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final colors = BoardColors.of(context);
+    final mqHeight = MediaQuery.of(context).size.height;
 
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -81,6 +81,9 @@ class PropertiesPanel extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       child: Container(
         width: 224,
+        constraints: BoxConstraints(
+          maxHeight: math.max(200.0, mqHeight - 80),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),

@@ -1477,15 +1477,17 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        MinimapWidget(
-                          elements: _elements,
-                          pan: _pan,
-                          zoom: _zoom,
-                          viewSize: _viewSize,
-                          colors: colors,
-                          onJumpTo: (newPan) => setState(() => _pan = newPan),
-                        ),
-                        const SizedBox(width: 8),
+                        if (_viewSize.width > 540) ...[
+                          MinimapWidget(
+                            elements: _elements,
+                            pan: _pan,
+                            zoom: _zoom,
+                            viewSize: _viewSize,
+                            colors: colors,
+                            onJumpTo: (newPan) => setState(() => _pan = newPan),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
                         ThemeToggle(onToggleTheme: widget.onToggleTheme),
                         const SizedBox(width: 8),
                         Material(

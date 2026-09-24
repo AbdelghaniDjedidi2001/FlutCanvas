@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'ui/whiteboard_page.dart';
 
 void main() {
@@ -27,21 +28,29 @@ class _WhiteboardAppState extends State<WhiteboardApp> {
   Widget build(BuildContext context) {
     const seed = Color(0xFF3B5BDB);
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Mini Whiteboard',
-      themeMode: _themeMode,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: seed,
-        brightness: Brightness.light,
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: seed,
-        brightness: Brightness.dark,
-      ),
-      home: WhiteboardPage(onToggleTheme: _toggleTheme),
+    return ScreenUtilInit(
+      designSize: const Size(1440, 900),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'FlutCanvas',
+          themeMode: _themeMode,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorSchemeSeed: seed,
+            brightness: Brightness.light,
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorSchemeSeed: seed,
+            brightness: Brightness.dark,
+          ),
+          home: child,
+        );
+      },
+      child: WhiteboardPage(onToggleTheme: _toggleTheme),
     );
   }
 }
