@@ -72,6 +72,7 @@ class PropertiesPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = BoardColors.of(context);
     final mqHeight = MediaQuery.of(context).size.height;
 
     return Material(
