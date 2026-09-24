@@ -1,0 +1,81 @@
+import 'package:flutter/material.dart';
+
+class ZoomControls extends StatelessWidget {
+  const ZoomControls({
+    super.key,
+    required this.zoom,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onResetZoom,
+    required this.isGridSnap,
+    required this.onToggleGridSnap,
+  });
+
+  final double zoom;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onResetZoom;
+  final bool isGridSnap;
+  final VoidCallback onToggleGridSnap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.surfaceContainerHigh,
+      elevation: 3,
+      shadowColor: const Color(0x33000000),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Zoom out',
+              onPressed: onZoomOut,
+              icon: const Icon(Icons.remove, size: 18),
+            ),
+            Tooltip(
+              message: 'Reset view to 100%',
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                onPressed: onResetZoom,
+                child: Text(
+                  '${(zoom * 100).round()}%',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Zoom in',
+              onPressed: onZoomIn,
+              icon: const Icon(Icons.add, size: 18),
+            ),
+            Container(
+              width: 1,
+              height: 20,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              color: scheme.outlineVariant,
+            ),
+            Tooltip(
+              message: isGridSnap ? 'Grid snapping: ON (G)' : 'Grid snapping: OFF (G)',
+              child: IconButton(
+                onPressed: onToggleGridSnap,
+                icon: Icon(
+                  isGridSnap ? Icons.grid_on : Icons.grid_off_outlined,
+                  size: 18,
+                  color: isGridSnap ? scheme.primary : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
