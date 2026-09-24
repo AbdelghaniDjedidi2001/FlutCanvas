@@ -27,6 +27,22 @@ void main() {
     expect(find.byIcon(Icons.crop_free_rounded), findsOneWidget); // Frame tool
     expect(find.text('Main Board'), findsOneWidget); // Board tab title
 
+    // Verify Empty Canvas Onboarding Guide renders when board has no elements
+    expect(find.text('FLUTCANVAS'), findsOneWidget);
+    expect(find.text('Pick a tool &\nStart drawing!'), findsOneWidget);
+    expect(find.text('Open / Import file'), findsOneWidget);
+    expect(find.text('Keyboard shortcuts & Help'), findsOneWidget);
+
+    // Tap shortcuts & help button to verify ShortcutsHelpDialog opens
+    await tester.tap(find.text('Keyboard shortcuts & Help'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keyboard Shortcuts'), findsOneWidget);
+    expect(find.text('🖌️ Drawing & Creation Tools'), findsOneWidget);
+
+    // Close help dialog
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+
     // Select text tool and tap canvas to type
     await tester.tap(find.byIcon(Icons.title_rounded));
     await tester.pumpAndSettle();
@@ -34,14 +50,15 @@ void main() {
     await tester.tapAt(const Offset(300, 300));
     await tester.pumpAndSettle();
 
-    // Verify TextField appears and enter text with shortcut letters like 'This is a test'
+    // Verify TextField appears and enter text
     expect(find.byType(TextField), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'This is a test note');
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
 
-    // Verify text is committed and editor closed
+    // Verify text is committed, editor closed, and welcome guide is replaced by drawn elements
     expect(find.byType(TextField), findsNothing);
+    expect(find.text('FLUTCANVAS'), findsNothing);
   });
 
   test('ConnectionBinding anchor positions and hit-testing', () {

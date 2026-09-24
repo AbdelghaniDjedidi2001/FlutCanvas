@@ -24,8 +24,10 @@ import 'presentation/presentation_overlay.dart';
 import 'toolbar/board_tabs_bar.dart';
 import 'toolbar/main_toolbar.dart';
 import 'toolbar/properties_panel.dart';
+import 'widgets/empty_canvas_guide.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/minimap_widget.dart';
+import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/template_picker_dialog.dart';
 import 'widgets/theme_toggle.dart';
 import 'widgets/zoom_controls.dart';
@@ -654,6 +656,40 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     });
   }
 
+  // ── Dialog Helpers ─────────────────────────────────────────
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => ExportDialog(
+        elements: _elements,
+        colors: BoardColors.of(context),
+        onImport: (imported) {
+          setState(() {
+            _pushUndo(_elements);
+            _elements = imported;
+            _selectedIds.clear();
+          });
+        },
+      ),
+    );
+  }
+
+  void _showTemplatesDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => TemplatePickerDialog(
+        onSelectTemplate: _handleInsertTemplate,
+      ),
+    );
+  }
+
+  void _showShortcutsHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => const ShortcutsHelpDialog(),
+    );
+  }
+
   // ── Presentation Mode ──────────────────────────────────────
   void _startPresentation() {
     if (_frames.isEmpty) return;
@@ -1160,6 +1196,25 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       return KeyEventResult.handled;
     }
 
+    // Help & Shortcuts dialog (?)
+    if ((key == LogicalKeyboardKey.slash && kb.isShiftPressed) ||
+        key == LogicalKeyboardKey.question) {
+      _showShortcutsHelpDialog();
+      return KeyEventResult.handled;
+    }
+
+    // Open / Import (Cmd/Ctrl + O)
+    if (mod && key == LogicalKeyboardKey.keyO) {
+      _showExportDialog();
+      return KeyEventResult.handled;
+    }
+
+    // Export (Cmd/Ctrl + E)
+    if (mod && key == LogicalKeyboardKey.keyE) {
+      _showExportDialog();
+      return KeyEventResult.handled;
+    }
+
     // Undo / Redo
     if (mod && key == LogicalKeyboardKey.keyZ) {
       kb.isShiftPressed ? _redoAction() : _undoAction();
@@ -1284,6 +1339,21 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                 ),
               ),
 
+              // 1.5 Empty Canvas Onboarding Guide (when no elements are present)
+              if (_elements.isEmpty && !_isPresentationMode)
+                Positioned.fill(
+                  child: EmptyCanvasGuide(
+                    onOpenImport: _showExportDialog,
+                    onOpenTemplates: _showTemplatesDialog,
+                    onOpenHelp: _showShortcutsHelpDialog,
+                    onInsertImage: _handleInsertImage,
+                    onSelectTool: (t) => setState(() {
+                      _tool = t;
+                      if (t != Tool.select) _selectedIds.clear();
+                    }),
+                  ),
+                ),
+
               // 2. Unified Top Bar (Board selector on left, Main Toolbar centered/scrollable)
               if (!_isPresentationMode)
                 Positioned(
@@ -1322,26 +1392,8 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                               onUndo: _undoAction,
                               onRedo: _redoAction,
                               onClear: _clearBoard,
-                              onOpenExport: () => showDialog(
-                                context: context,
-                                builder: (_) => ExportDialog(
-                                  elements: _elements,
-                                  colors: colors,
-                                  onImport: (imported) {
-                                    setState(() {
-                                      _pushUndo(_elements);
-                                      _elements = imported;
-                                      _selectedIds.clear();
-                                    });
-                                  },
-                                ),
-                              ),
-                              onOpenTemplates: () => showDialog(
-                                context: context,
-                                builder: (_) => TemplatePickerDialog(
-                                  onSelectTemplate: _handleInsertTemplate,
-                                ),
-                              ),
+                              onOpenExport: _showExportDialog,
+                              onOpenTemplates: _showTemplatesDialog,
                               onStartPresentation: _startPresentation,
                               onToggleProperties: () => setState(
                                   () => _isPropertiesOpen = !_isPropertiesOpen),
@@ -1415,7 +1467,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                   ),
                 ),
 
-              // 6. Bottom-Right Radar Minimap & Theme Toggle
+              // 6. Bottom-Right Radar Minimap, Theme Toggle & Shortcuts/Help
               if (!_isPresentationMode)
                 Positioned(
                   right: 16,
@@ -1435,6 +1487,23 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                         ),
                         const SizedBox(width: 8),
                         ThemeToggle(onToggleTheme: widget.onToggleTheme),
+                        const SizedBox(width: 8),
+                        Material(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
+                          elevation: 3,
+                          shadowColor: const Color(0x33000000),
+                          borderRadius: BorderRadius.circular(12),
+                          child: IconButton(
+                            tooltip: 'Shortcuts & Help (?)',
+                            onPressed: _showShortcutsHelpDialog,
+                            icon: const Icon(
+                              Icons.help_outline_rounded,
+                              size: 20,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
