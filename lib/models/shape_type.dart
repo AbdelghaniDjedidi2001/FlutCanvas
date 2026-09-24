@@ -1,0 +1,17 @@
+enum ShapeType {
+  rectangle,
+  roundedRectangle,
+  ellipse,
+  diamond,
+  triangle,
+  star,
+  line,
+  arrow,
+  doubleArrow,
+  pen,
+  highlighter,
+  text,
+  stickyNote,
+  image,
+  frame,
+}
