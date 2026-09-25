@@ -28,7 +28,6 @@ class EmptyCanvasGuide extends StatelessWidget {
     final annotationColor = isDark
         ? const Color(0xFF9E9E9E)
         : const Color(0xFF616161);
-    final scheme = Theme.of(context).colorScheme;
 
     return LayoutBuilder(builder: (context, constraints) {
       final size = constraints.biggest;
@@ -50,11 +49,11 @@ class EmptyCanvasGuide extends StatelessWidget {
               ),
             ),
 
-          // 2. Top-Left Annotation Text
+          // 2. Top-Left Annotation Text ("Export, preferences, boards...")
           if (showAnnotations)
             Positioned(
-              top: 76,
-              left: 48,
+              top: 76.h.clamp(64.0, 92.0),
+              left: 48.w.clamp(36.0, 64.0),
               child: IgnorePointer(
                 child: Text(
                   'Export, preferences, boards...',
@@ -63,16 +62,24 @@ class EmptyCanvasGuide extends StatelessWidget {
                     fontSize: 13.5.sp.clamp(11.0, 16.0),
                     fontStyle: FontStyle.italic,
                     letterSpacing: 0.2,
-                    fontFamily: 'sans-serif',
+                    fontFamily: 'Caveat',
+                    fontFamilyFallback: const [
+                      'Kalam',
+                      'Comic Sans MS',
+                      'Chalkboard SE',
+                      'Segoe Print',
+                      'cursive',
+                      'sans-serif',
+                    ],
                   ),
                 ),
               ),
             ),
 
-          // 3. Top-Center Navigation Hint (below toolbar)
+          // 3. Top-Center Navigation Hint (perfectly centered)
           if (showAnnotations)
             Positioned(
-              top: 58,
+              top: 200.h.clamp(48.0, 66.0),
               left: 0,
               right: 0,
               child: IgnorePointer(
@@ -84,7 +91,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                         'To move canvas, hold ',
                         style: TextStyle(
                           color: annotationColor.withValues(alpha: 0.85),
-                          fontSize: 12.sp.clamp(10.0, 14.0),
+                          fontSize: 11.5.sp.clamp(9.5, 13.0),
                         ),
                       ),
                       _HintKeyBadge('Scroll wheel', annotationColor, isDark),
@@ -92,7 +99,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                         ' or ',
                         style: TextStyle(
                           color: annotationColor.withValues(alpha: 0.85),
-                          fontSize: 12.sp.clamp(10.0, 14.0),
+                          fontSize: 11.5.sp.clamp(9.5, 13.0),
                         ),
                       ),
                       _HintKeyBadge('Space', annotationColor, isDark),
@@ -100,7 +107,7 @@ class EmptyCanvasGuide extends StatelessWidget {
                         ' while dragging, or use the hand tool',
                         style: TextStyle(
                           color: annotationColor.withValues(alpha: 0.85),
-                          fontSize: 12.sp.clamp(10.0, 14.0),
+                          fontSize: 11.5.sp.clamp(9.5, 13.0),
                         ),
                       ),
                     ],
@@ -109,12 +116,12 @@ class EmptyCanvasGuide extends StatelessWidget {
               ),
             ),
 
-          // 3b. Top-Center "Pick a tool & Start drawing!"
+          // 3.5 Top-Center "Pick a tool & Start drawing!" (centered with generous space below hint)
           if (showAnnotations)
             Positioned(
-              top: 92,
+              top: 112.h.clamp(98.0, 128.0),
               left: 0,
-              right: 90,
+              right: 0,
               child: IgnorePointer(
                 child: Center(
                   child: Text(
@@ -122,21 +129,30 @@ class EmptyCanvasGuide extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: annotationColor,
-                      fontSize: 14.5.sp.clamp(12.0, 18.0),
+                      fontSize: 14.5.sp.clamp(12.0, 17.5),
                       fontWeight: FontWeight.w500,
                       fontStyle: FontStyle.italic,
                       height: 1.25,
+                      fontFamily: 'Caveat',
+                      fontFamilyFallback: const [
+                        'Kalam',
+                        'Comic Sans MS',
+                        'Chalkboard SE',
+                        'Segoe Print',
+                        'cursive',
+                        'sans-serif',
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
 
-          // 4. Bottom-Right Annotation Text
+          // 4. Bottom-Right Annotation Text ("Shortcuts & help")
           if (showAnnotations)
             Positioned(
-              bottom: 36,
-              right: 84,
+              bottom: 66.h.clamp(54.0, 80.0),
+              right: 68.w.clamp(56.0, 84.0),
               child: IgnorePointer(
                 child: Text(
                   'Shortcuts &\nhelp',
@@ -146,6 +162,15 @@ class EmptyCanvasGuide extends StatelessWidget {
                     fontSize: 13.5.sp.clamp(11.0, 16.0),
                     fontStyle: FontStyle.italic,
                     height: 1.2,
+                    fontFamily: 'Caveat',
+                    fontFamilyFallback: const [
+                      'Kalam',
+                      'Comic Sans MS',
+                      'Chalkboard SE',
+                      'Segoe Print',
+                      'cursive',
+                      'sans-serif',
+                    ],
                   ),
                 ),
               ),
@@ -155,8 +180,11 @@ class EmptyCanvasGuide extends StatelessWidget {
           Center(
             child: SingleChildScrollView(
               child: Container(
-                constraints: BoxConstraints(maxWidth: 480.w.clamp(320.0, 520.0)),
-                padding: EdgeInsets.symmetric(horizontal: 24.w.clamp(16.0, 32.0), vertical: 20.h.clamp(12.0, 24.0)),
+                constraints:
+                    BoxConstraints(maxWidth: 480.w.clamp(320.0, 520.0)),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 24.w.clamp(16.0, 32.0),
+                    vertical: 20.h.clamp(12.0, 24.0)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -164,31 +192,11 @@ class EmptyCanvasGuide extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
+                        Image.asset(
+                          'assets/images/logo.png',
                           width: 44.r.clamp(32.0, 52.0),
                           height: 44.r.clamp(32.0, 52.0),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF4C6EF5), Color(0xFF15AABF)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius:
-                                BorderRadius.circular(10.r.clamp(8.0, 14.0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF4C6EF5)
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.draw_rounded,
-                            size: 26.r.clamp(20.0, 32.0),
-                            color: Colors.white,
-                          ),
+                          fit: BoxFit.contain,
                         ),
                         SizedBox(width: 14.w.clamp(8.0, 18.0)),
                         Text(
@@ -411,36 +419,46 @@ class _GuideAnnotationPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
+      ..color = color.withValues(alpha: 0.82)
+      ..strokeWidth = 1.4
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // 1. Top-Left Menu Arrow: curves up & left towards top-left board tabs
+    // 1. Top-Left Menu Arrow: curves from left of text up towards board tabs with spacing
     _drawSketchyCurvedArrow(
       canvas,
-      start: const Offset(36, 76),
-      control: const Offset(18, 60),
-      end: const Offset(20, 36),
+      start: Offset(40.w.clamp(30.0, 50.0), 86.h.clamp(76.0, 96.0)),
+      control: Offset(18.w.clamp(12.0, 26.0), 68.h.clamp(58.0, 78.0)),
+      end: Offset(36.w.clamp(28.0, 44.0), 56.h.clamp(50.0, 62.0)),
       paint: paint,
     );
 
-    // 2. Top-Center Toolbar Arrow: curves from right of "Start drawing!" up to tools
+    // 2. Top-Center Toolbar Arrow: starts at "drawing!" below hint and arches up towards tools
     final centerX = size.width / 2;
     _drawSketchyCurvedArrow(
-      canvas,
-      start: Offset(centerX + 36, 110),
-      control: Offset(centerX + 78, 86),
-      end: Offset(centerX + 64, 46),
-      paint: paint,
-    );
+  canvas,
+  start: Offset(
+    centerX + 45.w.clamp(38.0, 52.0),
+    125.h.clamp(115.0, 135.0),
+  ),
+  control: Offset(
+    centerX + 65.w.clamp(55.0, 75.0),
+    105.h.clamp(98.0, 112.0),
+  ),
+  end: Offset(
+    centerX + 58.w.clamp(50.0, 68.0),
+    82.h.clamp(76.0, 88.0),
+  ),
+  paint: paint,
+);
 
-    // 3. Bottom-Right Arrow: curves from right of "Shortcuts & help" down to ? icon
+    // 3. Bottom-Right Arrow: arches up-right from "help" text and points towards ? button with spacing
     _drawSketchyCurvedArrow(
       canvas,
-      start: Offset(size.width - 70, size.height - 38),
-      control: Offset(size.width - 42, size.height - 42),
-      end: Offset(size.width - 24, size.height - 24),
+      start: Offset(size.width - 60.w.clamp(50.0, 72.0), size.height - 82.h.clamp(72.0, 92.0)),
+      control: Offset(size.width - 22.w.clamp(16.0, 30.0), size.height - 100.h.clamp(86.0, 114.0)),
+      end: Offset(size.width - 34.w.clamp(28.0, 42.0), size.height - 64.h.clamp(58.0, 72.0)),
       paint: paint,
     );
   }
@@ -452,10 +470,11 @@ class _GuideAnnotationPainter extends CustomPainter {
     required Offset end,
     required Paint paint,
   }) {
-    // 1. Double pass sketchy quadratic bezier curve
-    const steps = 24;
-    final path1 = Path()..moveTo(start.dx, start.dy);
-    final path2 = Path()..moveTo(start.dx + 0.4, start.dy - 0.4);
+    const steps = 28;
+    final path = Path()..moveTo(start.dx, start.dy);
+
+    double penultimateX = start.dx;
+    double penultimateY = start.dy;
 
     for (var i = 1; i <= steps; i++) {
       final t = i / steps;
@@ -466,22 +485,23 @@ class _GuideAnnotationPainter extends CustomPainter {
           2 * (1 - t) * t * control.dy +
           t * t * end.dy;
 
-      final jitter1 = math.sin(i * 3.7) * 0.6;
-      final jitter2 = math.cos(i * 4.1) * 0.6;
+      final jitter = (i == steps || i == 1) ? 0.0 : math.sin(i * 3.5) * 0.35;
+      path.lineTo(x + jitter, y + jitter);
 
-      path1.lineTo(x + jitter1, y + jitter2);
-      path2.lineTo(x - jitter1 * 0.5, y - jitter2 * 0.5);
+      if (i == steps - 2) {
+        penultimateX = x;
+        penultimateY = y;
+      }
     }
 
-    canvas.drawPath(path1, paint);
-    canvas.drawPath(path2, paint);
+    canvas.drawPath(path, paint);
 
-    // 2. Arrowhead at 'end' pointing along tangent
-    final tangentX = end.dx - control.dx;
-    final tangentY = end.dy - control.dy;
+    // Arrowhead along true tangent of the curve tip
+    final tangentX = end.dx - penultimateX;
+    final tangentY = end.dy - penultimateY;
     final angle = math.atan2(tangentY, tangentX);
-    const arrowLen = 13.0;
-    const arrowAngle = math.pi / 6; // 30 degrees
+    const arrowLen = 11.5;
+    const arrowAngle = math.pi / 5.5; // ~32 degrees
 
     final leftWing = Offset(
       end.dx - arrowLen * math.cos(angle - arrowAngle),
@@ -492,13 +512,8 @@ class _GuideAnnotationPainter extends CustomPainter {
       end.dy - arrowLen * math.sin(angle + arrowAngle),
     );
 
-    // Draw arrow wings with subtle double sketch
     canvas.drawLine(end, leftWing, paint);
-    canvas.drawLine(
-        end, Offset(leftWing.dx + 0.5, leftWing.dy - 0.5), paint);
     canvas.drawLine(end, rightWing, paint);
-    canvas.drawLine(
-        end, Offset(rightWing.dx - 0.5, rightWing.dy + 0.5), paint);
   }
 
   @override

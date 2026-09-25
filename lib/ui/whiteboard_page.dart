@@ -1477,7 +1477,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (_viewSize.width > 540) ...[
+                        if (_elements.isNotEmpty && _viewSize.width > 540) ...[
                           MinimapWidget(
                             elements: _elements,
                             pan: _pan,
