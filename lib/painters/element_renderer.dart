@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/board_colors.dart';
 import '../models/board_element.dart';
@@ -279,11 +280,10 @@ class ElementRenderer {
     final textPainter = TextPainter(
       text: TextSpan(
         text: content,
-        style: TextStyle(
+        style: GoogleFonts.caveat(
           color: el.text.isEmpty ? color.withValues(alpha: 0.4) : color,
           fontSize: el.fontSize,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'sans-serif',
+          fontWeight: FontWeight.w600,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -331,11 +331,10 @@ class ElementRenderer {
       final textPainter = TextPainter(
         text: TextSpan(
           text: el.text,
-          style: TextStyle(
+          style: GoogleFonts.caveat(
             color: const Color(0xFF212529),
             fontSize: el.fontSize,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'sans-serif',
+            fontWeight: FontWeight.w500,
           ),
         ),
         textDirection: TextDirection.ltr,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'connection_binding.dart';
 import 'shape_type.dart';
@@ -154,7 +155,10 @@ class BoardElement {
       final textPainter = TextPainter(
         text: TextSpan(
           text: text.isEmpty ? 'Type text...' : text,
-          style: TextStyle(fontSize: fontSize, fontFamily: 'sans-serif'),
+          style: GoogleFonts.caveat(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

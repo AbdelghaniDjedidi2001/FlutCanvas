@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../models/board_colors.dart';
 import '../../models/tool.dart';
@@ -57,20 +58,11 @@ class EmptyCanvasGuide extends StatelessWidget {
               child: IgnorePointer(
                 child: Text(
                   'Export, preferences, boards...',
-                  style: TextStyle(
+                  style: GoogleFonts.caveat(
                     color: annotationColor,
-                    fontSize: 13.5.sp.clamp(11.0, 16.0),
-                    fontStyle: FontStyle.italic,
+                    fontSize: 18.sp.clamp(14.0, 22.0),
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 0.2,
-                    fontFamily: 'Caveat',
-                    fontFamilyFallback: const [
-                      'Kalam',
-                      'Comic Sans MS',
-                      'Chalkboard SE',
-                      'Segoe Print',
-                      'cursive',
-                      'sans-serif',
-                    ],
                   ),
                 ),
               ),
@@ -80,37 +72,43 @@ class EmptyCanvasGuide extends StatelessWidget {
           if (showAnnotations)
             Positioned(
               top: 200.h.clamp(48.0, 66.0),
-              left: 0,
-              right: 0,
+              left: 20,
+              right: 20,
               child: IgnorePointer(
                 child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'To move canvas, hold ',
-                        style: TextStyle(
-                          color: annotationColor.withValues(alpha: 0.85),
-                          fontSize: 11.5.sp.clamp(9.5, 13.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'To move canvas, hold ',
+                          style: GoogleFonts.caveat(
+                            color: annotationColor.withValues(alpha: 0.9),
+                            fontSize: 15.sp.clamp(12.0, 18.0),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      _HintKeyBadge('Scroll wheel', annotationColor, isDark),
-                      Text(
-                        ' or ',
-                        style: TextStyle(
-                          color: annotationColor.withValues(alpha: 0.85),
-                          fontSize: 11.5.sp.clamp(9.5, 13.0),
+                        _HintKeyBadge('Scroll wheel', annotationColor, isDark),
+                        Text(
+                          ' or ',
+                          style: GoogleFonts.caveat(
+                            color: annotationColor.withValues(alpha: 0.9),
+                            fontSize: 15.sp.clamp(12.0, 18.0),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      _HintKeyBadge('Space', annotationColor, isDark),
-                      Text(
-                        ' while dragging, or use the hand tool',
-                        style: TextStyle(
-                          color: annotationColor.withValues(alpha: 0.85),
-                          fontSize: 11.5.sp.clamp(9.5, 13.0),
+                        _HintKeyBadge('Space', annotationColor, isDark),
+                        Text(
+                          ' while dragging, or use the hand tool',
+                          style: GoogleFonts.caveat(
+                            color: annotationColor.withValues(alpha: 0.9),
+                            fontSize: 15.sp.clamp(12.0, 18.0),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -127,21 +125,11 @@ class EmptyCanvasGuide extends StatelessWidget {
                   child: Text(
                     'Pick a tool &\nStart drawing!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: GoogleFonts.caveat(
                       color: annotationColor,
-                      fontSize: 14.5.sp.clamp(12.0, 17.5),
-                      fontWeight: FontWeight.w500,
-                      fontStyle: FontStyle.italic,
-                      height: 1.25,
-                      fontFamily: 'Caveat',
-                      fontFamilyFallback: const [
-                        'Kalam',
-                        'Comic Sans MS',
-                        'Chalkboard SE',
-                        'Segoe Print',
-                        'cursive',
-                        'sans-serif',
-                      ],
+                      fontSize: 19.sp.clamp(15.0, 23.0),
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
                     ),
                   ),
                 ),
@@ -157,20 +145,11 @@ class EmptyCanvasGuide extends StatelessWidget {
                 child: Text(
                   'Shortcuts &\nhelp',
                   textAlign: TextAlign.right,
-                  style: TextStyle(
+                  style: GoogleFonts.caveat(
                     color: annotationColor,
-                    fontSize: 13.5.sp.clamp(11.0, 16.0),
-                    fontStyle: FontStyle.italic,
+                    fontSize: 18.sp.clamp(14.0, 22.0),
+                    fontWeight: FontWeight.w600,
                     height: 1.2,
-                    fontFamily: 'Caveat',
-                    fontFamilyFallback: const [
-                      'Kalam',
-                      'Comic Sans MS',
-                      'Chalkboard SE',
-                      'Segoe Print',
-                      'cursive',
-                      'sans-serif',
-                    ],
                   ),
                 ),
               ),
@@ -181,9 +160,9 @@ class EmptyCanvasGuide extends StatelessWidget {
             child: SingleChildScrollView(
               child: Container(
                 constraints:
-                    BoxConstraints(maxWidth: 480.w.clamp(320.0, 520.0)),
+                    BoxConstraints(maxWidth: 480.w.clamp(380.0, 520.0)),
                 padding: EdgeInsets.symmetric(
-                    horizontal: 24.w.clamp(16.0, 32.0),
+                    horizontal: 20.w.clamp(14.0, 28.0),
                     vertical: 20.h.clamp(12.0, 24.0)),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -191,64 +170,72 @@ class EmptyCanvasGuide extends StatelessWidget {
                     // Project Logo & Title
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Image.asset(
                           'assets/images/logo.png',
-                          width: 44.r.clamp(32.0, 52.0),
-                          height: 44.r.clamp(32.0, 52.0),
+                          width: 44.r.clamp(34.0, 52.0),
+                          height: 44.r.clamp(34.0, 52.0),
                           fit: BoxFit.contain,
                         ),
-                        SizedBox(width: 14.w.clamp(8.0, 18.0)),
+                        SizedBox(width: 14.w.clamp(10.0, 18.0)),
                         Text(
                           'FLUTCANVAS',
                           style: TextStyle(
-                            fontSize: 32.sp.clamp(22.0, 38.0),
-                            fontWeight: FontWeight.w900,
+                            fontSize: 26.sp.clamp(20.0, 32.0),
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 2.5,
                             color: colors.ink,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 18.h.clamp(10.0, 22.0)),
+                    SizedBox(height: 18.h.clamp(12.0, 22.0)),
 
                     // Storage description notice
                     Container(
+                      width: double.infinity,
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w.clamp(10.0, 20.0),
-                          vertical: 12.h.clamp(8.0, 16.0)),
+                          horizontal: 16.w.clamp(12.0, 20.0),
+                          vertical: 10.h.clamp(8.0, 14.0)),
                       decoration: BoxDecoration(
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.04)
                             : Colors.black.withValues(alpha: 0.03),
                         borderRadius:
-                            BorderRadius.circular(12.r.clamp(8.0, 14.0)),
+                            BorderRadius.circular(10.r.clamp(6.0, 12.0)),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.06)
+                              : Colors.black.withValues(alpha: 0.04),
+                        ),
                       ),
                       child: Column(
                         children: [
                           Text(
                             'Your drawings are saved in your browser’s storage.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13.5.sp.clamp(11.0, 15.0),
+                            style: GoogleFonts.caveat(
+                              fontSize: 16.sp.clamp(13.5, 18.5),
                               color: annotationColor,
-                              fontStyle: FontStyle.italic,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 2),
                           Text(
                             'Save your work to a file regularly to avoid losing it.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13.5.sp.clamp(11.0, 15.0),
+                            style: GoogleFonts.caveat(
+                              fontSize: 16.sp.clamp(13.5, 18.5),
                               color: annotationColor,
-                              fontStyle: FontStyle.italic,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 22.h.clamp(14.0, 26.0)),
+                    SizedBox(height: 18.h.clamp(12.0, 24.0)),
 
                     // Quick Action Menu Rows
                     _QuickActionButton(
@@ -257,21 +244,21 @@ class EmptyCanvasGuide extends StatelessWidget {
                       shortcut: 'Cmd+O',
                       onTap: onOpenImport,
                     ),
-                    SizedBox(height: 8.h.clamp(4.0, 10.0)),
+                    SizedBox(height: 6.h.clamp(3.0, 8.0)),
                     _QuickActionButton(
                       icon: Icons.auto_awesome_mosaic_outlined,
                       label: 'Pre-built Templates',
-                      shortcut: 'Flowchart, Kanban...',
+                      shortcut: 'Templates',
                       onTap: onOpenTemplates,
                     ),
-                    SizedBox(height: 8.h.clamp(4.0, 10.0)),
+                    SizedBox(height: 6.h.clamp(3.0, 8.0)),
                     _QuickActionButton(
                       icon: Icons.help_outline_rounded,
                       label: 'Keyboard shortcuts & Help',
                       shortcut: '?',
                       onTap: onOpenHelp,
                     ),
-                    SizedBox(height: 8.h.clamp(4.0, 10.0)),
+                    SizedBox(height: 6.h.clamp(3.0, 8.0)),
                     _QuickActionButton(
                       icon: Icons.image_outlined,
                       label: 'Insert an Image',
@@ -299,7 +286,7 @@ class _HintKeyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 3),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
       decoration: BoxDecoration(
         color: isDark
             ? Colors.white.withValues(alpha: 0.08)
@@ -312,11 +299,10 @@ class _HintKeyBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: GoogleFonts.caveat(
           color: color,
-          fontSize: 11.sp.clamp(9.5, 13.0),
-          fontWeight: FontWeight.w600,
-          fontFamily: 'monospace',
+          fontSize: 14.sp.clamp(11.0, 16.5),
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -357,18 +343,18 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(
-              horizontal: 16.w.clamp(10.0, 20.0),
-              vertical: 10.h.clamp(6.0, 12.0)),
+              horizontal: 14.w.clamp(10.0, 18.0),
+              vertical: 9.h.clamp(6.0, 11.0)),
           decoration: BoxDecoration(
             color: _isHovered
                 ? (isDark
-                    ? Colors.white.withValues(alpha: 0.08)
-                    : Colors.black.withValues(alpha: 0.05))
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.black.withValues(alpha: 0.04))
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10.r.clamp(6.0, 12.0)),
+            borderRadius: BorderRadius.circular(8.r.clamp(6.0, 10.0)),
             border: Border.all(
               color: _isHovered
-                  ? scheme.primary.withValues(alpha: 0.3)
+                  ? scheme.primary.withValues(alpha: 0.25)
                   : Colors.transparent,
             ),
           ),
@@ -376,27 +362,38 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
             children: [
               Icon(
                 widget.icon,
-                size: 20.r.clamp(16.0, 24.0),
+                size: 20.r.clamp(16.0, 22.0),
                 color: _isHovered ? scheme.primary : scheme.onSurfaceVariant,
               ),
-              SizedBox(width: 14.w.clamp(8.0, 16.0)),
+              SizedBox(width: 14.w.clamp(10.0, 16.0)),
               Expanded(
                 child: Text(
                   widget.label,
                   style: TextStyle(
-                    fontSize: 14.sp.clamp(11.5, 16.0),
+                    fontSize: 14.sp.clamp(12.0, 15.5),
                     fontWeight:
                         _isHovered ? FontWeight.w600 : FontWeight.w500,
                     color: _isHovered ? scheme.primary : scheme.onSurface,
                   ),
                 ),
               ),
-              Text(
-                widget.shortcut,
-                style: TextStyle(
-                  fontSize: 12.sp.clamp(10.0, 14.0),
-                  fontFamily: 'monospace',
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  widget.shortcut,
+                  style: TextStyle(
+                    fontSize: 11.5.sp.clamp(10.0, 13.0),
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
                 ),
               ),
             ],

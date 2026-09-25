@@ -59,7 +59,7 @@ class ExportService {
   /// Serializes board elements to formatted JSON string
   static String exportToJson(List<BoardElement> elements) {
     final data = {
-      'type': 'mini_whiteboard_export',
+      'type': 'flutcanvas_export',
       'version': 1,
       'exportedAt': DateTime.now().toIso8601String(),
       'elements': elements.map((e) => e.toMap()).toList(),

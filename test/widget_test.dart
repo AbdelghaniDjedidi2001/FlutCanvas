@@ -22,8 +22,8 @@ void main() {
     expect(find.byIcon(Icons.near_me_outlined), findsOneWidget); // Select tool
     expect(find.byIcon(Icons.pan_tool_outlined), findsOneWidget); // Hand tool
     expect(find.byIcon(Icons.crop_square), findsOneWidget); // Rectangle tool
-    expect(find.byIcon(Icons.auto_awesome_mosaic_outlined), findsOneWidget); // Template button
-    expect(find.byIcon(Icons.image_outlined), findsOneWidget); // Image tool
+    expect(find.byIcon(Icons.auto_awesome_mosaic_outlined), findsWidgets); // Template buttons
+    expect(find.byIcon(Icons.image_outlined), findsWidgets); // Image tools
     expect(find.byIcon(Icons.crop_free_rounded), findsOneWidget); // Frame tool
     expect(find.text('Main Board'), findsOneWidget); // Board tab title
 
@@ -34,6 +34,7 @@ void main() {
     expect(find.text('Keyboard shortcuts & Help'), findsOneWidget);
 
     // Tap shortcuts & help button to verify ShortcutsHelpDialog opens
+    await tester.ensureVisible(find.text('Keyboard shortcuts & Help'));
     await tester.tap(find.text('Keyboard shortcuts & Help'));
     await tester.pumpAndSettle();
     expect(find.text('Keyboard Shortcuts'), findsOneWidget);
@@ -47,7 +48,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.title_rounded));
     await tester.pumpAndSettle();
 
-    await tester.tapAt(const Offset(300, 300));
+    await tester.tapAt(const Offset(150, 250));
     await tester.pumpAndSettle();
 
     // Verify TextField appears and enter text

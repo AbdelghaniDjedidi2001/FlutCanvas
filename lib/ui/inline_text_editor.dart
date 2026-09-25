@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class InlineTextEditor extends StatefulWidget {
   const InlineTextEditor({
@@ -149,11 +150,10 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                   maxLines: widget.isStickyNote ? 8 : null,
                   minLines: widget.isStickyNote ? 3 : 1,
                   autofocus: true,
-                  style: TextStyle(
+                  style: GoogleFonts.caveat(
                     fontSize: widget.fontSize,
                     color: widget.color,
-                    fontFamily: 'sans-serif',
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                   decoration: const InputDecoration(
                     isDense: true,
