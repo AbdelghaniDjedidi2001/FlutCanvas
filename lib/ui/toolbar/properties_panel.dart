@@ -34,6 +34,7 @@ class PropertiesPanel extends StatelessWidget {
     required this.onDuplicate,
     required this.onDelete,
     required this.onAlign,
+    required this.onDistribute,
     this.onClose,
   });
 
@@ -64,6 +65,7 @@ class PropertiesPanel extends StatelessWidget {
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
   final void Function(String alignment) onAlign;
+  final void Function(String direction) onDistribute;
   final VoidCallback? onClose;
 
   bool get _hasGroupedElements =>
@@ -388,45 +390,111 @@ class PropertiesPanel extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      tooltip: 'Bring to Front',
-                      visualDensity: VisualDensity.compact,
-                      iconSize: 16,
-                      onPressed: onBringToFront,
-                      icon: const Icon(Icons.flip_to_front),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onBringToFront,
+                        icon: const Icon(Icons.flip_to_front, size: 13),
+                        label: const Text('Front', style: TextStyle(fontSize: 11)),
+                      ),
                     ),
-                    IconButton(
-                      tooltip: 'Send to Back',
-                      visualDensity: VisualDensity.compact,
-                      iconSize: 16,
-                      onPressed: onSendToBack,
-                      icon: const Icon(Icons.flip_to_back),
-                    ),
-                    IconButton(
-                      tooltip: 'Align Left',
-                      visualDensity: VisualDensity.compact,
-                      iconSize: 16,
-                      onPressed: () => onAlign('left'),
-                      icon: const Icon(Icons.align_horizontal_left),
-                    ),
-                    IconButton(
-                      tooltip: 'Align Center',
-                      visualDensity: VisualDensity.compact,
-                      iconSize: 16,
-                      onPressed: () => onAlign('center'),
-                      icon: const Icon(Icons.align_horizontal_center),
-                    ),
-                    IconButton(
-                      tooltip: 'Align Right',
-                      visualDensity: VisualDensity.compact,
-                      iconSize: 16,
-                      onPressed: () => onAlign('right'),
-                      icon: const Icon(Icons.align_horizontal_right),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onSendToBack,
+                        icon: const Icon(Icons.flip_to_back, size: 13),
+                        label: const Text('Back', style: TextStyle(fontSize: 11)),
+                      ),
                     ),
                   ],
                 ),
+                if (selectedElements.length >= 2) ...[
+                  const SizedBox(height: 8),
+                  const Text('Align & Distribute', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        tooltip: 'Align Left',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: () => onAlign('left'),
+                        icon: const Icon(Icons.align_horizontal_left),
+                      ),
+                      IconButton(
+                        tooltip: 'Align Center',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: () => onAlign('center'),
+                        icon: const Icon(Icons.align_horizontal_center),
+                      ),
+                      IconButton(
+                        tooltip: 'Align Right',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: () => onAlign('right'),
+                        icon: const Icon(Icons.align_horizontal_right),
+                      ),
+                      IconButton(
+                        tooltip: selectedElements.length >= 3
+                            ? 'Distribute Horizontally'
+                            : 'Distribute Horizontally (select 3+)',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: selectedElements.length >= 3
+                            ? () => onDistribute('horizontal')
+                            : null,
+                        icon: const Icon(Icons.horizontal_distribute),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        tooltip: 'Align Top',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: () => onAlign('top'),
+                        icon: const Icon(Icons.align_vertical_top),
+                      ),
+                      IconButton(
+                        tooltip: 'Align Middle',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: () => onAlign('middle'),
+                        icon: const Icon(Icons.align_vertical_center),
+                      ),
+                      IconButton(
+                        tooltip: 'Align Bottom',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: () => onAlign('bottom'),
+                        icon: const Icon(Icons.align_vertical_bottom),
+                      ),
+                      IconButton(
+                        tooltip: selectedElements.length >= 3
+                            ? 'Distribute Vertically'
+                            : 'Distribute Vertically (select 3+)',
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        onPressed: selectedElements.length >= 3
+                            ? () => onDistribute('vertical')
+                            : null,
+                        icon: const Icon(Icons.vertical_distribute),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/board_colors.dart';
 import '../models/board_element.dart';
+import '../models/snap_guide.dart';
 import 'connection_anchor_painter.dart';
 import 'element_renderer.dart';
 import 'grid_painter.dart';
@@ -17,6 +18,7 @@ class BoardPainter extends CustomPainter {
     required this.laserTrail,
     required this.hoveredAnchorElement,
     required this.activeAnchorPoint,
+    required this.activeSnapGuides,
     required this.pan,
     required this.zoom,
     required this.colors,
@@ -29,6 +31,7 @@ class BoardPainter extends CustomPainter {
   final List<LaserPoint> laserTrail;
   final BoardElement? hoveredAnchorElement;
   final Offset? activeAnchorPoint;
+  final List<SnapGuide> activeSnapGuides;
   final Offset pan;
   final double zoom;
   final BoardColors colors;
@@ -73,6 +76,11 @@ class BoardPainter extends CustomPainter {
       }
     }
 
+    // 5b. Dynamic Magnetic Snapping Guidelines
+    if (activeSnapGuides.isNotEmpty) {
+      SelectionPainter.drawSnapGuides(canvas, activeSnapGuides, zoom, colors);
+    }
+
     // 6. Magnetic Connection Anchors (when hovering with line/arrow tool)
     if (hoveredAnchorElement != null) {
       ConnectionAnchorPainter.drawAnchors(
@@ -101,6 +109,7 @@ class BoardPainter extends CustomPainter {
       old.laserTrail.length != laserTrail.length ||
       old.hoveredAnchorElement != hoveredAnchorElement ||
       old.activeAnchorPoint != activeAnchorPoint ||
+      old.activeSnapGuides != activeSnapGuides ||
       old.pan != pan ||
       old.zoom != zoom ||
       old.colors != colors;

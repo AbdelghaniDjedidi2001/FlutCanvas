@@ -185,6 +185,8 @@ class BoardElement {
     }
 
     final t = tol + strokeWidth / 2;
+    // For 2D filled/closed shapes, keep hit-testing precise so adjacent touching shapes don't overlap
+    final shapeTol = math.min(tol, 2.0) + strokeWidth / 2;
     switch (type) {
       case ShapeType.rectangle:
       case ShapeType.roundedRectangle:
@@ -192,29 +194,29 @@ class BoardElement {
       case ShapeType.text:
       case ShapeType.image:
       case ShapeType.frame:
-        return bounds.inflate(t).contains(testPoint);
+        return bounds.inflate(shapeTol).contains(testPoint);
 
       case ShapeType.ellipse:
         final r = bounds;
-        final rx = r.width / 2 + t;
-        final ry = r.height / 2 + t;
+        final rx = r.width / 2 + shapeTol;
+        final ry = r.height / 2 + shapeTol;
         if (rx <= 0 || ry <= 0) return false;
         final dx = (testPoint.dx - r.center.dx) / rx;
         final dy = (testPoint.dy - r.center.dy) / ry;
         return dx * dx + dy * dy <= 1;
 
       case ShapeType.diamond:
-        final r = bounds.inflate(t);
+        final r = bounds.inflate(shapeTol);
         final c = r.center;
         final dx = (testPoint.dx - c.dx).abs() / (r.width / 2);
         final dy = (testPoint.dy - c.dy).abs() / (r.height / 2);
         return dx + dy <= 1;
 
       case ShapeType.triangle:
-        return bounds.inflate(t).contains(testPoint);
+        return bounds.inflate(shapeTol).contains(testPoint);
 
       case ShapeType.star:
-        return bounds.inflate(t).contains(testPoint);
+        return bounds.inflate(shapeTol).contains(testPoint);
 
       case ShapeType.line:
       case ShapeType.arrow:

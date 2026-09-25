@@ -9,6 +9,8 @@ class ZoomControls extends StatelessWidget {
     required this.onResetZoom,
     required this.isGridSnap,
     required this.onToggleGridSnap,
+    this.isSmartGuides = true,
+    this.onToggleSmartGuides,
   });
 
   final double zoom;
@@ -17,6 +19,8 @@ class ZoomControls extends StatelessWidget {
   final VoidCallback onResetZoom;
   final bool isGridSnap;
   final VoidCallback onToggleGridSnap;
+  final bool isSmartGuides;
+  final VoidCallback? onToggleSmartGuides;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +77,20 @@ class ZoomControls extends StatelessWidget {
                 ),
               ),
             ),
+            if (onToggleSmartGuides != null)
+              Tooltip(
+                message: isSmartGuides
+                    ? 'Smart Alignment Guides: ON (S)'
+                    : 'Smart Alignment Guides: OFF (S)',
+                child: IconButton(
+                  onPressed: onToggleSmartGuides,
+                  icon: Icon(
+                    isSmartGuides ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                    size: 18,
+                    color: isSmartGuides ? scheme.primary : null,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

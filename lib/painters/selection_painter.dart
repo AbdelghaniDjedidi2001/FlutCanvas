@@ -1,9 +1,57 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/board_colors.dart';
 import '../models/board_element.dart';
+import '../models/snap_guide.dart';
 import '../models/transform_handle.dart';
 
 class SelectionPainter {
+  /// Draws dynamic magnetic snap guidelines while moving elements
+  static void drawSnapGuides(
+    Canvas canvas,
+    List<SnapGuide> guides,
+    double zoom,
+    BoardColors colors,
+  ) {
+    if (guides.isEmpty) return;
+
+    final guidePaint = Paint()
+      ..color = const Color(0xFFE91E63) // Vibrant magenta/pink guideline like Figma/Canva
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2 / zoom;
+
+    final dotPaint = Paint()
+      ..color = const Color(0xFFE91E63)
+      ..style = PaintingStyle.fill;
+
+    const dashLength = 4.0;
+    const gapLength = 3.0;
+
+    for (final g in guides) {
+      if (g.type == SnapGuideType.vertical) {
+        final x = g.position;
+        double currentY = g.minCross;
+        while (currentY < g.maxCross) {
+          final nextY = math.min(currentY + dashLength / zoom, g.maxCross);
+          canvas.drawLine(Offset(x, currentY), Offset(x, nextY), guidePaint);
+          currentY += (dashLength + gapLength) / zoom;
+        }
+        canvas.drawCircle(Offset(x, g.minCross), 2.5 / zoom, dotPaint);
+        canvas.drawCircle(Offset(x, g.maxCross), 2.5 / zoom, dotPaint);
+      } else {
+        final y = g.position;
+        double currentX = g.minCross;
+        while (currentX < g.maxCross) {
+          final nextX = math.min(currentX + dashLength / zoom, g.maxCross);
+          canvas.drawLine(Offset(currentX, y), Offset(nextX, y), guidePaint);
+          currentX += (dashLength + gapLength) / zoom;
+        }
+        canvas.drawCircle(Offset(g.minCross, y), 2.5 / zoom, dotPaint);
+        canvas.drawCircle(Offset(g.maxCross, y), 2.5 / zoom, dotPaint);
+      }
+    }
+  }
+
   /// Draws marquee selection box while dragging on canvas
   static void drawMarquee(Canvas canvas, Rect marqueeRect, double zoom, BoardColors colors) {
     final fillPaint = Paint()

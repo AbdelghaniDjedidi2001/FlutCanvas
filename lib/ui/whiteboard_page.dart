@@ -9,12 +9,14 @@ import '../models/board_document.dart';
 import '../models/board_element.dart';
 import '../models/connection_binding.dart';
 import '../models/shape_type.dart';
+import '../models/snap_guide.dart';
 import '../models/stroke_fill_style.dart';
 import '../models/templates.dart';
 import '../models/tool.dart';
 import '../models/transform_handle.dart';
 import '../painters/board_painter.dart';
 import '../painters/laser_painter.dart';
+import '../services/alignment_service.dart';
 import '../services/clipboard_service.dart';
 import '../services/history_manager.dart';
 import '../services/image_service.dart';
@@ -89,6 +91,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   double _rotation = 0.0;
   bool _isPropertiesOpen = false;
   bool _gridSnap = false;
+  bool _smartGuides = true;
 
   // Magnetic Connection Anchoring
   BoardElement? _hoveredAnchorElement;
@@ -113,9 +116,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   List<BoardElement>? _beforeGestureElements;
   HandleType? _activeResizeHandle;
   Rect? _initialSelectedBounds;
+  String? _clickedElementId;
   double _startRotationAngle = 0.0;
   bool _spaceDown = false;
   bool _shiftDown = false;
+  List<SnapGuide> _activeSnapGuides = [];
 
   // Inline Text Editing
   String? _editingElementId;
@@ -432,30 +437,25 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   void _alignSelected(String alignment) {
     if (_selectedIds.length < 2) return;
-    final bounds = _currentSelectedBounds;
-    if (bounds == null) return;
-
     setState(() {
       _pushUndo(_elements);
-      _elements = [
-        for (final el in _elements)
-          if (!_selectedIds.contains(el.id))
-            el
-          else
-            switch (alignment) {
-              'left' => el.translated(Offset(bounds.left - el.bounds.left, 0)),
-              'right' =>
-                el.translated(Offset(bounds.right - el.bounds.right, 0)),
-              'center' => el.translated(
-                  Offset(bounds.center.dx - el.bounds.center.dx, 0)),
-              'top' => el.translated(Offset(0, bounds.top - el.bounds.top)),
-              'bottom' =>
-                el.translated(Offset(0, bounds.bottom - el.bounds.bottom)),
-              'middle' => el.translated(
-                  Offset(0, bounds.center.dy - el.bounds.center.dy)),
-              _ => el,
-            },
-      ];
+      _elements = AlignmentService.alignElements(
+        allElements: _elements,
+        selectedIds: _selectedIds,
+        alignment: alignment,
+      );
+    });
+  }
+
+  void _distributeSelected(String direction) {
+    if (_selectedIds.length < 3) return;
+    setState(() {
+      _pushUndo(_elements);
+      _elements = AlignmentService.distributeElements(
+        allElements: _elements,
+        selectedIds: _selectedIds,
+        direction: direction,
+      );
     });
   }
 
@@ -803,6 +803,8 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           targetIds.add(hit.id);
         }
 
+        final bool hitAlreadySelected = _selectedIds.contains(hit.id);
+
         setState(() {
           if (_shiftDown) {
             if (_selectedIds.containsAll(targetIds)) {
@@ -811,11 +813,13 @@ class _WhiteboardPageState extends State<WhiteboardPage>
               _selectedIds.addAll(targetIds);
             }
           } else {
-            if (!_selectedIds.contains(hit.id)) {
+            if (!hitAlreadySelected) {
               _selectedIds = targetIds;
             }
           }
+          _clickedElementId = hit.id;
           _beforeGestureElements = _elements;
+          _initialSelectedBounds = _currentSelectedBounds;
           _mode = _DragMode.moving;
         });
       } else {
@@ -899,13 +903,48 @@ class _WhiteboardPageState extends State<WhiteboardPage>
         break;
 
       case _DragMode.moving:
-        final d = world - _lastWorld;
-        _lastWorld = world;
+        final initialBounds = _initialSelectedBounds;
+        final beforeElements = _beforeGestureElements;
+        if (initialBounds == null || beforeElements == null) {
+          final d = world - _lastWorld;
+          _lastWorld = world;
+          setState(() {
+            _elements = _updateConnectedArrows([
+              for (final el in _elements)
+                _selectedIds.contains(el.id) ? el.translated(d) : el,
+            ]);
+          });
+          break;
+        }
+
+        final rawDisplacement = world - _startWorld;
+        Offset finalDisplacement = rawDisplacement;
+        List<SnapGuide> guides = const [];
+
+        final isAltPressed = HardwareKeyboard.instance.isAltPressed;
+        if (_smartGuides && !_spaceDown && !isAltPressed) {
+          final unselected = beforeElements
+              .where((e) => !_selectedIds.contains(e.id))
+              .toList();
+          final snapResult = SnapService.calculateSnap(
+            initialBounds: initialBounds,
+            rawDisplacement: rawDisplacement,
+            otherElements: unselected,
+            zoom: _zoom,
+            snapThresholdPx: 5.0,
+          );
+          finalDisplacement = snapResult.snappedDisplacement;
+          guides = snapResult.guides;
+        }
+
         final movedElements = [
-          for (final el in _elements)
-            _selectedIds.contains(el.id) ? el.translated(d) : el,
+          for (final el in beforeElements)
+            _selectedIds.contains(el.id)
+                ? el.translated(finalDisplacement)
+                : el,
         ];
         setState(() {
+          _activeSnapGuides = guides;
           _elements = _updateConnectedArrows(movedElements);
         });
         break;
@@ -1042,6 +1081,22 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           break;
 
         case _DragMode.moving:
+          final before = _beforeGestureElements;
+          if (before != null && !identical(before, _elements)) {
+            _pushUndo(before);
+          }
+          // If clicked without dragging on an item that was part of a multi-selection, isolate selection
+          final dist = (e.localPosition - _lastScreen).distance;
+          if (dist < 4.0 && !_shiftDown && _clickedElementId != null && _selectedIds.length > 1) {
+            _selectedIds = {_clickedElementId!};
+          }
+          _beforeGestureElements = null;
+          _activeResizeHandle = null;
+          _initialSelectedBounds = null;
+          _clickedElementId = null;
+          _activeSnapGuides = const [];
+          break;
+
         case _DragMode.resizing:
         case _DragMode.rotating:
           final before = _beforeGestureElements;
@@ -1051,6 +1106,8 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           _beforeGestureElements = null;
           _activeResizeHandle = null;
           _initialSelectedBounds = null;
+          _clickedElementId = null;
+          _activeSnapGuides = const [];
           break;
 
         case _DragMode.marquee:
@@ -1258,6 +1315,12 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       return KeyEventResult.handled;
     }
 
+    // Toggle Smart Guides (S)
+    if (!mod && key == LogicalKeyboardKey.keyS) {
+      setState(() => _smartGuides = !_smartGuides);
+      return KeyEventResult.handled;
+    }
+
     // Tool shortcuts
     if (!mod && ToolExtension.shortcuts.containsKey(key)) {
       final t = ToolExtension.shortcuts[key]!;
@@ -1328,6 +1391,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                           laserTrail: _laserTrail,
                           hoveredAnchorElement: _hoveredAnchorElement,
                           activeAnchorPoint: _activeAnchorPoint,
+                          activeSnapGuides: _activeSnapGuides,
                           pan: _pan,
                           zoom: _zoom,
                           colors: colors,
@@ -1439,6 +1503,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       onDuplicate: _duplicateSelected,
                       onDelete: _deleteSelected,
                       onAlign: _alignSelected,
+                      onDistribute: _distributeSelected,
                       onClose: () => setState(() => _isPropertiesOpen = false),
                     ),
                   ),
@@ -1463,6 +1528,9 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       isGridSnap: _gridSnap,
                       onToggleGridSnap: () =>
                           setState(() => _gridSnap = !_gridSnap),
+                      isSmartGuides: _smartGuides,
+                      onToggleSmartGuides: () =>
+                          setState(() => _smartGuides = !_smartGuides),
                     ),
                   ),
                 ),

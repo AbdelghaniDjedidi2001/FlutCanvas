@@ -298,13 +298,21 @@ class ElementRenderer {
         ? el.fillColor
         : BoardColors.stickyNoteColors[0];
 
-    // Shadow
-    final shadowPaint = Paint()
-      ..color = const Color(0x28000000)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    // WebGL-safe soft drop shadow without MaskFilter.blur (avoids WebGL shader compilation errors)
+    final shadowPaint1 = Paint()
+      ..color = const Color(0x0F000000)
+      ..style = PaintingStyle.fill;
+    final shadowPaint2 = Paint()
+      ..color = const Color(0x18000000)
+      ..style = PaintingStyle.fill;
+
     canvas.drawRRect(
-      RRect.fromRectAndRadius(rect.shift(const Offset(2, 4)), const Radius.circular(8)),
-      shadowPaint,
+      RRect.fromRectAndRadius(rect.shift(const Offset(3, 5)).inflate(2), const Radius.circular(9)),
+      shadowPaint1,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect.shift(const Offset(1.5, 3)), const Radius.circular(8)),
+      shadowPaint2,
     );
 
     // Note card body

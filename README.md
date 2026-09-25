@@ -30,8 +30,9 @@ FlutCanvas is a modern, lightweight, and feature-rich digital whiteboard built u
 ### 📐 Infinite Canvas & Navigation
 - **Smooth Navigation**: Pan freely with middle-click, Space + Drag, or the Hand tool (`H`).
 - **Zoom Range**: Zoom smoothly from 10% to 800% with mouse wheel or on-screen controls.
-- **Minimap**: Interactive interactive minimap preview for instant spatial awareness.
-- **Grid Snapping**: Toggleable 24px coordinate grid snapping (`G`).
+- **Minimap**: Interactive minimap preview for instant spatial awareness.
+- **Grid Snapping & Smart Guides**: Toggleable 24px coordinate grid snapping (`G`) and real-time **Dynamic Magnetic Snapping Guidelines** when moving objects.
+- **Align & Distribute**: One-click alignment (Left, Center, Right, Top, Middle, Bottom) and equal spacing distribution (Horizontally and Vertically) for multi-selection.
 
 ### 📦 Pre-Built Diagram Templates
 Instant one-click diagram generators for rapid brainstorming:
