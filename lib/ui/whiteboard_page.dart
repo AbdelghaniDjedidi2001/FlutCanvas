@@ -28,6 +28,7 @@ import 'toolbar/main_toolbar.dart';
 import 'toolbar/properties_panel.dart';
 import 'widgets/empty_canvas_guide.dart';
 import 'widgets/export_dialog.dart';
+import 'widgets/layers_sidebar.dart';
 import 'widgets/minimap_widget.dart';
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/template_picker_dialog.dart';
@@ -90,6 +91,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   double _opacity = 1.0;
   double _rotation = 0.0;
   bool _isPropertiesOpen = false;
+  bool _isLayersOpen = false;
   bool _gridSnap = false;
   bool _smartGuides = true;
 
@@ -269,6 +271,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   BoardElement? _hitTestTopmost(Offset world) {
     for (final el in _elements.reversed) {
+      if (!el.isVisible) continue;
       if (el.hitTest(world, 6 / _zoom)) return el;
     }
     return null;
@@ -276,6 +279,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   (BoardElement, AnchorPoint, Offset)? _findNearestAnchorAround(Offset world) {
     for (final el in _elements.reversed) {
+      if (!el.isVisible) continue;
       if (el.type == ShapeType.line ||
           el.type == ShapeType.arrow ||
           el.type == ShapeType.doubleArrow) {
@@ -335,11 +339,105 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   void _deleteSelected() {
     if (_selectedIds.isEmpty) return;
+    final toDelete = _elements
+        .where((e) => _selectedIds.contains(e.id) && !e.isLocked)
+        .map((e) => e.id)
+        .toSet();
+    if (toDelete.isEmpty) return;
     setState(() {
       _pushUndo(_elements);
       _elements =
-          _elements.where((e) => !_selectedIds.contains(e.id)).toList();
-      _selectedIds.clear();
+          _elements.where((e) => !toDelete.contains(e.id)).toList();
+      _selectedIds.removeAll(toDelete);
+    });
+  }
+
+  void _toggleLockSelected() {
+    if (_selectedIds.isEmpty) return;
+    final anyUnlocked = _elements
+        .where((e) => _selectedIds.contains(e.id))
+        .any((e) => !e.isLocked);
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [
+        for (final el in _elements)
+          if (_selectedIds.contains(el.id))
+            el.copyWith(isLocked: anyUnlocked)
+          else
+            el,
+      ];
+    });
+  }
+
+  void _toggleLockElement(String id) {
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [
+        for (final el in _elements)
+          if (el.id == id) el.copyWith(isLocked: !el.isLocked) else el,
+      ];
+    });
+  }
+
+  void _toggleVisibilityElement(String id) {
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [
+        for (final el in _elements)
+          if (el.id == id) el.copyWith(isVisible: !el.isVisible) else el,
+      ];
+      final target = _elements.where((e) => e.id == id).firstOrNull;
+      if (target != null && !target.isVisible) {
+        _selectedIds.remove(id);
+      }
+    });
+  }
+
+  void _renameElement(String id, String newName) {
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [
+        for (final el in _elements)
+          if (el.id == id) el.copyWith(customName: newName) else el,
+      ];
+    });
+  }
+
+  void _deleteElementById(String id) {
+    final target = _elements.where((e) => e.id == id).firstOrNull;
+    if (target == null || target.isLocked) return;
+    setState(() {
+      _pushUndo(_elements);
+      _elements = _elements.where((e) => e.id != id).toList();
+      _selectedIds.remove(id);
+    });
+  }
+
+  void _reorderElements(int oldIndex, int newIndex) {
+    if (oldIndex < 0 ||
+        oldIndex >= _elements.length ||
+        newIndex < 0 ||
+        newIndex >= _elements.length) {
+      return;
+    }
+    setState(() {
+      _pushUndo(_elements);
+      final item = _elements.removeAt(oldIndex);
+      _elements.insert(newIndex, item);
+    });
+  }
+
+  void _selectElementFromSidebar(String id, bool multiSelect) {
+    setState(() {
+      if (multiSelect) {
+        if (_selectedIds.contains(id)) {
+          _selectedIds.remove(id);
+        } else {
+          _selectedIds.add(id);
+        }
+      } else {
+        _selectedIds = {id};
+      }
     });
   }
 
@@ -770,7 +868,10 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     if (_tool == Tool.select) {
       // 1. Check if clicking on transform handles (resize or rotation)
       final selectedBounds = _currentSelectedBounds;
-      if (selectedBounds != null) {
+      final anySelectedLocked = _elements
+          .where((e) => _selectedIds.contains(e.id))
+          .any((e) => e.isLocked);
+      if (selectedBounds != null && !anySelectedLocked) {
         final box = selectedBounds.inflate(8.0 / _zoom);
         final handle = TransformHandle.hitTest(box, world, _zoom);
         if (handle != null) {
@@ -903,6 +1004,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
         break;
 
       case _DragMode.moving:
+        final selectedElements = _elements.where((e) => _selectedIds.contains(e.id)).toList();
+        if (selectedElements.isNotEmpty && selectedElements.every((e) => e.isLocked)) {
+          break;
+        }
+
         final initialBounds = _initialSelectedBounds;
         final beforeElements = _beforeGestureElements;
         if (initialBounds == null || beforeElements == null) {
@@ -1164,6 +1270,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     final world = _toWorld(d.localPosition);
     final hit = _hitTestTopmost(world);
     if (hit != null &&
+        !hit.isLocked &&
         (hit.type == ShapeType.text || hit.type == ShapeType.stickyNote)) {
       setState(() {
         _editingElementId = hit.id;
@@ -1190,6 +1297,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
         });
         return KeyEventResult.handled;
       }
+      return KeyEventResult.ignored;
+    }
+
+    // If an inner widget (e.g. TextField in LayersSidebar or search bar) has focus, let it handle keys
+    if (!node.hasPrimaryFocus) {
       return KeyEventResult.ignored;
     }
 
@@ -1305,6 +1417,18 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     }
     if (mod && key == LogicalKeyboardKey.bracketLeft) {
       _sendToBack();
+      return KeyEventResult.handled;
+    }
+
+    // Lock / Unlock Selected (Cmd/Ctrl + L)
+    if (mod && key == LogicalKeyboardKey.keyL) {
+      _toggleLockSelected();
+      return KeyEventResult.handled;
+    }
+
+    // Toggle Layers Sidebar (Alt + L)
+    if (kb.isAltPressed && key == LogicalKeyboardKey.keyL) {
+      setState(() => _isLayersOpen = !_isLayersOpen);
       return KeyEventResult.handled;
     }
 
@@ -1448,6 +1572,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                               hasElements: _elements.isNotEmpty,
                               hasFrames: _frames.isNotEmpty,
                               isPropertiesOpen: _isPropertiesOpen,
+                              isLayersOpen: _isLayersOpen,
                               onSelectTool: (t) => setState(() {
                                 _tool = t;
                                 if (t != Tool.select) _selectedIds.clear();
@@ -1461,6 +1586,8 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                               onStartPresentation: _startPresentation,
                               onToggleProperties: () => setState(
                                   () => _isPropertiesOpen = !_isPropertiesOpen),
+                              onToggleLayers: () => setState(
+                                  () => _isLayersOpen = !_isLayersOpen),
                             ),
                           ),
                         ),
@@ -1504,8 +1631,27 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       onDelete: _deleteSelected,
                       onAlign: _alignSelected,
                       onDistribute: _distributeSelected,
+                      onToggleLock: _toggleLockSelected,
                       onClose: () => setState(() => _isPropertiesOpen = false),
                     ),
+                  ),
+                ),
+
+              // 4. Floating Layers / Object Tree Sidebar
+              if (!_isPresentationMode && _isLayersOpen)
+                Positioned(
+                  top: 64,
+                  right: 12,
+                  child: LayersSidebar(
+                    elements: _elements,
+                    selectedIds: _selectedIds,
+                    onSelectElement: _selectElementFromSidebar,
+                    onToggleVisibility: _toggleVisibilityElement,
+                    onToggleLock: _toggleLockElement,
+                    onRenameElement: _renameElement,
+                    onDeleteElement: _deleteElementById,
+                    onReorderElements: _reorderElements,
+                    onClose: () => setState(() => _isLayersOpen = false),
                   ),
                 ),
 

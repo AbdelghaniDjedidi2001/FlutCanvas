@@ -31,6 +31,9 @@ class BoardElement {
     this.drawStyle = DrawStyle.clean,
     this.frameTitle,
     this.frameIndex,
+    this.isLocked = false,
+    this.isVisible = true,
+    this.customName,
   });
 
   final String id;
@@ -54,6 +57,39 @@ class BoardElement {
   final DrawStyle drawStyle;
   final String? frameTitle;
   final int? frameIndex;
+  final bool isLocked;
+  final bool isVisible;
+  final String? customName;
+
+  String get displayName {
+    if (customName != null && customName!.trim().isNotEmpty) {
+      return customName!;
+    }
+    if (frameTitle != null && frameTitle!.isNotEmpty) {
+      return frameTitle!;
+    }
+    if (text.isNotEmpty) {
+      final preview = text.replaceAll('\n', ' ').trim();
+      return preview.length > 20 ? '${preview.substring(0, 18)}...' : preview;
+    }
+    return switch (type) {
+      ShapeType.rectangle => 'Rectangle',
+      ShapeType.roundedRectangle => 'Rounded Box',
+      ShapeType.ellipse => 'Ellipse',
+      ShapeType.diamond => 'Diamond',
+      ShapeType.triangle => 'Triangle',
+      ShapeType.star => 'Star',
+      ShapeType.line => 'Line',
+      ShapeType.arrow => 'Arrow',
+      ShapeType.doubleArrow => 'Double Arrow',
+      ShapeType.pen => 'Sketch',
+      ShapeType.highlighter => 'Highlight',
+      ShapeType.text => 'Text',
+      ShapeType.stickyNote => 'Sticky Note',
+      ShapeType.frame => 'Frame',
+      ShapeType.image => 'Image',
+    };
+  }
 
   BoardElement copyWith({
     String? id,
@@ -77,9 +113,13 @@ class BoardElement {
     DrawStyle? drawStyle,
     String? frameTitle,
     int? frameIndex,
+    bool? isLocked,
+    bool? isVisible,
+    String? customName,
     bool clearStartBinding = false,
     bool clearEndBinding = false,
     bool clearGroupId = false,
+    bool clearCustomName = false,
   }) {
     return BoardElement(
       id: id ?? this.id,
@@ -104,6 +144,9 @@ class BoardElement {
       drawStyle: drawStyle ?? this.drawStyle,
       frameTitle: frameTitle ?? this.frameTitle,
       frameIndex: frameIndex ?? this.frameIndex,
+      isLocked: isLocked ?? this.isLocked,
+      isVisible: isVisible ?? this.isVisible,
+      customName: clearCustomName ? null : (customName ?? this.customName),
     );
   }
 
@@ -263,6 +306,9 @@ class BoardElement {
       'drawStyle': drawStyle.name,
       'frameTitle': frameTitle,
       'frameIndex': frameIndex,
+      'isLocked': isLocked,
+      'isVisible': isVisible,
+      'customName': customName,
     };
   }
 
@@ -320,6 +366,9 @@ class BoardElement {
       ),
       frameTitle: map['frameTitle'] as String?,
       frameIndex: map['frameIndex'] as int?,
+      isLocked: map['isLocked'] as bool? ?? false,
+      isVisible: map['isVisible'] as bool? ?? true,
+      customName: map['customName'] as String?,
     );
   }
 

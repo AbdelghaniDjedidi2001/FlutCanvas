@@ -82,49 +82,81 @@ class SelectionPainter {
     }
 
     final box = combined.inflate(8.0 / zoom);
+    final bool allLocked = selectedElements.every((e) => e.isLocked);
+    final bool anyLocked = selectedElements.any((e) => e.isLocked);
 
     // 1. Draw outer selection rectangle
     final boxPaint = Paint()
-      ..color = colors.selection
+      ..color = anyLocked ? Colors.amber.shade700 : colors.selection
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5 / zoom;
     canvas.drawRect(box, boxPaint);
 
-    // 2. Draw Rotation Handle Stem line
-    final rotHandlePos = Offset(box.center.dx, box.top - 20.0 / zoom);
-    final stemPaint = Paint()
-      ..color = colors.selection
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2 / zoom;
-    canvas.drawLine(Offset(box.center.dx, box.top), rotHandlePos, stemPaint);
+    if (anyLocked) {
+      // Draw Lock Badge at top-right of bounding box
+      final lockIcon = Icons.lock_rounded;
+      final iconPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(lockIcon.codePoint),
+          style: TextStyle(
+            inherit: false,
+            color: Colors.white,
+            fontSize: 10.0 / zoom,
+            fontFamily: lockIcon.fontFamily,
+            package: lockIcon.fontPackage,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
 
-    // 3. Draw 8 corner/edge resize handles & 1 circular rotation handle
-    final handleFill = Paint()..color = Colors.white;
-    final handleStroke = Paint()
-      ..color = colors.selection
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8 / zoom;
+      final badgeCenter = Offset(box.right, box.top);
+      final badgeBgPaint = Paint()
+        ..color = Colors.amber.shade800
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(badgeCenter, 8.5 / zoom, badgeBgPaint);
+      iconPainter.paint(
+        canvas,
+        badgeCenter - Offset(iconPainter.width / 2, iconPainter.height / 2),
+      );
+    }
 
-    final handleSize = 7.0 / zoom;
+    if (!allLocked) {
+      // 2. Draw Rotation Handle Stem line
+      final rotHandlePos = Offset(box.center.dx, box.top - 20.0 / zoom);
+      final stemPaint = Paint()
+        ..color = colors.selection
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2 / zoom;
+      canvas.drawLine(Offset(box.center.dx, box.top), rotHandlePos, stemPaint);
 
-    for (final handle in TransformHandle.getHandlesForRect(box, zoom)) {
-      if (handle.type == HandleType.rotation) {
-        canvas.drawCircle(handle.position, 4.5 / zoom, handleFill);
-        canvas.drawCircle(handle.position, 4.5 / zoom, handleStroke);
-      } else {
-        final handleRect = Rect.fromCenter(
-          center: handle.position,
-          width: handleSize,
-          height: handleSize,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(handleRect, Radius.circular(2.0 / zoom)),
-          handleFill,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(handleRect, Radius.circular(2.0 / zoom)),
-          handleStroke,
-        );
+      // 3. Draw 8 corner/edge resize handles & 1 circular rotation handle
+      final handleFill = Paint()..color = Colors.white;
+      final handleStroke = Paint()
+        ..color = colors.selection
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8 / zoom;
+
+      final handleSize = 7.0 / zoom;
+
+      for (final handle in TransformHandle.getHandlesForRect(box, zoom)) {
+        if (handle.type == HandleType.rotation) {
+          canvas.drawCircle(handle.position, 4.5 / zoom, handleFill);
+          canvas.drawCircle(handle.position, 4.5 / zoom, handleStroke);
+        } else {
+          final handleRect = Rect.fromCenter(
+            center: handle.position,
+            width: handleSize,
+            height: handleSize,
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(handleRect, Radius.circular(2.0 / zoom)),
+            handleFill,
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(handleRect, Radius.circular(2.0 / zoom)),
+            handleStroke,
+          );
+        }
       }
     }
 

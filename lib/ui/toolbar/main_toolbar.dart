@@ -22,6 +22,8 @@ class MainToolbar extends StatelessWidget {
     required this.onStartPresentation,
     required this.onToggleProperties,
     required this.isPropertiesOpen,
+    required this.onToggleLayers,
+    required this.isLayersOpen,
   });
 
   final Tool currentTool;
@@ -40,6 +42,8 @@ class MainToolbar extends StatelessWidget {
   final VoidCallback onStartPresentation;
   final VoidCallback onToggleProperties;
   final bool isPropertiesOpen;
+  final VoidCallback onToggleLayers;
+  final bool isLayersOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +152,27 @@ class MainToolbar extends StatelessWidget {
               ),
               _divider(scheme),
 
-              // 9. Properties Panel Toggle
+              // 9. Layers Sidebar Toggle
+              Tooltip(
+                message: 'Layers & Objects (Alt+L)',
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 18,
+                  style: isLayersOpen
+                      ? IconButton.styleFrom(
+                          backgroundColor: scheme.primaryContainer,
+                          foregroundColor: scheme.onPrimaryContainer,
+                        )
+                      : null,
+                  onPressed: onToggleLayers,
+                  icon: Icon(
+                    Icons.layers_outlined,
+                    color: isLayersOpen ? scheme.primary : null,
+                  ),
+                ),
+              ),
+
+              // 10. Properties Panel Toggle
               Tooltip(
                 message: 'Styling & Properties',
                 child: IconButton(

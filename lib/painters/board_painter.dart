@@ -52,6 +52,7 @@ class BoardPainter extends CustomPainter {
     ).inflate(80 / zoom);
 
     for (final el in elements) {
+      if (!el.isVisible) continue;
       if (el.bounds.overlaps(visible) || el.bounds.isEmpty) {
         ElementRenderer.draw(canvas, el, colors);
       }

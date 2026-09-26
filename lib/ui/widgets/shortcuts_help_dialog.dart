@@ -102,6 +102,7 @@ class ShortcutsHelpDialog extends StatelessWidget {
                         _ShortcutItem('Copy Selected', 'Ctrl / Cmd + C'),
                         _ShortcutItem('Paste', 'Ctrl / Cmd + V'),
                         _ShortcutItem('Duplicate', 'Ctrl / Cmd + D'),
+                        _ShortcutItem('Lock / Unlock Selected', 'Ctrl / Cmd + L'),
                         _ShortcutItem('Group Selected', 'Ctrl / Cmd + G'),
                         _ShortcutItem('Ungroup', 'Ctrl / Cmd + Shift + G'),
                         _ShortcutItem('Bring to Front', 'Ctrl / Cmd + ]'),
@@ -118,6 +119,8 @@ class ShortcutsHelpDialog extends StatelessWidget {
                       items: [
                         _ShortcutItem('Pan Canvas', 'Middle Drag / Space + Drag'),
                         _ShortcutItem('Zoom In / Out', 'Mouse Scroll Wheel'),
+                        _ShortcutItem('Toggle Layers / Object Tree', 'Alt + L'),
+                        _ShortcutItem('Toggle Smart Snapping Guides', 'S'),
                         _ShortcutItem('Toggle Grid Snapping', 'G'),
                         _ShortcutItem('Toggle Dark/Light Mode', 'Alt + Shift + D'),
                         _ShortcutItem('Start Presentation', 'F5'),

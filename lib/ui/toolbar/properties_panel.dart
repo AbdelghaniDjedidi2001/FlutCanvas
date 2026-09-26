@@ -35,6 +35,7 @@ class PropertiesPanel extends StatelessWidget {
     required this.onDelete,
     required this.onAlign,
     required this.onDistribute,
+    required this.onToggleLock,
     this.onClose,
   });
 
@@ -66,6 +67,7 @@ class PropertiesPanel extends StatelessWidget {
   final VoidCallback onDelete;
   final void Function(String alignment) onAlign;
   final void Function(String direction) onDistribute;
+  final VoidCallback onToggleLock;
   final VoidCallback? onClose;
 
   bool get _hasGroupedElements =>
@@ -412,6 +414,32 @@ class PropertiesPanel extends StatelessWidget {
                         onPressed: onSendToBack,
                         icon: const Icon(Icons.flip_to_back, size: 13),
                         label: const Text('Back', style: TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onToggleLock,
+                        icon: Icon(
+                          selectedElements.any((e) => e.isLocked)
+                              ? Icons.lock_open_rounded
+                              : Icons.lock_outline_rounded,
+                          size: 13,
+                        ),
+                        label: Text(
+                          selectedElements.any((e) => e.isLocked)
+                              ? 'Unlock (Ctrl+L)'
+                              : 'Lock (Ctrl+L)',
+                          style: const TextStyle(fontSize: 11),
+                        ),
                       ),
                     ),
                   ],
