@@ -1,22 +1,34 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../models/board_colors.dart';
+import '../models/board_document.dart';
 import '../models/board_element.dart';
 import '../painters/element_renderer.dart';
+import 'pdf_export_service.dart';
+import 'svg_export_service.dart';
+
+export 'pdf_export_service.dart' show PdfExportMode;
+export 'svg_export_service.dart';
 
 class ExportService {
-  /// Renders all elements onto a high-resolution PNG image
+  /// Renders all elements onto a high-resolution PNG image with progress feedback
   static Future<Uint8List?> renderToPng({
     required List<BoardElement> elements,
     required BoardColors colors,
     bool includeBackground = true,
     double scale = 2.0,
+    double? maxDimension,
     double padding = 40.0,
+    void Function(String status)? onProgress,
   }) async {
     if (elements.isEmpty) return null;
+
+    onProgress?.call('Calculating canvas bounds...');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
 
     // 1. Calculate entire bounding box
     Rect bounds = elements.first.bounds;
@@ -25,10 +37,21 @@ class ExportService {
     }
     bounds = bounds.inflate(padding);
 
-    final width = (bounds.width * scale).ceil().toDouble();
-    final height = (bounds.height * scale).ceil().toDouble();
+    var effectiveScale = scale;
+    if (maxDimension != null && maxDimension > 0) {
+      final maxSide = math.max(bounds.width, bounds.height);
+      if (maxSide * effectiveScale > maxDimension) {
+        effectiveScale = maxDimension / maxSide;
+      }
+    }
+
+    final width = (bounds.width * effectiveScale).ceil().toDouble();
+    final height = (bounds.height * effectiveScale).ceil().toDouble();
 
     if (width <= 0 || height <= 0) return null;
+
+    onProgress?.call('Rasterizing elements (${width.toInt()}x${height.toInt()})...');
+    await Future<void>.delayed(const Duration(milliseconds: 30));
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width, height));
@@ -41,7 +64,7 @@ class ExportService {
       );
     }
 
-    canvas.scale(scale);
+    canvas.scale(effectiveScale);
     canvas.translate(-bounds.left, -bounds.top);
 
     // Draw all elements in order
@@ -49,11 +72,44 @@ class ExportService {
       ElementRenderer.draw(canvas, el, colors);
     }
 
+    onProgress?.call('Encoding image data...');
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
     final picture = recorder.endRecording();
     final img = await picture.toImage(width.toInt(), height.toInt());
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
 
     return byteData?.buffer.asUint8List();
+  }
+
+  /// Exports elements to vector SVG string
+  static String exportToSvg({
+    required List<BoardElement> elements,
+    required BoardColors colors,
+    bool includeBackground = true,
+  }) {
+    return SvgExportService.exportToSvg(
+      elements: elements,
+      colors: colors,
+      includeBackground: includeBackground,
+    );
+  }
+
+  /// Exports elements/frames/boards to PDF document bytes with progress feedback
+  static Future<Uint8List> exportToPdf({
+    required List<BoardElement> elements,
+    required BoardColors colors,
+    List<BoardDocument>? allBoards,
+    PdfExportMode mode = PdfExportMode.currentBoard,
+    void Function(String status)? onProgress,
+  }) {
+    return PdfExportService.exportToPdf(
+      elements: elements,
+      colors: colors,
+      allBoards: allBoards,
+      mode: mode,
+      onProgress: onProgress,
+    );
   }
 
   /// Serializes board elements to formatted JSON string

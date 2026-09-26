@@ -39,6 +39,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_screenutil: ^5.9.3
   google_fonts: ^8.2.1
+  pdf: ^3.13.1
 
 dev_dependencies:
   flutter_test:

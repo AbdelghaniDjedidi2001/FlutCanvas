@@ -783,6 +783,10 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       builder: (_) => ExportDialog(
         elements: _elements,
         colors: BoardColors.of(context),
+        allBoards: _boards,
+        boardName: _boards.isNotEmpty && _activeBoardIndex < _boards.length
+            ? _boards[_activeBoardIndex].title
+            : null,
         onImport: (imported) {
           setState(() {
             _pushUndo(_elements);
