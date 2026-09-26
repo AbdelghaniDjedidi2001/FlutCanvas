@@ -8,6 +8,7 @@ import '../models/board_colors.dart';
 import '../models/board_document.dart';
 import '../models/board_element.dart';
 import '../models/connection_binding.dart';
+import '../models/connector_style.dart';
 import '../models/shape_type.dart';
 import '../models/snap_guide.dart';
 import '../models/stroke_fill_style.dart';
@@ -18,6 +19,7 @@ import '../painters/board_painter.dart';
 import '../painters/laser_painter.dart';
 import '../services/alignment_service.dart';
 import '../services/clipboard_service.dart';
+import '../services/connector_routing_service.dart';
 import '../services/history_manager.dart';
 import '../services/image_service.dart';
 import '../services/storage_service.dart';
@@ -90,6 +92,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   double _fontSize = 22.0;
   double _opacity = 1.0;
   double _rotation = 0.0;
+  ConnectorStyle _connectorStyle = ConnectorStyle.straight;
   bool _isPropertiesOpen = false;
   bool _isLayersOpen = false;
   bool _gridSnap = false;
@@ -718,6 +721,25 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     });
   }
 
+  void _updateConnectorStyle(ConnectorStyle s) {
+    setState(() {
+      _connectorStyle = s;
+      if (_selectedIds.isNotEmpty) {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            if (_selectedIds.contains(el.id) &&
+                (el.type == ShapeType.line ||
+                    el.type == ShapeType.arrow ||
+                    el.type == ShapeType.doubleArrow))
+              el.copyWith(connectorStyle: s)
+            else
+              el,
+        ];
+      }
+    });
+  }
+
   // ── Image Upload & Insertion ───────────────────────────────
   Future<void> _handleInsertImage() async {
     final picked = await ImageService.pickImage();
@@ -973,6 +995,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           fontSize: _fontSize,
           opacity: _opacity,
           startBinding: _draftStartBinding,
+          connectorStyle: _connectorStyle,
           frameTitle: shapeType == ShapeType.frame ? 'Slide $frameCount' : null,
           frameIndex: shapeType == ShapeType.frame ? frameCount : null,
         );
@@ -1269,14 +1292,23 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   void _onDoubleTapDown(TapDownDetails d) {
     final world = _toWorld(d.localPosition);
     final hit = _hitTestTopmost(world);
-    if (hit != null &&
-        !hit.isLocked &&
-        (hit.type == ShapeType.text || hit.type == ShapeType.stickyNote)) {
-      setState(() {
-        _editingElementId = hit.id;
-        _editingScreenPos = _toScreen(hit.start);
-        _isEditingSticky = hit.type == ShapeType.stickyNote;
-      });
+    if (hit != null && !hit.isLocked) {
+      if (hit.type == ShapeType.text || hit.type == ShapeType.stickyNote) {
+        setState(() {
+          _editingElementId = hit.id;
+          _editingScreenPos = _toScreen(hit.start);
+          _isEditingSticky = hit.type == ShapeType.stickyNote;
+        });
+      } else if (hit.type == ShapeType.line ||
+          hit.type == ShapeType.arrow ||
+          hit.type == ShapeType.doubleArrow) {
+        final route = ConnectorRoutingService.computeRoute(hit);
+        setState(() {
+          _editingElementId = hit.id;
+          _editingScreenPos = _toScreen(route.midpoint);
+          _isEditingSticky = false;
+        });
+      }
     }
   }
 
@@ -1623,6 +1655,27 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       onFontSizeChanged: _updateFontSize,
                       onOpacityChanged: _updateOpacity,
                       onRotationChanged: _updateRotation,
+                      currentConnectorStyle: selectedElements.isNotEmpty &&
+                              (selectedElements.first.type == ShapeType.line ||
+                                  selectedElements.first.type == ShapeType.arrow ||
+                                  selectedElements.first.type == ShapeType.doubleArrow)
+                          ? selectedElements.first.connectorStyle
+                          : _connectorStyle,
+                      onConnectorStyleChanged: _updateConnectorStyle,
+                      onEditConnectorLabel: () {
+                        final connector = selectedElements.where((e) =>
+                            e.type == ShapeType.line ||
+                            e.type == ShapeType.arrow ||
+                            e.type == ShapeType.doubleArrow).firstOrNull;
+                        if (connector != null) {
+                          final route = ConnectorRoutingService.computeRoute(connector);
+                          setState(() {
+                            _editingElementId = connector.id;
+                            _editingScreenPos = _toScreen(route.midpoint);
+                            _isEditingSticky = false;
+                          });
+                        }
+                      },
                       onGroup: _groupSelected,
                       onUngroup: _ungroupSelected,
                       onBringToFront: _bringToFront,
@@ -1727,43 +1780,60 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
               // 7. Floating In-Canvas Text Editor
               if (_editingElementId != null && _editingScreenPos != null)
-                InlineTextEditor(
-                  initialText: _elements
-                      .firstWhere((e) => e.id == _editingElementId,
-                          orElse: () => _elements.first)
-                      .text,
-                  fontSize: _fontSize,
-                  color: _color,
-                  screenPosition: _editingScreenPos!,
-                  isStickyNote: _isEditingSticky,
-                  onSubmitted: (newText) {
-                    setState(() {
-                      _pushUndo(_elements);
-                      _elements = [
-                        for (final el in _elements)
-                          if (el.id == _editingElementId)
-                            el.copyWith(text: newText)
-                          else
-                            el,
-                      ];
+                Builder(builder: (context) {
+                  final editingEl = _elements.firstWhere(
+                    (e) => e.id == _editingElementId,
+                    orElse: () => _elements.first,
+                  );
+                  final isConnector = editingEl.type == ShapeType.line ||
+                      editingEl.type == ShapeType.arrow ||
+                      editingEl.type == ShapeType.doubleArrow;
+                  final initialText = isConnector
+                      ? (editingEl.label ?? '')
+                      : editingEl.text;
+
+                  return InlineTextEditor(
+                    initialText: initialText,
+                    fontSize: isConnector ? 16.0 : _fontSize,
+                    color: isConnector ? editingEl.color : _color,
+                    screenPosition: _editingScreenPos!,
+                    isStickyNote: _isEditingSticky,
+                    onSubmitted: (newText) {
+                      setState(() {
+                        _pushUndo(_elements);
+                        _elements = [
+                          for (final el in _elements)
+                            if (el.id == _editingElementId)
+                              isConnector
+                                  ? el.copyWith(
+                                      label: newText.trim().isEmpty
+                                          ? null
+                                          : newText.trim(),
+                                      clearLabel: newText.trim().isEmpty,
+                                    )
+                                  : el.copyWith(text: newText)
+                            else
+                              el,
+                        ];
+                        _editingElementId = null;
+                        _editingScreenPos = null;
+                      });
+                    },
+                    onCanceled: () => setState(() {
+                      final el = _elements.firstWhere(
+                        (e) => e.id == _editingElementId,
+                        orElse: () => _elements.first,
+                      );
+                      if (!isConnector && el.text.trim().isEmpty) {
+                        _elements = _elements
+                            .where((e) => e.id != _editingElementId)
+                            .toList();
+                      }
                       _editingElementId = null;
                       _editingScreenPos = null;
-                    });
-                  },
-                  onCanceled: () => setState(() {
-                    final el = _elements.firstWhere(
-                      (e) => e.id == _editingElementId,
-                      orElse: () => _elements.first,
-                    );
-                    if (el.text.trim().isEmpty) {
-                      _elements = _elements
-                          .where((e) => e.id != _editingElementId)
-                          .toList();
-                    }
-                    _editingElementId = null;
-                    _editingScreenPos = null;
-                  }),
-                ),
+                    }),
+                  );
+                }),
 
               // 8. Full-screen Presentation Slides Overlay
               if (_isPresentationMode)

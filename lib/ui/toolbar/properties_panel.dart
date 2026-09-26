@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/board_colors.dart';
 import '../../models/board_element.dart';
+import '../../models/connector_style.dart';
+import '../../models/shape_type.dart';
 import '../../models/stroke_fill_style.dart';
 
 class PropertiesPanel extends StatelessWidget {
@@ -18,6 +20,7 @@ class PropertiesPanel extends StatelessWidget {
     required this.currentFontSize,
     required this.currentOpacity,
     required this.currentRotation,
+    this.currentConnectorStyle = ConnectorStyle.straight,
     required this.onColorChanged,
     required this.onFillColorChanged,
     required this.onStrokeWidthChanged,
@@ -27,6 +30,8 @@ class PropertiesPanel extends StatelessWidget {
     required this.onFontSizeChanged,
     required this.onOpacityChanged,
     required this.onRotationChanged,
+    required this.onConnectorStyleChanged,
+    required this.onEditConnectorLabel,
     required this.onGroup,
     required this.onUngroup,
     required this.onBringToFront,
@@ -49,6 +54,7 @@ class PropertiesPanel extends StatelessWidget {
   final double currentFontSize;
   final double currentOpacity;
   final double currentRotation;
+  final ConnectorStyle currentConnectorStyle;
 
   final void Function(Color color) onColorChanged;
   final void Function(Color color) onFillColorChanged;
@@ -59,6 +65,8 @@ class PropertiesPanel extends StatelessWidget {
   final void Function(double size) onFontSizeChanged;
   final void Function(double opacity) onOpacityChanged;
   final void Function(double radians) onRotationChanged;
+  final void Function(ConnectorStyle style) onConnectorStyleChanged;
+  final VoidCallback onEditConnectorLabel;
   final VoidCallback onGroup;
   final VoidCallback onUngroup;
   final VoidCallback onBringToFront;
@@ -69,6 +77,12 @@ class PropertiesPanel extends StatelessWidget {
   final void Function(String direction) onDistribute;
   final VoidCallback onToggleLock;
   final VoidCallback? onClose;
+
+  bool get _hasConnectors => selectedElements.isEmpty ||
+      selectedElements.any((e) =>
+          e.type == ShapeType.line ||
+          e.type == ShapeType.arrow ||
+          e.type == ShapeType.doubleArrow);
 
   bool get _hasGroupedElements =>
       selectedElements.any((e) => e.groupId != null);
@@ -270,6 +284,33 @@ class PropertiesPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 9),
+
+              // 4.5 Connector Routing (when connectors are present/selected)
+              if (_hasConnectors) ...[
+                const Text('Connector Routing', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    _connectorStyleOption(ConnectorStyle.straight, Icons.straighten_rounded, 'Straight', scheme),
+                    const SizedBox(width: 4),
+                    _connectorStyleOption(ConnectorStyle.orthogonal, Icons.call_split_rounded, 'Elbow', scheme),
+                    const SizedBox(width: 4),
+                    _connectorStyleOption(ConnectorStyle.curved, Icons.gesture_rounded, 'Curved', scheme),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    minimumSize: const Size.fromHeight(26),
+                  ),
+                  onPressed: onEditConnectorLabel,
+                  icon: const Icon(Icons.label_outline_rounded, size: 13),
+                  label: const Text('Add / Edit Line Label', style: TextStyle(fontSize: 11)),
+                ),
+                const SizedBox(height: 9),
+              ],
 
               // 5. Text Size
               const Text('Font Size', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
@@ -644,6 +685,53 @@ class PropertiesPanel extends StatelessWidget {
             ),
           ),
           child: Icon(icon, size: 15, color: isSelected ? scheme.primary : Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _connectorStyleOption(
+    ConnectorStyle style,
+    IconData icon,
+    String label,
+    ColorScheme scheme,
+  ) {
+    final isSelected = currentConnectorStyle == style;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onConnectorStyleChanged(style),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? scheme.primaryContainer : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isSelected
+                  ? scheme.primary.withValues(alpha: 0.6)
+                  : scheme.outlineVariant.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 11,
+                color: isSelected ? scheme.primary : scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

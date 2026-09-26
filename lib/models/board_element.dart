@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'connection_binding.dart';
+import 'connector_style.dart';
 import 'shape_type.dart';
 import 'stroke_fill_style.dart';
+import '../services/connector_routing_service.dart';
 
 @immutable
 class BoardElement {
@@ -34,6 +36,8 @@ class BoardElement {
     this.isLocked = false,
     this.isVisible = true,
     this.customName,
+    this.connectorStyle = ConnectorStyle.straight,
+    this.label,
   });
 
   final String id;
@@ -60,6 +64,8 @@ class BoardElement {
   final bool isLocked;
   final bool isVisible;
   final String? customName;
+  final ConnectorStyle connectorStyle;
+  final String? label;
 
   String get displayName {
     if (customName != null && customName!.trim().isNotEmpty) {
@@ -67,6 +73,10 @@ class BoardElement {
     }
     if (frameTitle != null && frameTitle!.isNotEmpty) {
       return frameTitle!;
+    }
+    if (label != null && label!.trim().isNotEmpty) {
+      final preview = label!.replaceAll('\n', ' ').trim();
+      return preview.length > 20 ? '${preview.substring(0, 18)}...' : preview;
     }
     if (text.isNotEmpty) {
       final preview = text.replaceAll('\n', ' ').trim();
@@ -116,10 +126,13 @@ class BoardElement {
     bool? isLocked,
     bool? isVisible,
     String? customName,
+    ConnectorStyle? connectorStyle,
+    String? label,
     bool clearStartBinding = false,
     bool clearEndBinding = false,
     bool clearGroupId = false,
     bool clearCustomName = false,
+    bool clearLabel = false,
   }) {
     return BoardElement(
       id: id ?? this.id,
@@ -147,6 +160,8 @@ class BoardElement {
       isLocked: isLocked ?? this.isLocked,
       isVisible: isVisible ?? this.isVisible,
       customName: clearCustomName ? null : (customName ?? this.customName),
+      connectorStyle: connectorStyle ?? this.connectorStyle,
+      label: clearLabel ? null : (label ?? this.label),
     );
   }
 
@@ -186,6 +201,23 @@ class BoardElement {
       var minX = points.first.dx, maxX = minX;
       var minY = points.first.dy, maxY = minY;
       for (final p in points) {
+        minX = math.min(minX, p.dx);
+        maxX = math.max(maxX, p.dx);
+        minY = math.min(minY, p.dy);
+        maxY = math.max(maxY, p.dy);
+      }
+      return Rect.fromLTRB(minX, minY, maxX, maxY);
+    }
+
+    if (type == ShapeType.line ||
+        type == ShapeType.arrow ||
+        type == ShapeType.doubleArrow) {
+      final route = ConnectorRoutingService.computeRoute(this);
+      var minX = math.min(start.dx, end.dx);
+      var maxX = math.max(start.dx, end.dx);
+      var minY = math.min(start.dy, end.dy);
+      var maxY = math.max(start.dy, end.dy);
+      for (final p in route.waypoints) {
         minX = math.min(minX, p.dx);
         maxX = math.max(maxX, p.dx);
         minY = math.min(minY, p.dy);
@@ -264,7 +296,7 @@ class BoardElement {
       case ShapeType.line:
       case ShapeType.arrow:
       case ShapeType.doubleArrow:
-        return _distToSegment(testPoint, start, end) <= t;
+        return ConnectorRoutingService.hitTestRoute(this, testPoint, t);
 
       case ShapeType.pen:
       case ShapeType.highlighter:
@@ -309,6 +341,8 @@ class BoardElement {
       'isLocked': isLocked,
       'isVisible': isVisible,
       'customName': customName,
+      'connectorStyle': connectorStyle.name,
+      'label': label,
     };
   }
 
@@ -369,6 +403,11 @@ class BoardElement {
       isLocked: map['isLocked'] as bool? ?? false,
       isVisible: map['isVisible'] as bool? ?? true,
       customName: map['customName'] as String?,
+      connectorStyle: ConnectorStyle.values.firstWhere(
+        (e) => e.name == map['connectorStyle'],
+        orElse: () => ConnectorStyle.straight,
+      ),
+      label: map['label'] as String?,
     );
   }
 

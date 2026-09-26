@@ -6,6 +6,7 @@ import '../models/board_colors.dart';
 import '../models/board_element.dart';
 import '../models/shape_type.dart';
 import '../models/stroke_fill_style.dart';
+import '../services/connector_routing_service.dart';
 import '../services/image_service.dart';
 import 'rough_sketch_painter.dart';
 
@@ -97,17 +98,9 @@ class ElementRenderer {
         break;
 
       case ShapeType.line:
-        _drawStrokedPath(
-          canvas,
-          Path()..moveTo(el.start.dx, el.start.dy)..lineTo(el.end.dx, el.end.dy),
-          strokePaint,
-          el.strokeStyle,
-        );
-        break;
-
       case ShapeType.arrow:
       case ShapeType.doubleArrow:
-        _drawArrow(canvas, el, strokePaint, strokeColor);
+        _drawConnector(canvas, el, strokePaint, strokeColor, colors);
         break;
 
       case ShapeType.pen:
@@ -219,15 +212,19 @@ class ElementRenderer {
     }
   }
 
-  static void _drawArrow(Canvas canvas, BoardElement el, Paint strokePaint, Color color) {
-    _drawStrokedPath(
-      canvas,
-      Path()..moveTo(el.start.dx, el.start.dy)..lineTo(el.end.dx, el.end.dy),
-      strokePaint,
-      el.strokeStyle,
-    );
+  static void _drawConnector(
+    Canvas canvas,
+    BoardElement el,
+    Paint strokePaint,
+    Color color,
+    BoardColors colors,
+  ) {
+    final route = ConnectorRoutingService.computeRoute(el);
 
-    final angle = math.atan2(el.end.dy - el.start.dy, el.end.dx - el.start.dx);
+    // 1. Draw the routed path (straight / orthogonal elbow / curved bezier)
+    _drawStrokedPath(canvas, route.path, strokePaint, el.strokeStyle);
+
+    // 2. Draw Arrow Heads (if arrow or doubleArrow)
     final headLen = math.max(el.strokeWidth * 4.5, 14.0);
     const spread = 0.48;
 
@@ -238,18 +235,83 @@ class ElementRenderer {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    for (final s in [-spread, spread]) {
-      final tip = el.end - Offset(math.cos(angle + s), math.sin(angle + s)) * headLen;
-      canvas.drawLine(el.end, tip, headPaint);
+    if (el.type == ShapeType.arrow || el.type == ShapeType.doubleArrow) {
+      final angle = route.endAngle;
+      for (final s in [-spread, spread]) {
+        final tip = el.end -
+            Offset(math.cos(angle + s), math.sin(angle + s)) * headLen;
+        canvas.drawLine(el.end, tip, headPaint);
+      }
     }
 
     if (el.type == ShapeType.doubleArrow) {
-      final startAngle = angle + math.pi;
+      final startAngle = route.startAngle;
       for (final s in [-spread, spread]) {
-        final tip = el.start - Offset(math.cos(startAngle + s), math.sin(startAngle + s)) * headLen;
+        final tip = el.start -
+            Offset(math.cos(startAngle + s), math.sin(startAngle + s)) * headLen;
         canvas.drawLine(el.start, tip, headPaint);
       }
     }
+
+    // 3. Draw Connector Label (if present)
+    final labelText = el.label?.trim() ??
+        (el.type != ShapeType.text && el.text.isNotEmpty
+            ? el.text.trim()
+            : '');
+    if (labelText.isNotEmpty) {
+      _drawConnectorLabel(
+          canvas, route.midpoint, labelText, el, color, colors);
+    }
+  }
+
+  static void _drawConnectorLabel(
+    Canvas canvas,
+    Offset position,
+    String labelText,
+    BoardElement el,
+    Color textColor,
+    BoardColors colors,
+  ) {
+    final fontSize = (el.fontSize * 0.75).clamp(11.0, 20.0);
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: labelText,
+        style: GoogleFonts.inter(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    )..layout();
+
+    const paddingH = 8.0;
+    const paddingV = 4.0;
+    final labelRect = Rect.fromCenter(
+      center: position,
+      width: textPainter.width + paddingH * 2,
+      height: textPainter.height + paddingV * 2,
+    );
+
+    // Label pill background & subtle border
+    final bgPaint = Paint()
+      ..color = colors.background
+      ..style = PaintingStyle.fill;
+    final borderPaint = Paint()
+      ..color = colors.grid.withValues(alpha: 0.85)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    final rrect =
+        RRect.fromRectAndRadius(labelRect, const Radius.circular(6));
+    canvas.drawRRect(rrect, bgPaint);
+    canvas.drawRRect(rrect, borderPaint);
+
+    textPainter.paint(
+      canvas,
+      Offset(labelRect.left + paddingH, labelRect.top + paddingV),
+    );
   }
 
   static void _drawFreehand(Canvas canvas, BoardElement el, Paint strokePaint, Color color) {
