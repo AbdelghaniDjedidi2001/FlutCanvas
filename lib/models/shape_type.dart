@@ -14,4 +14,5 @@ enum ShapeType {
   stickyNote,
   image,
   frame,
+  codeBlock,
 }

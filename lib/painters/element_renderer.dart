@@ -8,6 +8,8 @@ import '../models/shape_type.dart';
 import '../models/stroke_fill_style.dart';
 import '../services/connector_routing_service.dart';
 import '../services/image_service.dart';
+import '../services/markdown_text_service.dart';
+import '../services/syntax_highlighter_service.dart';
 import 'rough_sketch_painter.dart';
 
 class ElementRenderer {
@@ -113,6 +115,10 @@ class ElementRenderer {
 
       case ShapeType.stickyNote:
         _drawStickyNote(canvas, el, colors);
+        break;
+
+      case ShapeType.codeBlock:
+        _drawCodeBlock(canvas, el, colors);
         break;
 
       case ShapeType.image:
@@ -337,16 +343,36 @@ class ElementRenderer {
   }
 
   static void _drawText(Canvas canvas, BoardElement el, Color color) {
-    final content = el.text.isEmpty ? 'Type text...' : el.text;
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: content,
-        style: GoogleFonts.caveat(
-          color: el.text.isEmpty ? color.withValues(alpha: 0.4) : color,
-          fontSize: el.fontSize,
-          fontWeight: FontWeight.w600,
+    if (el.text.isEmpty) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: 'Type text...',
+          style: GoogleFonts.caveat(
+            color: color.withValues(alpha: 0.4),
+            fontSize: el.fontSize,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-      ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(canvas, el.start + const Offset(4, 4));
+      return;
+    }
+
+    final baseStyle = GoogleFonts.caveat(
+      color: color,
+      fontSize: el.fontSize,
+      fontWeight: FontWeight.w600,
+    );
+
+    final span = MarkdownTextService.parseMarkdown(
+      text: el.text,
+      baseStyle: baseStyle,
+      isDark: color.computeLuminance() > 0.5,
+    );
+
+    final textPainter = TextPainter(
+      text: span,
       textDirection: TextDirection.ltr,
     )..layout();
 
@@ -395,25 +421,199 @@ class ElementRenderer {
       borderPaint,
     );
 
-    // Sticky note text
+    // Sticky note text with markdown
     if (el.text.isNotEmpty) {
       final isDarkNote = noteColor.computeLuminance() < 0.35;
+      final baseColor = isDarkNote ? const Color(0xFFF8F9FA) : const Color(0xFF212529);
+
+      final baseStyle = GoogleFonts.caveat(
+        color: baseColor,
+        fontSize: el.fontSize,
+        fontWeight: FontWeight.w500,
+      );
+
+      final span = MarkdownTextService.parseMarkdown(
+        text: el.text,
+        baseStyle: baseStyle,
+        isDark: isDarkNote,
+      );
+
       final textPainter = TextPainter(
-        text: TextSpan(
-          text: el.text,
-          style: GoogleFonts.caveat(
-            color: isDarkNote ? const Color(0xFFF8F9FA) : const Color(0xFF212529),
-            fontSize: el.fontSize,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        text: span,
         textDirection: TextDirection.ltr,
-        maxLines: 12,
+        maxLines: 14,
         ellipsis: '...',
       )..layout(maxWidth: math.max(rect.width - 20, 20));
 
       textPainter.paint(canvas, rect.topLeft + const Offset(10, 10));
     }
+  }
+
+  static void _drawCodeBlock(Canvas canvas, BoardElement el, BoardColors colors) {
+    final rect = el.bounds;
+    final isDark = colors.isDark || el.fillColor.computeLuminance() < 0.4;
+    final theme = isDark ? SyntaxThemeColors.dark : SyntaxThemeColors.light;
+
+    final cardBg = el.fillColor != Colors.transparent ? el.fillColor : theme.background;
+    final cardBorder = el.color != Colors.transparent
+        ? colors.display(el.color).withValues(alpha: 0.8 * el.opacity)
+        : theme.headerBorder;
+
+    // 1. Drop Shadow
+    final shadowPaint = Paint()
+      ..color = const Color(0x22000000)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect.shift(const Offset(2, 4)), const Radius.circular(10)),
+      shadowPaint,
+    );
+
+    // 2. Card Body
+    final bodyPaint = Paint()
+      ..color = cardBg.withValues(alpha: el.opacity)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(8)),
+      bodyPaint,
+    );
+
+    // 3. Card Border
+    final borderPaint = Paint()
+      ..color = cardBorder
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(el.strokeWidth, 1.2);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(8)),
+      borderPaint,
+    );
+
+    // 4. Header Bar (32px high)
+    const headerHeight = 32.0;
+    final headerRect = Rect.fromLTWH(rect.left, rect.top, rect.width, headerHeight);
+    final headerPaint = Paint()
+      ..color = theme.headerBackground.withValues(alpha: el.opacity)
+      ..style = PaintingStyle.fill;
+
+    // Clip top corners of header
+    final headerPath = Path()
+      ..addRRect(RRect.fromRectAndCorners(
+        headerRect,
+        topLeft: const Radius.circular(8),
+        topRight: const Radius.circular(8),
+      ));
+    canvas.drawPath(headerPath, headerPaint);
+
+    final dividerPaint = Paint()
+      ..color = theme.headerBorder
+      ..strokeWidth = 1.0;
+    canvas.drawLine(
+      Offset(rect.left, rect.top + headerHeight),
+      Offset(rect.right, rect.top + headerHeight),
+      dividerPaint,
+    );
+
+    // macOS Window Dots (Red, Yellow, Green)
+    final dotY = rect.top + headerHeight / 2;
+    final dots = [
+      (const Color(0xFFFF5F56), rect.left + 14.0),
+      (const Color(0xFFFFBD2E), rect.left + 26.0),
+      (const Color(0xFF27C93F), rect.left + 38.0),
+    ];
+    for (final (dotColor, dotX) in dots) {
+      canvas.drawCircle(Offset(dotX, dotY), 4.5, Paint()..color = dotColor);
+    }
+
+    // Language Badge
+    final langName = SyntaxHighlighterService.getDisplayName(el.codeLanguage);
+    final langPainter = TextPainter(
+      text: TextSpan(
+        text: langName,
+        style: GoogleFonts.jetBrainsMono(
+          color: theme.foreground.withValues(alpha: 0.75),
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final badgeWidth = langPainter.width + 12;
+    final badgeLeft = rect.right - badgeWidth - 10;
+    final badgeRect = Rect.fromLTWH(badgeLeft, rect.top + 6, badgeWidth, 20);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(badgeRect, const Radius.circular(4)),
+      Paint()..color = theme.background.withValues(alpha: 0.6),
+    );
+    langPainter.paint(canvas, Offset(badgeLeft + 6, rect.top + 9));
+
+    // 5. Code Content & Line Numbers
+    final codeText = el.text.isNotEmpty
+        ? el.text
+        : '// Code snippet\nvoid main() {\n  print("Hello from FlutCanvas!");\n}';
+    final lines = codeText.split('\n');
+
+    final codeTop = rect.top + headerHeight + 8;
+    final baseStyle = GoogleFonts.jetBrainsMono(
+      fontSize: el.fontSize * 0.72,
+      height: 1.45,
+    );
+
+    var leftMargin = rect.left + 12.0;
+
+    // Line Numbers
+    if (el.showLineNumbers) {
+      final lineNumBuffer = StringBuffer();
+      for (var i = 1; i <= lines.length; i++) {
+        lineNumBuffer.writeln(i.toString());
+      }
+
+      final lineNumPainter = TextPainter(
+        text: TextSpan(
+          text: lineNumBuffer.toString().trimRight(),
+          style: baseStyle.copyWith(
+            color: theme.lineNumbers,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      lineNumPainter.paint(canvas, Offset(rect.left + 10, codeTop));
+
+      final lineNumColWidth = math.max(lineNumPainter.width + 16, 28.0);
+      leftMargin = rect.left + lineNumColWidth + 10;
+
+      // Vertical line separator
+      canvas.drawLine(
+        Offset(rect.left + lineNumColWidth + 2, rect.top + headerHeight),
+        Offset(rect.left + lineNumColWidth + 2, rect.bottom),
+        Paint()
+          ..color = theme.lineNumbersBorder.withValues(alpha: 0.6)
+          ..strokeWidth = 1.0,
+      );
+    }
+
+    // Syntax Highlighted Code
+    final highlightedSpan = SyntaxHighlighterService.highlight(
+      code: codeText,
+      language: el.codeLanguage ?? 'dart',
+      baseStyle: baseStyle.copyWith(color: theme.foreground),
+      theme: theme,
+    );
+
+    final codePainter = TextPainter(
+      text: highlightedSpan,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: math.max(rect.right - leftMargin - 10, 50));
+
+    // Clip code inside element boundaries
+    canvas.save();
+    canvas.clipRRect(RRect.fromRectAndRadius(
+      Rect.fromLTWH(rect.left, rect.top + headerHeight, rect.width, rect.height - headerHeight),
+      const Radius.circular(8),
+    ));
+    codePainter.paint(canvas, Offset(leftMargin, codeTop));
+    canvas.restore();
   }
 
   static void _drawImage(Canvas canvas, BoardElement el) {

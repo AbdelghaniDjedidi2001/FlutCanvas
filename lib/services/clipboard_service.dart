@@ -6,6 +6,7 @@ import '../models/shape_type.dart';
 import 'excalidraw_import_service.dart';
 import 'export_service.dart';
 import 'mermaid_parser_service.dart';
+import 'syntax_highlighter_service.dart';
 
 class PasteResult {
   final List<BoardElement> elements;
@@ -109,10 +110,52 @@ class ClipboardService {
         );
       }
 
-      // 4. Plain Text -> Create Sticky Note or Text element
+      // 4. Markdown Code Fence (```dart ... ```) or Code Snippet
+      final codeFenceMatch = RegExp(r'^```(\w+)?\n([\s\S]*?)```$').firstMatch(text.trim());
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      if (codeFenceMatch != null) {
+        final lang = codeFenceMatch.group(1)?.toLowerCase() ?? 'dart';
+        final code = codeFenceMatch.group(2)?.trim() ?? '';
+        final codeEl = BoardElement(
+          id: 'code_$now',
+          type: ShapeType.codeBlock,
+          start: targetCanvasPosition,
+          end: targetCanvasPosition + const Offset(360, 220),
+          text: code,
+          codeLanguage: lang,
+          color: Colors.transparent,
+          fillColor: Colors.transparent,
+          showLineNumbers: true,
+        );
+        return PasteResult(
+          elements: [codeEl],
+          sourceDescription: '${SyntaxHighlighterService.getDisplayName(lang)} Code Block',
+        );
+      }
+
+      if (_looksLikeCode(text)) {
+        final lang = _detectLanguage(text);
+        final codeEl = BoardElement(
+          id: 'code_$now',
+          type: ShapeType.codeBlock,
+          start: targetCanvasPosition,
+          end: targetCanvasPosition + const Offset(360, 220),
+          text: text,
+          codeLanguage: lang,
+          color: Colors.transparent,
+          fillColor: Colors.transparent,
+          showLineNumbers: true,
+        );
+        return PasteResult(
+          elements: [codeEl],
+          sourceDescription: '${SyntaxHighlighterService.getDisplayName(lang)} Code Block',
+        );
+      }
+
+      // 5. Plain Text -> Create Sticky Note or Text element
       if (text.length > 3 || text.contains('\n')) {
         final isMultiLine = text.contains('\n') || text.length > 50;
-        final now = DateTime.now().millisecondsSinceEpoch;
 
         if (isMultiLine) {
           // Create Sticky Note
@@ -176,5 +219,57 @@ class ClipboardService {
       color: Colors.transparent,
       imageBase64: base64Image,
     );
+  }
+
+  static bool _looksLikeCode(String text) {
+    final trimmed = text.trim();
+    if (!trimmed.contains('\n') && trimmed.length < 40) return false;
+
+    final codePatterns = [
+      RegExp(r'^(import\s+|export\s+|from\s+|package\s+|using\s+|#include\s+)', multiLine: true),
+      RegExp(r'^(class\s+\w+|interface\s+\w+|struct\s+\w+|enum\s+\w+)', multiLine: true),
+      RegExp(r'^(def\s+\w+|function\s+\w+|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=)', multiLine: true),
+      RegExp(r'^(public\s+|private\s+|protected\s+|void\s+|async\s+)', multiLine: true),
+      RegExp(r'^(SELECT\s+.*?\s+FROM\s+|CREATE\s+TABLE\s+|INSERT\s+INTO\s+)', caseSensitive: false, multiLine: true),
+      RegExp(r'^(<!DOCTYPE\s+html|<html|<div|<script|<style)', caseSensitive: false, multiLine: true),
+      RegExp(r'([{};]\s*\n|\b(console\.log|print\(|System\.out\.println))'),
+    ];
+
+    for (final p in codePatterns) {
+      if (p.hasMatch(trimmed)) return true;
+    }
+    return false;
+  }
+
+  static String _detectLanguage(String text) {
+    final lower = text.toLowerCase();
+    if (lower.contains('void main()') || lower.contains('widget build') || lower.contains('import \'package:')) {
+      return 'dart';
+    }
+    if (lower.contains('def ') || lower.contains('import pandas') || lower.contains('import numpy') || lower.contains('__init__') || (lower.contains('print(') && !lower.contains(';'))) {
+      return 'python';
+    }
+    if (lower.contains('select ') && lower.contains(' from ') || lower.contains('create table')) {
+      return 'sql';
+    }
+    if (lower.contains('<!doctype html') || lower.contains('<div') || lower.contains('<html>')) {
+      return 'html';
+    }
+    if (lower.contains('interface ') || lower.contains(': string') || lower.contains(': number')) {
+      return 'typescript';
+    }
+    if (lower.contains('const ') || lower.contains('let ') || lower.contains('console.log') || lower.contains('function(')) {
+      return 'javascript';
+    }
+    if ((lower.startsWith('{') && lower.endsWith('}')) || (lower.startsWith('[') && lower.endsWith(']'))) {
+      return 'json';
+    }
+    if (lower.contains('fn main()') || lower.contains('let mut ') || lower.contains('impl ')) {
+      return 'rust';
+    }
+    if (lower.contains('package main') || lower.contains('func ')) {
+      return 'go';
+    }
+    return 'dart';
   }
 }

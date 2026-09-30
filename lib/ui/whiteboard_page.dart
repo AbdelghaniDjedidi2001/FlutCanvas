@@ -24,6 +24,7 @@ import '../services/connector_routing_service.dart';
 import '../services/history_manager.dart';
 import '../services/image_service.dart';
 import '../services/storage_service.dart';
+import '../services/syntax_highlighter_service.dart';
 import 'inline_text_editor.dart';
 import 'presentation/presentation_overlay.dart';
 import 'toolbar/board_tabs_bar.dart';
@@ -95,6 +96,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   double _opacity = 1.0;
   double _rotation = 0.0;
   ConnectorStyle _connectorStyle = ConnectorStyle.straight;
+  String _codeLanguage = 'dart';
   bool _isPropertiesOpen = false;
   bool _isLayersOpen = false;
   bool _gridSnap = false;
@@ -133,6 +135,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   String? _editingElementId;
   Offset? _editingScreenPos;
   bool _isEditingSticky = false;
+  bool _isEditingCode = false;
 
   // Presentation Mode
   bool _isPresentationMode = false;
@@ -770,6 +773,69 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     });
   }
 
+  void _updateCodeLanguage(String lang) {
+    setState(() {
+      _codeLanguage = lang;
+      if (_selectedIds.isNotEmpty) {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            _selectedIds.contains(el.id) && el.type == ShapeType.codeBlock
+                ? el.copyWith(codeLanguage: lang)
+                : el,
+        ];
+      }
+    });
+  }
+
+  void _toggleLineNumbers(bool show) {
+    setState(() {
+      if (_selectedIds.isNotEmpty) {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            _selectedIds.contains(el.id) && el.type == ShapeType.codeBlock
+                ? el.copyWith(showLineNumbers: show)
+                : el,
+        ];
+      }
+    });
+  }
+
+  void _copyCode() {
+    final codeBlock = _elements.where((e) => _selectedIds.contains(e.id) && e.type == ShapeType.codeBlock).firstOrNull;
+    if (codeBlock != null && codeBlock.text.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: codeBlock.text));
+      _showToast('Code snippet copied to clipboard!');
+    }
+  }
+
+  void _insertCodeBlock(Offset world, [String? initialCode, String? lang]) {
+    final newId = 'el_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+    final code = initialCode ?? '// Code Snippet\nvoid main() {\n  print("Hello from FlutCanvas!");\n}';
+    final language = lang ?? _codeLanguage;
+    final newElement = BoardElement(
+      id: newId,
+      type: ShapeType.codeBlock,
+      start: world,
+      end: world + const Offset(340, 200),
+      color: Colors.transparent,
+      fillColor: Colors.transparent,
+      fontSize: 16.0,
+      text: code,
+      codeLanguage: language,
+      showLineNumbers: true,
+    );
+
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [..._elements, newElement];
+      _selectedIds = {newId};
+      _tool = Tool.select;
+    });
+    _showToast('Inserted ${SyntaxHighlighterService.getDisplayName(language)} Code Block');
+  }
+
   // ── Image Upload & Insertion ───────────────────────────────
   Future<void> _handleInsertImage() async {
     final picked = await ImageService.pickImage();
@@ -974,6 +1040,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
     if (_tool == Tool.image) {
       _handleInsertImage();
+      return;
+    }
+
+    if (_tool == Tool.codeBlock) {
+      _insertCodeBlock(world);
       return;
     }
 
@@ -1381,6 +1452,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       _editingElementId = newId;
       _editingScreenPos = screen;
       _isEditingSticky = isSticky;
+      _isEditingCode = false;
     });
   }
 
@@ -1388,11 +1460,14 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     final world = _toWorld(d.localPosition);
     final hit = _hitTestTopmost(world);
     if (hit != null && !hit.isLocked) {
-      if (hit.type == ShapeType.text || hit.type == ShapeType.stickyNote) {
+      if (hit.type == ShapeType.text ||
+          hit.type == ShapeType.stickyNote ||
+          hit.type == ShapeType.codeBlock) {
         setState(() {
           _editingElementId = hit.id;
           _editingScreenPos = _toScreen(hit.start);
           _isEditingSticky = hit.type == ShapeType.stickyNote;
+          _isEditingCode = hit.type == ShapeType.codeBlock;
         });
       } else if (hit.type == ShapeType.line ||
           hit.type == ShapeType.arrow ||
@@ -1402,6 +1477,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           _editingElementId = hit.id;
           _editingScreenPos = _toScreen(route.midpoint);
           _isEditingSticky = false;
+          _isEditingCode = false;
         });
       }
     }
@@ -1757,6 +1833,19 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                                   selectedElements.first.type == ShapeType.doubleArrow)
                           ? selectedElements.first.connectorStyle
                           : _connectorStyle,
+                      currentCodeLanguage: selectedElements
+                              .where((e) => e.type == ShapeType.codeBlock)
+                              .firstOrNull
+                              ?.codeLanguage ??
+                          _codeLanguage,
+                      currentShowLineNumbers: selectedElements
+                              .where((e) => e.type == ShapeType.codeBlock)
+                              .firstOrNull
+                              ?.showLineNumbers ??
+                          true,
+                      onCodeLanguageChanged: _updateCodeLanguage,
+                      onToggleLineNumbers: _toggleLineNumbers,
+                      onCopyCode: _copyCode,
                       onConnectorStyleChanged: _updateConnectorStyle,
                       onEditConnectorLabel: () {
                         final connector = selectedElements.where((e) =>
@@ -1894,6 +1983,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                     color: isConnector ? editingEl.color : _color,
                     screenPosition: _editingScreenPos!,
                     isStickyNote: _isEditingSticky,
+                    isCodeBlock: _isEditingCode,
                     onSubmitted: (newText) {
                       setState(() {
                         _pushUndo(_elements);

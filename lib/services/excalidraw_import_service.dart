@@ -99,6 +99,7 @@ class ExcalidrawImportService {
       ShapeType.highlighter ||
       ShapeType.image => 30,
       ShapeType.stickyNote ||
+      ShapeType.codeBlock ||
       ShapeType.text => 40,
     };
   }

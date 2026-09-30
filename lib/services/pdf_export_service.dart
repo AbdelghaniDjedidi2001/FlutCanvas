@@ -17,14 +17,6 @@ enum PdfExportMode {
   allBoards,
 }
 
-class _RawPageRender {
-  final Uint8List rawBytes;
-  final int width;
-  final int height;
-
-  _RawPageRender(this.rawBytes, this.width, this.height);
-}
-
 class PdfExportService {
   static Future<Uint8List> exportToPdf({
     required List<BoardElement> elements,
@@ -51,20 +43,13 @@ class PdfExportService {
             onProgress?.call('Rendering $title (${i + 1}/${frames.length})...');
             await Future<void>.delayed(const Duration(milliseconds: 20));
 
-            final pageRender = await _renderPagePixels(
+            final pngBytes = await _renderPagePng(
               elements: elements,
               colors: colors,
               boundingBox: frame.bounds,
             );
-            if (pageRender != null) {
-              final pdfImage = PdfImage(
-                pdf.document,
-                image: pageRender.rawBytes,
-                width: pageRender.width,
-                height: pageRender.height,
-                alpha: false,
-              );
-              final imageProvider = pw.ImageProxy(pdfImage);
+            if (pngBytes != null) {
+              final imageProvider = pw.MemoryImage(pngBytes);
               pdf.addPage(
                 pw.Page(
                   pageFormat: PdfPageFormat.a4.landscape,
@@ -91,22 +76,15 @@ class PdfExportService {
         onProgress?.call('Rendering canvas elements to high-resolution page...');
         await Future<void>.delayed(const Duration(milliseconds: 20));
 
-        final pageRender = await _renderPagePixels(
+        final pngBytes = await _renderPagePng(
           elements: elements,
           colors: colors,
         );
-        if (pageRender != null) {
+        if (pngBytes != null) {
           onProgress?.call('Constructing landscape PDF page...');
           await Future<void>.delayed(const Duration(milliseconds: 20));
 
-          final pdfImage = PdfImage(
-            pdf.document,
-            image: pageRender.rawBytes,
-            width: pageRender.width,
-            height: pageRender.height,
-            alpha: false,
-          );
-          final imageProvider = pw.ImageProxy(pdfImage);
+          final imageProvider = pw.MemoryImage(pngBytes);
           pdf.addPage(
             pw.Page(
               pageFormat: PdfPageFormat.a4.landscape,
@@ -134,19 +112,12 @@ class PdfExportService {
             onProgress?.call('Rendering "${board.title}" (${i + 1}/${boards.length})...');
             await Future<void>.delayed(const Duration(milliseconds: 20));
 
-            final pageRender = await _renderPagePixels(
+            final pngBytes = await _renderPagePng(
               elements: board.elements,
               colors: colors,
             );
-            if (pageRender != null) {
-              final pdfImage = PdfImage(
-                pdf.document,
-                image: pageRender.rawBytes,
-                width: pageRender.width,
-                height: pageRender.height,
-                alpha: false,
-              );
-              final imageProvider = pw.ImageProxy(pdfImage);
+            if (pngBytes != null) {
+              final imageProvider = pw.MemoryImage(pngBytes);
               pdf.addPage(
                 pw.Page(
                   pageFormat: PdfPageFormat.a4.landscape,
@@ -172,7 +143,7 @@ class PdfExportService {
     return pdf.save();
   }
 
-  static Future<_RawPageRender?> _renderPagePixels({
+  static Future<Uint8List?> _renderPagePng({
     required List<BoardElement> elements,
     required BoardColors colors,
     Rect? boundingBox,
@@ -226,9 +197,9 @@ class PdfExportService {
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(width.toInt(), height.toInt());
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
 
     if (byteData == null) return null;
-    return _RawPageRender(byteData.buffer.asUint8List(), width.toInt(), height.toInt());
+    return byteData.buffer.asUint8List();
   }
 }

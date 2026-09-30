@@ -38,6 +38,8 @@ class BoardElement {
     this.customName,
     this.connectorStyle = ConnectorStyle.straight,
     this.label,
+    this.codeLanguage,
+    this.showLineNumbers = true,
   });
 
   final String id;
@@ -66,6 +68,8 @@ class BoardElement {
   final String? customName;
   final ConnectorStyle connectorStyle;
   final String? label;
+  final String? codeLanguage;
+  final bool showLineNumbers;
 
   String get displayName {
     if (customName != null && customName!.trim().isNotEmpty) {
@@ -98,6 +102,7 @@ class BoardElement {
       ShapeType.stickyNote => 'Sticky Note',
       ShapeType.frame => 'Frame',
       ShapeType.image => 'Image',
+      ShapeType.codeBlock => 'Code (${codeLanguage ?? "Dart"})',
     };
   }
 
@@ -128,11 +133,14 @@ class BoardElement {
     String? customName,
     ConnectorStyle? connectorStyle,
     String? label,
+    String? codeLanguage,
+    bool? showLineNumbers,
     bool clearStartBinding = false,
     bool clearEndBinding = false,
     bool clearGroupId = false,
     bool clearCustomName = false,
     bool clearLabel = false,
+    bool clearCodeLanguage = false,
   }) {
     return BoardElement(
       id: id ?? this.id,
@@ -162,6 +170,8 @@ class BoardElement {
       customName: clearCustomName ? null : (customName ?? this.customName),
       connectorStyle: connectorStyle ?? this.connectorStyle,
       label: clearLabel ? null : (label ?? this.label),
+      codeLanguage: clearCodeLanguage ? null : (codeLanguage ?? this.codeLanguage),
+      showLineNumbers: showLineNumbers ?? this.showLineNumbers,
     );
   }
 
@@ -266,6 +276,7 @@ class BoardElement {
       case ShapeType.rectangle:
       case ShapeType.roundedRectangle:
       case ShapeType.stickyNote:
+      case ShapeType.codeBlock:
       case ShapeType.text:
       case ShapeType.image:
       case ShapeType.frame:
@@ -343,6 +354,8 @@ class BoardElement {
       'customName': customName,
       'connectorStyle': connectorStyle.name,
       'label': label,
+      'codeLanguage': codeLanguage,
+      'showLineNumbers': showLineNumbers,
     };
   }
 
@@ -408,6 +421,8 @@ class BoardElement {
         orElse: () => ConnectorStyle.straight,
       ),
       label: map['label'] as String?,
+      codeLanguage: map['codeLanguage'] as String?,
+      showLineNumbers: map['showLineNumbers'] as bool? ?? true,
     );
   }
 

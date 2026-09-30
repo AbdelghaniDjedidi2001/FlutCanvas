@@ -87,6 +87,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
       ShapeType.highlighter => Icons.brush_outlined,
       ShapeType.text => Icons.title_rounded,
       ShapeType.stickyNote => Icons.sticky_note_2_outlined,
+      ShapeType.codeBlock => Icons.code_rounded,
       ShapeType.frame => Icons.crop_free_rounded,
       ShapeType.image => Icons.image_outlined,
     };

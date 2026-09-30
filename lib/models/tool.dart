@@ -21,6 +21,7 @@ enum Tool {
   laser,
   frame,
   image,
+  codeBlock,
 }
 
 extension ToolExtension on Tool {
@@ -39,6 +40,7 @@ extension ToolExtension on Tool {
         Tool.highlighter => 'Highlighter (M)',
         Tool.text => 'Text (T)',
         Tool.stickyNote => 'Sticky Note (N)',
+        Tool.codeBlock => 'Code Block (C)',
         Tool.eraser => 'Eraser (E)',
         Tool.laser => 'Laser Pointer (K)',
         Tool.frame => 'Frame / Slide (F)',
@@ -60,6 +62,7 @@ extension ToolExtension on Tool {
         Tool.highlighter => Icons.brush_outlined,
         Tool.text => Icons.title_rounded,
         Tool.stickyNote => Icons.sticky_note_2_outlined,
+        Tool.codeBlock => Icons.code_rounded,
         Tool.eraser => Icons.auto_fix_normal_outlined,
         Tool.laser => Icons.flare_rounded,
         Tool.frame => Icons.crop_free_rounded,
@@ -79,6 +82,7 @@ extension ToolExtension on Tool {
         Tool.highlighter => ShapeType.highlighter,
         Tool.text => ShapeType.text,
         Tool.stickyNote => ShapeType.stickyNote,
+        Tool.codeBlock => ShapeType.codeBlock,
         Tool.frame => ShapeType.frame,
         Tool.image => ShapeType.image,
         _ => null,
@@ -96,6 +100,7 @@ extension ToolExtension on Tool {
     LogicalKeyboardKey.keyM: Tool.highlighter,
     LogicalKeyboardKey.keyT: Tool.text,
     LogicalKeyboardKey.keyN: Tool.stickyNote,
+    LogicalKeyboardKey.keyC: Tool.codeBlock,
     LogicalKeyboardKey.keyE: Tool.eraser,
     LogicalKeyboardKey.keyK: Tool.laser,
     LogicalKeyboardKey.keyF: Tool.frame,

@@ -6,6 +6,7 @@ import '../../models/board_element.dart';
 import '../../models/connector_style.dart';
 import '../../models/shape_type.dart';
 import '../../models/stroke_fill_style.dart';
+import '../../services/syntax_highlighter_service.dart';
 
 class PropertiesPanel extends StatelessWidget {
   const PropertiesPanel({
@@ -21,6 +22,8 @@ class PropertiesPanel extends StatelessWidget {
     required this.currentOpacity,
     required this.currentRotation,
     this.currentConnectorStyle = ConnectorStyle.straight,
+    this.currentCodeLanguage,
+    this.currentShowLineNumbers = true,
     required this.onColorChanged,
     required this.onFillColorChanged,
     required this.onStrokeWidthChanged,
@@ -32,6 +35,9 @@ class PropertiesPanel extends StatelessWidget {
     required this.onRotationChanged,
     required this.onConnectorStyleChanged,
     required this.onEditConnectorLabel,
+    this.onCodeLanguageChanged,
+    this.onToggleLineNumbers,
+    this.onCopyCode,
     required this.onGroup,
     required this.onUngroup,
     required this.onBringToFront,
@@ -55,6 +61,8 @@ class PropertiesPanel extends StatelessWidget {
   final double currentOpacity;
   final double currentRotation;
   final ConnectorStyle currentConnectorStyle;
+  final String? currentCodeLanguage;
+  final bool currentShowLineNumbers;
 
   final void Function(Color color) onColorChanged;
   final void Function(Color color) onFillColorChanged;
@@ -67,6 +75,9 @@ class PropertiesPanel extends StatelessWidget {
   final void Function(double radians) onRotationChanged;
   final void Function(ConnectorStyle style) onConnectorStyleChanged;
   final VoidCallback onEditConnectorLabel;
+  final void Function(String language)? onCodeLanguageChanged;
+  final void Function(bool showNumbers)? onToggleLineNumbers;
+  final VoidCallback? onCopyCode;
   final VoidCallback onGroup;
   final VoidCallback onUngroup;
   final VoidCallback onBringToFront;
@@ -83,6 +94,12 @@ class PropertiesPanel extends StatelessWidget {
           e.type == ShapeType.line ||
           e.type == ShapeType.arrow ||
           e.type == ShapeType.doubleArrow);
+
+  bool get _hasCodeBlock =>
+      selectedElements.any((e) => e.type == ShapeType.codeBlock);
+
+  bool get _hasMarkdownText => selectedElements.any(
+      (e) => e.type == ShapeType.stickyNote || e.type == ShapeType.text);
 
   bool get _hasGroupedElements =>
       selectedElements.any((e) => e.groupId != null);
@@ -310,6 +327,118 @@ class PropertiesPanel extends StatelessWidget {
                   label: const Text('Add / Edit Line Label', style: TextStyle(fontSize: 11)),
                 ),
                 const SizedBox(height: 9),
+              ],
+
+              // 4.6 Code Block Settings (when code blocks are present/selected)
+              if (_hasCodeBlock) ...[
+                const Text('Code Block Settings', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Container(
+                  height: 30,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: currentCodeLanguage ?? 'dart',
+                      isDense: true,
+                      isExpanded: true,
+                      icon: const Icon(Icons.arrow_drop_down, size: 18),
+                      style: TextStyle(fontSize: 12, color: scheme.onSurface, fontWeight: FontWeight.w600),
+                      items: [
+                        for (final lang in SyntaxHighlighterService.supportedLanguages)
+                          DropdownMenuItem(
+                            value: lang,
+                            child: Text(SyntaxHighlighterService.getDisplayName(lang)),
+                          ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null && onCodeLanguageChanged != null) {
+                          onCodeLanguageChanged!(val);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          backgroundColor: currentShowLineNumbers ? scheme.primaryContainer.withValues(alpha: 0.5) : null,
+                        ),
+                        onPressed: () {
+                          if (onToggleLineNumbers != null) {
+                            onToggleLineNumbers!(!currentShowLineNumbers);
+                          }
+                        },
+                        icon: Icon(
+                          Icons.format_list_numbered_rounded,
+                          size: 13,
+                          color: currentShowLineNumbers ? scheme.primary : null,
+                        ),
+                        label: Text(
+                          currentShowLineNumbers ? 'Line # On' : 'Line # Off',
+                          style: TextStyle(fontSize: 11, color: currentShowLineNumbers ? scheme.primary : null),
+                        ),
+                      ),
+                    ),
+                    if (onCopyCode != null) ...[
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                          onPressed: onCopyCode,
+                          icon: const Icon(Icons.copy_rounded, size: 13),
+                          label: const Text('Copy', style: TextStyle(fontSize: 11)),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 9),
+              ],
+
+              // 4.7 Markdown Tips (when sticky notes / text elements are selected)
+              if (_hasMarkdownText) ...[
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.text_fields_rounded, size: 12, color: scheme.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Markdown Supported',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '**bold** *italic* `code` # H1 - list',
+                        style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
+                      ),
+                    ],
+                  ),
+                ),
               ],
 
               // 5. Text Size

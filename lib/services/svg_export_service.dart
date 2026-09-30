@@ -7,6 +7,7 @@ import '../models/connector_style.dart';
 import '../models/shape_type.dart';
 import '../models/stroke_fill_style.dart';
 import 'connector_routing_service.dart';
+import 'syntax_highlighter_service.dart';
 
 class SvgExportService {
   static String exportToSvg({
@@ -155,6 +156,10 @@ class SvgExportService {
         _renderStickyNoteSvg(buffer, el, colors);
         break;
 
+      case ShapeType.codeBlock:
+        _renderCodeBlockSvg(buffer, el);
+        break;
+
       case ShapeType.image:
         if (el.imageBase64 != null) {
           final r = el.bounds;
@@ -267,15 +272,22 @@ class SvgExportService {
   ) {
     final lines = el.text.split('\n');
     final start = el.start;
-    final fontSize = el.fontSize;
-    final lineHeight = fontSize * 1.3;
+    final baseFontSize = el.fontSize;
+    final lineHeight = baseFontSize * 1.35;
 
     buffer.writeln('    <g opacity="$opacity">');
-    for (var i = 0; i < lines.length; i++) {
-      final line = _escapeXml(lines[i]);
-      final y = start.dy + fontSize + (i * lineHeight);
-      buffer.writeln(
-          '      <text x="${start.dx}" y="$y" font-size="$fontSize" font-weight="600" fill="$strokeColor">$line</text>');
+    var textY = start.dy + baseFontSize;
+
+    for (final line in lines) {
+      _renderMarkdownLineSvg(
+        buffer,
+        line,
+        start.dx,
+        textY,
+        baseFontSize,
+        strokeColor,
+      );
+      textY += lineHeight;
     }
     buffer.writeln('    </g>');
   }
@@ -290,20 +302,156 @@ class SvgExportService {
     final textColor = _colorToHex(el.color);
 
     buffer.writeln(
-        '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}" rx="4" fill="$fillHex" filter="url(#stickyShadow)"/>');
+        '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}" rx="6" fill="$fillHex" filter="url(#stickyShadow)"/>');
 
     final lines = el.text.split('\n');
-    final fontSize = el.fontSize;
-    final lineHeight = fontSize * 1.3;
-    final textX = r.left + 12;
-    var textY = r.top + 20 + fontSize;
+    final baseFontSize = el.fontSize;
+    final lineHeight = baseFontSize * 1.35;
+    final textX = r.left + 14;
+    var textY = r.top + 20 + baseFontSize;
 
     for (final line in lines) {
-      final escapedLine = _escapeXml(line);
-      buffer.writeln(
-          '    <text x="$textX" y="$textY" font-size="$fontSize" font-weight="600" fill="$textColor">$escapedLine</text>');
+      if (textY > r.bottom - 10) break;
+      _renderMarkdownLineSvg(
+        buffer,
+        line,
+        textX,
+        textY,
+        baseFontSize,
+        textColor,
+        fontFamily: 'Caveat, cursive, sans-serif',
+      );
       textY += lineHeight;
     }
+  }
+
+  static void _renderMarkdownLineSvg(
+    StringBuffer buffer,
+    String rawLine,
+    double x,
+    double y,
+    double baseFontSize,
+    String defaultColor, {
+    String fontFamily = 'sans-serif',
+  }) {
+    var text = rawLine;
+    var fontSize = baseFontSize;
+    var fontWeight = '600';
+    var fontStyle = 'normal';
+    var color = defaultColor;
+
+    // 1. Heading (# H1, ## H2, ### H3)
+    if (text.startsWith('#')) {
+      final headingMatch = RegExp(r'^(#{1,3})\s+(.*)$').firstMatch(text);
+      if (headingMatch != null) {
+        final level = headingMatch.group(1)!.length;
+        text = headingMatch.group(2)!;
+        fontSize = baseFontSize * (level == 1 ? 1.35 : (level == 2 ? 1.20 : 1.10));
+        fontWeight = 'bold';
+      }
+    }
+    // 2. Bullet list (- or *)
+    else if (RegExp(r'^\s*[-*]\s+(.*)$').hasMatch(text)) {
+      final m = RegExp(r'^\s*[-*]\s+(.*)$').firstMatch(text)!;
+      text = '• ${m.group(1)}';
+    }
+    // 3. Numbered list (1. item)
+    else if (RegExp(r'^\s*(\d+\.)\s+(.*)$').hasMatch(text)) {
+      final m = RegExp(r'^\s*(\d+\.)\s+(.*)$').firstMatch(text)!;
+      text = '${m.group(1)} ${m.group(2)}';
+    }
+    // 4. Blockquote (> quote)
+    else if (RegExp(r'^\s*>\s*(.*)$').hasMatch(text)) {
+      final m = RegExp(r'^\s*>\s*(.*)$').firstMatch(text)!;
+      text = '▌ ${m.group(1)}';
+      color = '#748FFC';
+    }
+
+    // Strip remaining inline bold/italic markers for clean SVG
+    text = text.replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), (m) => m.group(1)!);
+    text = text.replaceAllMapped(RegExp(r'~~(.+?)~~'), (m) => m.group(1)!);
+    text = text.replaceAllMapped(RegExp(r'\*(.+?)\*'), (m) => m.group(1)!);
+    text = text.replaceAllMapped(RegExp(r'`(.+?)`'), (m) => m.group(1)!);
+    text = text.replaceAllMapped(RegExp(r'\[(.*?)\]\((.*?)\)'), (m) => '${m.group(1)} (${m.group(2)})');
+
+    final escaped = _escapeXml(text);
+    buffer.writeln(
+        '      <text x="$x" y="$y" font-size="$fontSize" font-weight="$fontWeight" font-style="$fontStyle" font-family="$fontFamily" fill="$color">$escaped</text>');
+  }
+
+  static void _renderCodeBlockSvg(
+    StringBuffer buffer,
+    BoardElement el,
+  ) {
+    final r = el.bounds;
+    final lang = el.codeLanguage ?? 'Dart';
+    final showNumbers = el.showLineNumbers;
+    final rawText = el.text.isEmpty ? '// Type code here...' : el.text;
+    final lines = rawText.split('\n');
+    const theme = SyntaxThemeColors.dark;
+
+    // Outer card container
+    buffer.writeln(
+        '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}" rx="10" fill="#181825" stroke="#313244" stroke-width="1.2"/>');
+
+    // Window titlebar
+    buffer.writeln(
+        '    <path d="M ${r.left} ${r.top + 10} A 10 10 0 0 1 ${r.left + 10} ${r.top} L ${r.right - 10} ${r.top} A 10 10 0 0 1 ${r.right} ${r.top + 10} L ${r.right} ${r.top + 32} L ${r.left} ${r.top + 32} Z" fill="#11111B"/>');
+
+    // macOS Window Controls (dots)
+    buffer.writeln('    <circle cx="${r.left + 16}" cy="${r.top + 16}" r="5" fill="#ED6A5E"/>');
+    buffer.writeln('    <circle cx="${r.left + 30}" cy="${r.top + 16}" r="5" fill="#F4BF4F"/>');
+    buffer.writeln('    <circle cx="${r.left + 44}" cy="${r.top + 16}" r="5" fill="#61C554"/>');
+
+    // Language Badge
+    final escapedLang = _escapeXml(lang.toUpperCase());
+    buffer.writeln(
+        '    <text x="${r.right - 14}" y="${r.top + 20}" font-size="10" font-family="monospace" font-weight="bold" fill="#6C7086" text-anchor="end">$escapedLang</text>');
+
+    // Code Content
+    final fontSize = 13.0;
+    final lineHeight = fontSize * 1.5;
+    final lineNumberGutter = showNumbers ? 42.0 : 0.0;
+    final codeX = r.left + 14 + lineNumberGutter;
+    var currentY = r.top + 32 + 18;
+
+    for (var i = 0; i < lines.length; i++) {
+      if (currentY + lineHeight > r.bottom - 8) break;
+
+      if (showNumbers) {
+        final lineNum = '${i + 1}';
+        buffer.writeln(
+            '    <text x="${r.left + 12}" y="$currentY" font-size="11" font-family="monospace" fill="#585B70">$lineNum</text>');
+      }
+
+      final lineTokens = SyntaxHighlighterService.tokenize(lines[i], lang);
+      final lineSpans = StringBuffer();
+
+      for (final token in lineTokens) {
+        final colorHex = _getTokenHexColor(token.type, theme);
+        final escaped = _escapeXml(token.text);
+        lineSpans.write('<tspan fill="$colorHex">$escaped</tspan>');
+      }
+
+      buffer.writeln(
+          '    <text x="$codeX" y="$currentY" font-size="$fontSize" font-family="monospace">$lineSpans</text>');
+      currentY += lineHeight;
+    }
+  }
+
+  static String _getTokenHexColor(SyntaxTokenType type, SyntaxThemeColors theme) {
+    final color = switch (type) {
+      SyntaxTokenType.keyword => theme.keyword,
+      SyntaxTokenType.type => theme.type,
+      SyntaxTokenType.string => theme.string,
+      SyntaxTokenType.number => theme.number,
+      SyntaxTokenType.comment => theme.comment,
+      SyntaxTokenType.function => theme.function,
+      SyntaxTokenType.operator => theme.operator,
+      SyntaxTokenType.punctuation => theme.punctuation,
+      SyntaxTokenType.plain => theme.foreground,
+    };
+    return _colorToHex(color);
   }
 
   static String _pathToSvgPathData(List<Offset> waypoints, ConnectorStyle style) {
