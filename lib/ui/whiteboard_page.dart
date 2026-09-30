@@ -18,6 +18,7 @@ import '../models/transform_handle.dart';
 import '../painters/board_painter.dart';
 import '../painters/laser_painter.dart';
 import '../services/alignment_service.dart';
+import '../services/clipboard_paste_service.dart';
 import '../services/clipboard_service.dart';
 import '../services/connector_routing_service.dart';
 import '../services/history_manager.dart';
@@ -31,6 +32,7 @@ import 'toolbar/properties_panel.dart';
 import 'widgets/empty_canvas_guide.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/layers_sidebar.dart';
+import 'widgets/mermaid_dialog.dart';
 import 'widgets/minimap_widget.dart';
 import 'widgets/shortcuts_help_dialog.dart';
 import 'widgets/template_picker_dialog.dart';
@@ -146,6 +148,20 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     super.initState();
     _loadInitialWorkspace();
     _startLaserTicker();
+    ClipboardPasteService.initWebPasteListener((base64Image) {
+      if (!mounted) return;
+      final center = _currentViewportCenter;
+      final imgEl = ClipboardService.createImageElement(
+        base64Image: base64Image,
+        position: center - const Offset(160, 110),
+      );
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [..._elements, imgEl];
+        _selectedIds = {imgEl.id};
+      });
+      _showToast('Pasted image from clipboard');
+    });
   }
 
   @override
@@ -153,6 +169,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     _focus.dispose();
     _autoSaveTimer?.cancel();
     _laserDecayTimer?.cancel();
+    ClipboardPasteService.dispose();
     super.dispose();
   }
 
@@ -453,12 +470,17 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     });
   }
 
+  Offset get _currentViewportCenter {
+    final size = _viewSize != Size.zero ? _viewSize : const Size(1200, 800);
+    return (-_pan + Offset(size.width / 2, size.height / 2)) / _zoom;
+  }
+
   void _duplicateSelected() {
     if (_selectedIds.isEmpty) return;
     final selected =
         _elements.where((e) => _selectedIds.contains(e.id)).toList();
     ClipboardService.copy(selected);
-    final pasted = ClipboardService.paste(offset: const Offset(20, 20));
+    final pasted = ClipboardService.duplicate(offset: const Offset(20, 20));
     setState(() {
       _pushUndo(_elements);
       _elements = [..._elements, ...pasted];
@@ -471,16 +493,24 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     final selected =
         _elements.where((e) => _selectedIds.contains(e.id)).toList();
     ClipboardService.copy(selected);
+    _showToast('Copied ${selected.length} element(s) to clipboard');
   }
 
-  void _pasteClipboard() {
-    if (!ClipboardService.hasData) return;
-    final pasted = ClipboardService.paste();
-    setState(() {
-      _pushUndo(_elements);
-      _elements = [..._elements, ...pasted];
-      _selectedIds = pasted.map((e) => e.id).toSet();
-    });
+  Future<void> _pasteClipboard() async {
+    final center = _currentViewportCenter;
+    final result = await ClipboardService.pasteFromSystem(
+      targetCanvasPosition: center - const Offset(100, 100),
+      defaultColor: _color,
+    );
+
+    if (result != null && result.elements.isNotEmpty && mounted) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [..._elements, ...result.elements];
+        _selectedIds = result.elements.map((e) => e.id).toSet();
+      });
+      _showToast('Pasted ${result.sourceDescription}');
+    }
   }
 
   void _groupSelected() {
@@ -791,8 +821,42 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           setState(() {
             _pushUndo(_elements);
             _elements = imported;
-            _selectedIds.clear();
+            _selectedIds = imported.map((e) => e.id).toSet();
           });
+          _zoomToFitElements(imported);
+          _showToast('Imported ${imported.length} element(s) to canvas');
+        },
+      ),
+    );
+  }
+
+  void _showToast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        width: 340,
+      ),
+    );
+  }
+
+  void _showMermaidDialog([String? initialScript]) {
+    final center = _currentViewportCenter;
+    showDialog(
+      context: context,
+      builder: (_) => MermaidDialog(
+        initialScript: initialScript,
+        targetOrigin: center - const Offset(200, 150),
+        onInsert: (elements) {
+          setState(() {
+            _pushUndo(_elements);
+            _elements = [..._elements, ...elements];
+            _selectedIds = elements.map((e) => e.id).toSet();
+          });
+          _showToast('Inserted Mermaid diagram (${elements.length} items)');
         },
       ),
     );
@@ -803,6 +867,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       context: context,
       builder: (_) => TemplatePickerDialog(
         onSelectTemplate: _handleInsertTemplate,
+        onOpenMermaid: _showMermaidDialog,
       ),
     );
   }
@@ -841,6 +906,32 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
     setState(() {
       _currentSlideIndex = index;
+      _zoom = targetZoom;
+      _pan = targetPan;
+    });
+  }
+
+  void _zoomToFitElements(List<BoardElement> items) {
+    if (items.isEmpty) return;
+    Rect bounds = items.first.bounds;
+    for (var i = 1; i < items.length; i++) {
+      bounds = bounds.expandToInclude(items[i].bounds);
+    }
+    bounds = bounds.inflate(60);
+
+    final viewW = _viewSize.width > 0 ? _viewSize.width : 1000.0;
+    final viewH = _viewSize.height > 0 ? _viewSize.height : 700.0;
+
+    final scaleX = viewW / bounds.width;
+    final scaleY = viewH / bounds.height;
+    final targetZoom = math.min(scaleX, scaleY).clamp(0.15, 2.0);
+
+    final targetPan = Offset(
+      viewW / 2 - bounds.center.dx * targetZoom,
+      viewH / 2 - bounds.center.dy * targetZoom,
+    );
+
+    setState(() {
       _zoom = targetZoom;
       _pan = targetPan;
     });
@@ -1569,6 +1660,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                   child: EmptyCanvasGuide(
                     onOpenImport: _showExportDialog,
                     onOpenTemplates: _showTemplatesDialog,
+                    onOpenMermaid: _showMermaidDialog,
                     onOpenHelp: _showShortcutsHelpDialog,
                     onInsertImage: _handleInsertImage,
                     onSelectTool: (t) => setState(() {

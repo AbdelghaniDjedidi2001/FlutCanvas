@@ -7,8 +7,10 @@ import '../../models/board_colors.dart';
 import '../../models/board_document.dart';
 import '../../models/board_element.dart';
 import '../../models/shape_type.dart';
+import '../../services/excalidraw_import_service.dart';
 import '../../services/export_service.dart';
 import '../../services/file_downloader.dart';
+import '../../services/mermaid_parser_service.dart';
 
 enum ExportFormatTab { png, svg, pdf, json }
 
@@ -784,14 +786,23 @@ class _ExportDialogState extends State<ExportDialog> {
     try {
       final result = await FilePickerPlatform.instance.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['json', 'whiteboard', 'txt'],
+        allowedExtensions: ['json', 'whiteboard', 'excalidraw', 'mermaid', 'mmd', 'txt'],
       );
 
       if (result.isNotEmpty) {
         final file = result.first;
         final bytes = await file.readAsBytes();
         final content = utf8.decode(bytes);
-        final imported = ExportService.importFromJson(content);
+
+        List<BoardElement>? imported;
+        if (ExcalidrawImportService.isExcalidrawJson(content)) {
+          imported = ExcalidrawImportService.importFromExcalidraw(jsonStr: content);
+        } else if (MermaidParserService.isMermaidSyntax(content)) {
+          imported = MermaidParserService.parseToElements(script: content);
+        } else {
+          imported = ExportService.importFromJson(content);
+        }
+
         if (imported != null && imported.isNotEmpty) {
           widget.onImport(imported);
           if (mounted) {
@@ -800,7 +811,7 @@ class _ExportDialogState extends State<ExportDialog> {
         } else {
           if (mounted) {
             setState(() {
-              _statusMessage = 'Invalid whiteboard file format.';
+              _statusMessage = 'Unrecognized file format or empty diagram.';
               _isError = true;
             });
           }

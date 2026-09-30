@@ -38,9 +38,8 @@ class ElementRenderer {
         el.type == ShapeType.star;
 
     // 1. Draw Fill (if applicable)
-    if (isFillable && el.fillStyle != FillStyle.none) {
-      final baseFill = el.fillColor != Colors.transparent ? el.fillColor : el.color;
-      final displayFill = colors.display(baseFill);
+    if (isFillable && el.fillStyle != FillStyle.none && el.fillColor != Colors.transparent) {
+      final displayFill = colors.display(el.fillColor);
 
       if (el.fillStyle == FillStyle.hatch || el.drawStyle == DrawStyle.sketch) {
         final path = _getShapePath(el);
@@ -398,11 +397,12 @@ class ElementRenderer {
 
     // Sticky note text
     if (el.text.isNotEmpty) {
+      final isDarkNote = noteColor.computeLuminance() < 0.35;
       final textPainter = TextPainter(
         text: TextSpan(
           text: el.text,
           style: GoogleFonts.caveat(
-            color: const Color(0xFF212529),
+            color: isDarkNote ? const Color(0xFFF8F9FA) : const Color(0xFF212529),
             fontSize: el.fontSize,
             fontWeight: FontWeight.w500,
           ),
@@ -442,26 +442,38 @@ class ElementRenderer {
   static void _drawFrame(Canvas canvas, BoardElement el, BoardColors colors) {
     final rect = el.bounds;
 
-    // Subtle slide background
+    // Slide background
+    final frameBg = el.fillColor != Colors.transparent
+        ? el.fillColor.withValues(alpha: el.opacity)
+        : colors.background.withValues(alpha: 0.5);
     final bgPaint = Paint()
-      ..color = colors.background.withValues(alpha: 0.5)
+      ..color = frameBg
       ..style = PaintingStyle.fill;
-    canvas.drawRect(rect, bgPaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+      bgPaint,
+    );
 
     // Frame Border
+    final frameBorderColor = el.color != Colors.transparent
+        ? colors.display(el.color).withValues(alpha: 0.8 * el.opacity)
+        : colors.selection.withValues(alpha: 0.6);
     final borderPaint = Paint()
-      ..color = colors.selection.withValues(alpha: 0.6)
+      ..color = frameBorderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawRect(rect, borderPaint);
+      ..strokeWidth = math.max(el.strokeWidth, 1.5);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+      borderPaint,
+    );
 
     // Slide header badge
-    final title = el.frameTitle ?? 'Slide ${el.frameIndex ?? 1}';
+    final title = el.frameTitle ?? 'Frame';
     final textPainter = TextPainter(
       text: TextSpan(
         text: title,
         style: TextStyle(
-          color: colors.selection,
+          color: frameBorderColor,
           fontSize: 13,
           fontWeight: FontWeight.bold,
         ),
@@ -478,7 +490,7 @@ class ElementRenderer {
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(badgeRect, const Radius.circular(4)),
-      Paint()..color = colors.selection.withValues(alpha: 0.15),
+      Paint()..color = frameBorderColor.withValues(alpha: 0.15),
     );
     textPainter.paint(canvas, Offset(badgeRect.left + 8, badgeRect.top + 3));
   }

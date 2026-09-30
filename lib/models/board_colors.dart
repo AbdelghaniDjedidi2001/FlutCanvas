@@ -37,8 +37,34 @@ class BoardColors {
   static BoardColors of(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? dark : light;
 
+  bool get isDark => this == dark || background.computeLuminance() < 0.5;
+
   /// How a stored element color should appear in this theme.
-  Color display(Color stored) => stored == kInk ? ink : stored;
+  Color display(Color stored) {
+    if (stored == Colors.transparent) return Colors.transparent;
+
+    // In dark mode: adapt pitch black or default dark ink to theme ink
+    if (isDark) {
+      if (stored == kInk ||
+          stored == Colors.black ||
+          stored.toARGB32() == 0xFF000000 ||
+          stored.toARGB32() == 0xFF1E1E1E ||
+          stored.toARGB32() == 0xFF121212 ||
+          stored.toARGB32() == 0xFF1F2430 ||
+          (stored.computeLuminance() < 0.06 && stored.a > 0.8)) {
+        return ink;
+      }
+    } else {
+      // In light mode: adapt pure white strokes on light background to theme ink
+      if (stored == Colors.white ||
+          stored.toARGB32() == 0xFFFFFFFF ||
+          stored.toARGB32() == 0xFFFBFBFD ||
+          (stored.computeLuminance() > 0.95 && stored.a > 0.8)) {
+        return ink;
+      }
+    }
+    return stored;
+  }
 
   /// Standard palette colors for strokes and shapes
   static const List<Color> strokePalette = [

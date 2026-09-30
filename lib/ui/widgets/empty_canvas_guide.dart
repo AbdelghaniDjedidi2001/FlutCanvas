@@ -14,6 +14,7 @@ class EmptyCanvasGuide extends StatelessWidget {
     required this.onOpenHelp,
     required this.onInsertImage,
     required this.onSelectTool,
+    this.onOpenMermaid,
   });
 
   final VoidCallback onOpenImport;
@@ -21,6 +22,7 @@ class EmptyCanvasGuide extends StatelessWidget {
   final VoidCallback onOpenHelp;
   final VoidCallback onInsertImage;
   final void Function(Tool tool) onSelectTool;
+  final VoidCallback? onOpenMermaid;
 
   @override
   Widget build(BuildContext context) {
@@ -252,6 +254,15 @@ class EmptyCanvasGuide extends StatelessWidget {
                       onTap: onOpenTemplates,
                     ),
                     SizedBox(height: 6.h.clamp(3.0, 8.0)),
+                    if (onOpenMermaid != null) ...[
+                      _QuickActionButton(
+                        icon: Icons.auto_awesome_rounded,
+                        label: 'Mermaid Code to Diagram',
+                        shortcut: 'Mermaid',
+                        onTap: onOpenMermaid!,
+                      ),
+                      SizedBox(height: 6.h.clamp(3.0, 8.0)),
+                    ],
                     _QuickActionButton(
                       icon: Icons.help_outline_rounded,
                       label: 'Keyboard shortcuts & Help',
