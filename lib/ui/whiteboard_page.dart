@@ -23,6 +23,7 @@ import '../services/clipboard_service.dart';
 import '../services/connector_routing_service.dart';
 import '../services/history_manager.dart';
 import '../services/image_service.dart';
+import '../services/shape_recognition_service.dart';
 import '../services/storage_service.dart';
 import '../services/syntax_highlighter_service.dart';
 import 'inline_text_editor.dart';
@@ -101,6 +102,10 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   bool _isLayersOpen = false;
   bool _gridSnap = false;
   bool _smartGuides = true;
+  bool _autoShapeRecognition = true;
+  Timer? _shapeSnapTimer;
+  bool _didSnapCurrentStroke = false;
+  Offset? _lastPointerMovePos;
 
   // Magnetic Connection Anchoring
   BoardElement? _hoveredAnchorElement;
@@ -172,6 +177,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     _focus.dispose();
     _autoSaveTimer?.cancel();
     _laserDecayTimer?.cancel();
+    _shapeSnapTimer?.cancel();
     ClipboardPasteService.dispose();
     super.dispose();
   }
@@ -1013,6 +1019,9 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     _lastScreen = screen;
     _lastWorld = world;
     _startWorld = world;
+    _shapeSnapTimer?.cancel();
+    _didSnapCurrentStroke = false;
+    _lastPointerMovePos = world;
 
     if (e.buttons == kMiddleMouseButton || _tool == Tool.hand || _spaceDown) {
       setState(() => _mode = _DragMode.panning);
@@ -1331,15 +1340,40 @@ class _WhiteboardPageState extends State<WhiteboardPage>
           }
         }
 
-        setState(() {
-          _draft = (d.type == ShapeType.pen ||
-                  d.type == ShapeType.highlighter)
-              ? d.copyWith(points: [...d.points, world], end: world)
-              : d.copyWith(
-                  end: endPos,
-                  endBinding: _draftEndBinding,
-                );
-        });
+        final isFreehand = d.type == ShapeType.pen ||
+            d.type == ShapeType.highlighter;
+
+        if (isFreehand && !_didSnapCurrentStroke) {
+          final updatedPoints = [...d.points, world];
+          setState(() {
+            _draft = d.copyWith(points: updatedPoints, end: world);
+          });
+
+          if (_autoShapeRecognition && updatedPoints.length >= 6) {
+            final moveDist = (_lastPointerMovePos != null)
+                ? (world - _lastPointerMovePos!).distance
+                : 0.0;
+            if (moveDist > 6.0) {
+              _lastPointerMovePos = world;
+            }
+            _shapeSnapTimer?.cancel();
+            _shapeSnapTimer = Timer(const Duration(milliseconds: 380), () {
+              if (!mounted || _mode != _DragMode.drawing || _draft == null || _didSnapCurrentStroke) return;
+              _trySnapCurrentStroke();
+            });
+          }
+        } else if (_didSnapCurrentStroke) {
+          setState(() {
+            _draft = d.copyWith(end: world);
+          });
+        } else {
+          setState(() {
+            _draft = d.copyWith(
+              end: endPos,
+              endBinding: _draftEndBinding,
+            );
+          });
+        }
         break;
 
       case _DragMode.none:
@@ -1356,7 +1390,29 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     _lastScreen = screen;
   }
 
+  void _trySnapCurrentStroke() {
+    final draft = _draft;
+    if (draft == null) return;
+    if (draft.type != ShapeType.pen && draft.type != ShapeType.highlighter) return;
+    if (draft.points.length < 5) return;
+
+    final recognized = ShapeRecognitionService.recognizeShape(draft.points);
+    if (recognized != null && recognized.confidence >= 0.55) {
+      setState(() {
+        _draft = draft.copyWith(
+          type: recognized.shapeType,
+          start: recognized.start,
+          end: recognized.end,
+          points: const [],
+        );
+        _didSnapCurrentStroke = true;
+      });
+      _showToast('Snapped to ${recognized.label}');
+    }
+  }
+
   void _onPointerUp(PointerEvent e) {
+    _shapeSnapTimer?.cancel();
     setState(() {
       switch (_mode) {
         case _DragMode.drawing:
@@ -1371,6 +1427,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
             _elements = [..._elements, d];
           }
           _draft = null;
+          _didSnapCurrentStroke = false;
           _hoveredAnchorElement = null;
           _activeAnchorPoint = null;
           break;
@@ -1915,6 +1972,9 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       isSmartGuides: _smartGuides,
                       onToggleSmartGuides: () =>
                           setState(() => _smartGuides = !_smartGuides),
+                      isShapeSnapping: _autoShapeRecognition,
+                      onToggleShapeSnapping: () =>
+                          setState(() => _autoShapeRecognition = !_autoShapeRecognition),
                     ),
                   ),
                 ),

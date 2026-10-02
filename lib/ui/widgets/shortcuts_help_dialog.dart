@@ -84,6 +84,7 @@ class ShortcutsHelpDialog extends StatelessWidget {
                         _ShortcutItem('Arrow Connector', 'A'),
                         _ShortcutItem('Pen (Freehand)', 'P'),
                         _ShortcutItem('Highlighter', 'M'),
+                        _ShortcutItem('Auto Shape Recognition', 'Draw & hold stroke (380ms)'),
                         _ShortcutItem('Text Tool', 'T'),
                         _ShortcutItem('Sticky Note', 'N'),
                         _ShortcutItem('Eraser', 'E'),

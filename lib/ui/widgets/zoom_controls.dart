@@ -11,6 +11,8 @@ class ZoomControls extends StatelessWidget {
     required this.onToggleGridSnap,
     this.isSmartGuides = true,
     this.onToggleSmartGuides,
+    this.isShapeSnapping = true,
+    this.onToggleShapeSnapping,
   });
 
   final double zoom;
@@ -21,6 +23,8 @@ class ZoomControls extends StatelessWidget {
   final VoidCallback onToggleGridSnap;
   final bool isSmartGuides;
   final VoidCallback? onToggleSmartGuides;
+  final bool isShapeSnapping;
+  final VoidCallback? onToggleShapeSnapping;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +92,20 @@ class ZoomControls extends StatelessWidget {
                     isSmartGuides ? Icons.auto_awesome : Icons.auto_awesome_outlined,
                     size: 18,
                     color: isSmartGuides ? scheme.primary : null,
+                  ),
+                ),
+              ),
+            if (onToggleShapeSnapping != null)
+              Tooltip(
+                message: isShapeSnapping
+                    ? 'Sketch-to-Shape Auto Snap (Hold stroke): ON'
+                    : 'Sketch-to-Shape Auto Snap: OFF',
+                child: IconButton(
+                  onPressed: onToggleShapeSnapping,
+                  icon: Icon(
+                    isShapeSnapping ? Icons.polyline_rounded : Icons.polyline_outlined,
+                    size: 18,
+                    color: isShapeSnapping ? scheme.primary : null,
                   ),
                 ),
               ),
