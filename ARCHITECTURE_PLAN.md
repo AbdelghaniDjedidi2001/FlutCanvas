@@ -37,7 +37,7 @@ Migrate from a monolithic `setState`-based architecture to a feature-first clean
 
 | Phase | Description | Status | Tasks Done |
 |-------|-------------|--------|------------|
-| 0 | Project Setup & Dependencies | ⬜ Not Started | 0/5 |
+| 0 | Project Setup & Dependencies | ✅ Complete | 5/5 |
 | 1 | Models → Freezed | ⬜ Not Started | 0/10 |
 | 2 | DI & Repository Layer | ⬜ Not Started | 0/8 |
 | 3 | Extract BLoCs from God Widget | ⬜ Not Started | 0/14 |
@@ -52,23 +52,23 @@ Migrate from a monolithic `setState`-based architecture to a feature-first clean
 > **Effort:** 0.5 day | **Risk:** Low  
 > **Goal:** Add all new packages and configure code generation tooling.
 
-- [ ] **0.1** Add runtime dependencies to `pubspec.yaml`
+- [x] **0.1** Add runtime dependencies to `pubspec.yaml`
   - `flutter_bloc: ^9.0.0`
   - `bloc_concurrency: ^0.3.0`
   - `freezed_annotation: ^3.0.0`
   - `json_annotation: ^4.9.0`
   - `get_it: ^8.0.0`
   - `injectable: ^2.5.0`
-- [ ] **0.2** Add dev dependencies to `pubspec.yaml`
+- [x] **0.2** Add dev dependencies to `pubspec.yaml`
   - `build_runner: ^2.4.0`
   - `freezed: ^3.0.0`
   - `json_serializable: ^6.8.0`
   - `injectable_generator: ^2.7.0`
   - `bloc_test: ^10.0.0`
   - `mocktail: ^1.0.0`
-- [ ] **0.3** Run `flutter pub get` — verify clean resolution
-- [ ] **0.4** Create `lib/core/di/injection.dart` with GetIt bootstrap skeleton
-- [ ] **0.5** Create `build.yaml` if needed for Freezed/json_serializable config
+- [x] **0.3** Run `flutter pub get` — verify clean resolution
+- [x] **0.4** Create `lib/core/di/injection.dart` with GetIt bootstrap skeleton
+- [x] **0.5** Create `build.yaml` if needed for Freezed/json_serializable config
 
 **Acceptance Criteria:**  
 ✅ `flutter pub get` succeeds  
