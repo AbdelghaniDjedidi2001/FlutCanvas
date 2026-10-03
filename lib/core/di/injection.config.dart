@@ -18,6 +18,8 @@ import '../../features/canvas/data/repositories/shared_prefs_board_repository.da
     as _i388;
 import '../../features/canvas/domain/repositories/board_repository.dart'
     as _i818;
+import '../../features/canvas/presentation/bloc/boards_cubit.dart' as _i936;
+import '../../features/canvas/presentation/bloc/canvas_bloc.dart' as _i796;
 import '../../features/clipboard/data/services/default_clipboard_repository.dart'
     as _i680;
 import '../../features/clipboard/domain/repositories/clipboard_repository.dart'
@@ -26,6 +28,7 @@ import '../../features/export/data/services/default_export_repository.dart'
     as _i158;
 import '../../features/export/domain/repositories/export_repository.dart'
     as _i1051;
+import '../../features/toolbar/presentation/bloc/tool_cubit.dart' as _i453;
 import 'app_module.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -40,6 +43,8 @@ extension GetItInjectableX on _i174.GetIt {
       () => appModule.prefs,
       preResolve: true,
     );
+    gh.factory<_i796.CanvasBloc>(() => _i796.CanvasBloc());
+    gh.factory<_i453.ToolCubit>(() => _i453.ToolCubit());
     gh.lazySingleton<_i10.ClipboardRepository>(
       () => _i680.DefaultClipboardRepository(),
     );
@@ -48,6 +53,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i818.BoardRepository>(
       () => _i388.SharedPrefsBoardRepository(gh<_i460.SharedPreferences>()),
+    );
+    gh.factory<_i936.BoardsCubit>(
+      () => _i936.BoardsCubit(gh<_i818.BoardRepository>()),
     );
     return this;
   }
