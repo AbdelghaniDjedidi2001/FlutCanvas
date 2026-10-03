@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,6 +14,20 @@ import 'features/layers/presentation/bloc/layers_cubit.dart';
 import 'features/presentation_mode/presentation/bloc/presentation_cubit.dart';
 import 'features/toolbar/presentation/bloc/tool_cubit.dart';
 import 'ui/whiteboard_page.dart';
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+        PointerDeviceKind.unknown,
+      };
+}
 
 T _resolve<T extends Object>(T Function() fallback) {
   try {
@@ -82,6 +97,7 @@ class _WhiteboardAppState extends State<WhiteboardApp> {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'FlutCanvas',
+            scrollBehavior: const AppScrollBehavior(),
             themeMode: _themeMode,
             theme: ThemeData(
               useMaterial3: true,

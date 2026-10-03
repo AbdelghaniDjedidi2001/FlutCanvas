@@ -2022,6 +2022,17 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                     onPointerMove: _onPointerMove,
                     onPointerUp: _onPointerUp,
                     onPointerCancel: _onPointerUp,
+                    onPointerPanZoomStart: (e) {
+                      _lastScreen = e.localPosition;
+                    },
+                    onPointerPanZoomUpdate: (e) {
+                      if (e.scale != 1.0) {
+                        _zoomAt(e.localPosition, _zoom * e.scale);
+                      } else if (e.panDelta != Offset.zero) {
+                        setState(() => _pan += e.panDelta);
+                      }
+                    },
+                    onPointerPanZoomEnd: (e) {},
                     onPointerSignal: (e) {
                       if (e is PointerScrollEvent) {
                         final factor = math.exp(-e.scrollDelta.dy / 380);
