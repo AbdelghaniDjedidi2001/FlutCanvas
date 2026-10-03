@@ -22,6 +22,7 @@ enum Tool {
   frame,
   image,
   codeBlock,
+  table,
 }
 
 extension ToolExtension on Tool {
@@ -41,6 +42,7 @@ extension ToolExtension on Tool {
         Tool.text => 'Text (T)',
         Tool.stickyNote => 'Sticky Note (N)',
         Tool.codeBlock => 'Code Block (C)',
+        Tool.table => 'Table Grid',
         Tool.eraser => 'Eraser (E)',
         Tool.laser => 'Laser Pointer (K)',
         Tool.frame => 'Frame / Slide (F)',
@@ -63,6 +65,7 @@ extension ToolExtension on Tool {
         Tool.text => Icons.title_rounded,
         Tool.stickyNote => Icons.sticky_note_2_outlined,
         Tool.codeBlock => Icons.code_rounded,
+        Tool.table => Icons.table_chart_outlined,
         Tool.eraser => Icons.auto_fix_normal_outlined,
         Tool.laser => Icons.flare_rounded,
         Tool.frame => Icons.crop_free_rounded,
@@ -83,6 +86,7 @@ extension ToolExtension on Tool {
         Tool.text => ShapeType.text,
         Tool.stickyNote => ShapeType.stickyNote,
         Tool.codeBlock => ShapeType.codeBlock,
+        Tool.table => ShapeType.table,
         Tool.frame => ShapeType.frame,
         Tool.image => ShapeType.image,
         _ => null,

@@ -121,6 +121,10 @@ class ElementRenderer {
         _drawCodeBlock(canvas, el, colors);
         break;
 
+      case ShapeType.table:
+        _drawTable(canvas, el, colors);
+        break;
+
       case ShapeType.image:
         _drawImage(canvas, el);
         break;
@@ -693,5 +697,159 @@ class ElementRenderer {
       Paint()..color = frameBorderColor.withValues(alpha: 0.15),
     );
     textPainter.paint(canvas, Offset(badgeRect.left + 8, badgeRect.top + 3));
+  }
+
+  static void _drawTable(Canvas canvas, BoardElement el, BoardColors colors) {
+    final rect = el.bounds;
+    final isDark = colors.isDark;
+    final table = el.safeTableData;
+    final rows = table.length;
+    final cols = table.isNotEmpty ? table.first.length : 1;
+    if (rows == 0 || cols == 0) return;
+
+    final cellW = rect.width / cols;
+    final cellH = rect.height / rows;
+    final hasHeader = el.tableHasHeader;
+
+    // 1. Base Table Background Card with Shadow
+    final shadowPaint = Paint()
+      ..color = isDark
+          ? Colors.black.withValues(alpha: 0.35)
+          : const Color(0x14000000)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect.translate(0, 2), const Radius.circular(8)),
+      shadowPaint,
+    );
+
+    final bgCardColor = el.fillColor != Colors.transparent
+        ? colors.display(el.fillColor).withValues(alpha: el.opacity)
+        : (isDark ? const Color(0xFF1E222B) : Colors.white);
+    final cardPaint = Paint()
+      ..color = bgCardColor
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(8)),
+      cardPaint,
+    );
+
+    // 2. Header Row Background & Zebra Alternating Rows
+    final headerBgColor = isDark
+        ? const Color(0xFF2C313D)
+        : const Color(0xFFF1F3F9);
+    final zebraBgColor = isDark
+        ? const Color(0xFF252A34)
+        : const Color(0xFFF8F9FA);
+
+    for (var r = 0; r < rows; r++) {
+      final isHeader = r == 0 && hasHeader;
+      final isEven = r % 2 == 1;
+
+      if (isHeader) {
+        final headerRect = Rect.fromLTWH(rect.left, rect.top, rect.width, cellH);
+        final headerPaint = Paint()..color = headerBgColor;
+        canvas.drawRRect(
+          RRect.fromRectAndCorners(
+            headerRect,
+            topLeft: const Radius.circular(8),
+            topRight: const Radius.circular(8),
+          ),
+          headerPaint,
+        );
+      } else if (isEven) {
+        final rowRect = Rect.fromLTWH(rect.left, rect.top + r * cellH, rect.width, cellH);
+        final zebraPaint = Paint()..color = zebraBgColor;
+        if (r == rows - 1) {
+          canvas.drawRRect(
+            RRect.fromRectAndCorners(
+              rowRect,
+              bottomLeft: const Radius.circular(8),
+              bottomRight: const Radius.circular(8),
+            ),
+            zebraPaint,
+          );
+        } else {
+          canvas.drawRect(rowRect, zebraPaint);
+        }
+      }
+    }
+
+    // 3. Grid Lines (Horizontal & Vertical Dividers)
+    final gridColor = isDark
+        ? const Color(0xFF383E4C)
+        : const Color(0xFFE2E6EE);
+    final gridPaint = Paint()
+      ..color = gridColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (var r = 1; r < rows; r++) {
+      final y = rect.top + r * cellH;
+      canvas.drawLine(Offset(rect.left, y), Offset(rect.right, y), gridPaint);
+    }
+
+    for (var c = 1; c < cols; c++) {
+      final x = rect.left + c * cellW;
+      canvas.drawLine(Offset(x, rect.top), Offset(x, rect.bottom), gridPaint);
+    }
+
+    // 4. Outer Border
+    final borderColor = el.color != Colors.transparent
+        ? colors.display(el.color).withValues(alpha: el.opacity)
+        : (isDark ? const Color(0xFF4A5162) : const Color(0xFFD0D5DD));
+    final outerBorderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.0, el.strokeWidth);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(8)),
+      outerBorderPaint,
+    );
+
+    // 5. Draw Cell Text
+    final textColor = isDark ? const Color(0xFFF1F3F5) : const Color(0xFF212529);
+    final headerTextColor = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF111827);
+    final fontSize = math.max(10.0, math.min(el.fontSize, cellH * 0.45));
+
+    for (var r = 0; r < rows; r++) {
+      final isHeader = r == 0 && hasHeader;
+      for (var c = 0; c < cols; c++) {
+        if (c >= table[r].length) continue;
+        final cellText = table[r][c];
+        if (cellText.isEmpty) continue;
+
+        final cellRect = Rect.fromLTWH(
+          rect.left + c * cellW,
+          rect.top + r * cellH,
+          cellW,
+          cellH,
+        );
+
+        final textSpan = TextSpan(
+          text: cellText,
+          style: GoogleFonts.inter(
+            color: isHeader ? headerTextColor : textColor,
+            fontSize: fontSize,
+            fontWeight: isHeader ? FontWeight.w700 : FontWeight.w500,
+          ),
+        );
+
+        const paddingH = 8.0;
+        final textPainter = TextPainter(
+          text: textSpan,
+          textDirection: TextDirection.ltr,
+          maxLines: math.max(1, (cellH / (fontSize * 1.3)).floor()),
+          ellipsis: '...',
+        )..layout(maxWidth: math.max(10.0, cellW - paddingH * 2));
+
+        final textY = cellRect.top + (cellH - textPainter.height) / 2;
+        final textX = cellRect.left + paddingH;
+
+        canvas.save();
+        canvas.clipRect(cellRect.deflate(2));
+        textPainter.paint(canvas, Offset(textX, textY));
+        canvas.restore();
+      }
+    }
   }
 }

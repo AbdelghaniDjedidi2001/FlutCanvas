@@ -15,4 +15,5 @@ enum ShapeType {
   image,
   frame,
   codeBlock,
+  table,
 }

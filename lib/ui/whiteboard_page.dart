@@ -138,6 +138,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   // Inline Text Editing
   String? _editingElementId;
+  (int, int)? _editingTableCell;
   Offset? _editingScreenPos;
   bool _isEditingSticky = false;
   bool _isEditingCode = false;
@@ -842,6 +843,152 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     _showToast('Inserted ${SyntaxHighlighterService.getDisplayName(language)} Code Block');
   }
 
+  void _insertTable(Offset world) {
+    final newId = 'tbl_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+    final newElement = BoardElement(
+      id: newId,
+      type: ShapeType.table,
+      start: world,
+      end: world + const Offset(360, 180),
+      color: _color,
+      fillColor: _fillColor,
+      strokeWidth: 1.5,
+      fontSize: 14.0,
+      tableData: const [
+        ['Item', 'Qty', 'Price'],
+        ['Apple', '10', '\$2.50'],
+        ['Banana', '5', '\$1.20'],
+      ],
+      tableHasHeader: true,
+    );
+
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [..._elements, newElement];
+      _selectedIds = {newId};
+      _tool = Tool.select;
+    });
+    _showToast('Inserted 3x3 Table Grid');
+  }
+
+  void _addTableRow() {
+    final table = _elements.where((e) => _selectedIds.contains(e.id) && e.type == ShapeType.table).firstOrNull;
+    if (table != null) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            el.id == table.id ? el.addTableRow() : el,
+        ];
+      });
+      _showToast('Added row (Total: ${table.tableRowCount + 1})');
+    }
+  }
+
+  void _removeTableRow() {
+    final table = _elements.where((e) => _selectedIds.contains(e.id) && e.type == ShapeType.table).firstOrNull;
+    if (table != null && table.tableRowCount > 1) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            el.id == table.id ? el.removeTableRow() : el,
+        ];
+      });
+      _showToast('Removed row (Total: ${table.tableRowCount - 1})');
+    }
+  }
+
+  void _addTableColumn() {
+    final table = _elements.where((e) => _selectedIds.contains(e.id) && e.type == ShapeType.table).firstOrNull;
+    if (table != null) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            el.id == table.id ? el.addTableColumn() : el,
+        ];
+      });
+      _showToast('Added column (Total: ${table.tableColCount + 1})');
+    }
+  }
+
+  void _removeTableColumn() {
+    final table = _elements.where((e) => _selectedIds.contains(e.id) && e.type == ShapeType.table).firstOrNull;
+    if (table != null && table.tableColCount > 1) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            el.id == table.id ? el.removeTableColumn() : el,
+        ];
+      });
+      _showToast('Removed column (Total: ${table.tableColCount - 1})');
+    }
+  }
+
+  void _toggleTableHeader(bool hasHeader) {
+    final table = _elements.where((e) => _selectedIds.contains(e.id) && e.type == ShapeType.table).firstOrNull;
+    if (table != null) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [
+          for (final el in _elements)
+            el.id == table.id ? el.copyWith(tableHasHeader: hasHeader) : el,
+        ];
+      });
+    }
+  }
+
+  void _navigateTableCell(int dRow, int dCol, String currentText) {
+    if (_editingElementId == null || _editingTableCell == null) return;
+    final elementId = _editingElementId!;
+    final currentCell = _editingTableCell!;
+    final el = _elements.where((e) => e.id == elementId).firstOrNull;
+    if (el == null || el.type != ShapeType.table) return;
+
+    final updatedEl = el.updateTableCell(currentCell.$1, currentCell.$2, currentText);
+    final rows = updatedEl.tableRowCount;
+    final cols = updatedEl.tableColCount;
+
+    var nextRow = currentCell.$1 + dRow;
+    var nextCol = currentCell.$2 + dCol;
+
+    if (nextCol >= cols) {
+      nextCol = 0;
+      nextRow++;
+    } else if (nextCol < 0) {
+      nextCol = cols - 1;
+      nextRow--;
+    }
+
+    if (nextRow < 0) nextRow = 0;
+    if (nextRow >= rows) {
+      setState(() {
+        _pushUndo(_elements);
+        _elements = [
+          for (final e in _elements)
+            e.id == elementId ? updatedEl : e,
+        ];
+        _editingElementId = null;
+        _editingTableCell = null;
+        _editingScreenPos = null;
+      });
+      return;
+    }
+
+    final nextCellRect = updatedEl.getCellRect(nextRow, nextCol);
+    setState(() {
+      _pushUndo(_elements);
+      _elements = [
+        for (final e in _elements)
+          e.id == elementId ? updatedEl : e,
+      ];
+      _editingTableCell = (nextRow, nextCol);
+      _editingScreenPos = _toScreen(nextCellRect.topLeft);
+    });
+  }
+
   // ── Image Upload & Insertion ───────────────────────────────
   Future<void> _handleInsertImage() async {
     final picked = await ImageService.pickImage();
@@ -1054,6 +1201,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
     if (_tool == Tool.codeBlock) {
       _insertCodeBlock(world);
+      return;
+    }
+
+    if (_tool == Tool.table) {
+      _insertTable(world);
       return;
     }
 
@@ -1517,11 +1669,27 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     final world = _toWorld(d.localPosition);
     final hit = _hitTestTopmost(world);
     if (hit != null && !hit.isLocked) {
+      if (hit.type == ShapeType.table) {
+        final cell = hit.hitTestCell(world);
+        if (cell != null) {
+          final cellRect = hit.getCellRect(cell.$1, cell.$2);
+          setState(() {
+            _editingElementId = hit.id;
+            _editingTableCell = (cell.$1, cell.$2);
+            _editingScreenPos = _toScreen(cellRect.topLeft);
+            _isEditingSticky = false;
+            _isEditingCode = false;
+          });
+        }
+        return;
+      }
+
       if (hit.type == ShapeType.text ||
           hit.type == ShapeType.stickyNote ||
           hit.type == ShapeType.codeBlock) {
         setState(() {
           _editingElementId = hit.id;
+          _editingTableCell = null;
           _editingScreenPos = _toScreen(hit.start);
           _isEditingSticky = hit.type == ShapeType.stickyNote;
           _isEditingCode = hit.type == ShapeType.codeBlock;
@@ -1532,6 +1700,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
         final route = ConnectorRoutingService.computeRoute(hit);
         setState(() {
           _editingElementId = hit.id;
+          _editingTableCell = null;
           _editingScreenPos = _toScreen(route.midpoint);
           _isEditingSticky = false;
           _isEditingCode = false;
@@ -1903,6 +2072,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       onCodeLanguageChanged: _updateCodeLanguage,
                       onToggleLineNumbers: _toggleLineNumbers,
                       onCopyCode: _copyCode,
+                      onAddTableRow: _addTableRow,
+                      onRemoveTableRow: _removeTableRow,
+                      onAddTableColumn: _addTableColumn,
+                      onRemoveTableColumn: _removeTableColumn,
+                      onToggleTableHeader: _toggleTableHeader,
                       onConnectorStyleChanged: _updateConnectorStyle,
                       onEditConnectorLabel: () {
                         final connector = selectedElements.where((e) =>
@@ -1913,6 +2087,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                           final route = ConnectorRoutingService.computeRoute(connector);
                           setState(() {
                             _editingElementId = connector.id;
+                            _editingTableCell = null;
                             _editingScreenPos = _toScreen(route.midpoint);
                             _isEditingSticky = false;
                           });
@@ -2033,35 +2208,52 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                   final isConnector = editingEl.type == ShapeType.line ||
                       editingEl.type == ShapeType.arrow ||
                       editingEl.type == ShapeType.doubleArrow;
-                  final initialText = isConnector
-                      ? (editingEl.label ?? '')
-                      : editingEl.text;
+                  final isTableCell = _editingTableCell != null && editingEl.type == ShapeType.table;
+
+                  final initialText = isTableCell
+                      ? (_editingTableCell!.$1 < editingEl.safeTableData.length &&
+                              _editingTableCell!.$2 < editingEl.safeTableData[_editingTableCell!.$1].length
+                          ? editingEl.safeTableData[_editingTableCell!.$1][_editingTableCell!.$2]
+                          : '')
+                      : (isConnector
+                          ? (editingEl.label ?? '')
+                          : editingEl.text);
+
+                  final cellWidth = isTableCell
+                      ? editingEl.getCellRect(_editingTableCell!.$1, _editingTableCell!.$2).width * _zoom
+                      : null;
 
                   return InlineTextEditor(
                     initialText: initialText,
-                    fontSize: isConnector ? 16.0 : _fontSize,
+                    fontSize: isConnector ? 16.0 : (isTableCell ? editingEl.fontSize : _fontSize),
                     color: isConnector ? editingEl.color : _color,
                     screenPosition: _editingScreenPos!,
                     isStickyNote: _isEditingSticky,
                     isCodeBlock: _isEditingCode,
+                    isTableCell: isTableCell,
+                    customWidth: cellWidth,
+                    onNavigateCell: _navigateTableCell,
                     onSubmitted: (newText) {
                       setState(() {
                         _pushUndo(_elements);
                         _elements = [
                           for (final el in _elements)
                             if (el.id == _editingElementId)
-                              isConnector
-                                  ? el.copyWith(
-                                      label: newText.trim().isEmpty
-                                          ? null
-                                          : newText.trim(),
-                                      clearLabel: newText.trim().isEmpty,
-                                    )
-                                  : el.copyWith(text: newText)
+                              isTableCell
+                                  ? el.updateTableCell(_editingTableCell!.$1, _editingTableCell!.$2, newText)
+                                  : (isConnector
+                                      ? el.copyWith(
+                                          label: newText.trim().isEmpty
+                                              ? null
+                                              : newText.trim(),
+                                          clearLabel: newText.trim().isEmpty,
+                                        )
+                                      : el.copyWith(text: newText))
                             else
                               el,
                         ];
                         _editingElementId = null;
+                        _editingTableCell = null;
                         _editingScreenPos = null;
                       });
                     },
@@ -2070,12 +2262,13 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                         (e) => e.id == _editingElementId,
                         orElse: () => _elements.first,
                       );
-                      if (!isConnector && el.text.trim().isEmpty) {
+                      if (!isConnector && !isTableCell && el.text.trim().isEmpty) {
                         _elements = _elements
                             .where((e) => e.id != _editingElementId)
                             .toList();
                       }
                       _editingElementId = null;
+                      _editingTableCell = null;
                       _editingScreenPos = null;
                     }),
                   );

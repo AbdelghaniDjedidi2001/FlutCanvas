@@ -94,6 +94,7 @@ class MainToolbar extends StatelessWidget {
               _toolButton(Tool.text, scheme),
               _toolButton(Tool.stickyNote, scheme),
               _toolButton(Tool.codeBlock, scheme),
+              _toolButton(Tool.table, scheme),
               _toolButton(Tool.image, scheme),
               _toolButton(Tool.frame, scheme),
               _divider(scheme),

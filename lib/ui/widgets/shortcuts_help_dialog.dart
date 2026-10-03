@@ -87,6 +87,8 @@ class ShortcutsHelpDialog extends StatelessWidget {
                         _ShortcutItem('Auto Shape Recognition', 'Draw & hold stroke (380ms)'),
                         _ShortcutItem('Text Tool', 'T'),
                         _ShortcutItem('Sticky Note', 'N'),
+                        _ShortcutItem('Code Block', 'C'),
+                        _ShortcutItem('Table Grid', 'Double-click cell to edit / Tab'),
                         _ShortcutItem('Eraser', 'E'),
                         _ShortcutItem('Laser Pointer', 'K'),
                         _ShortcutItem('Slide Frame', 'F'),

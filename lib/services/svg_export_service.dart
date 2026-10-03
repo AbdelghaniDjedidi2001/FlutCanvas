@@ -160,6 +160,10 @@ class SvgExportService {
         _renderCodeBlockSvg(buffer, el);
         break;
 
+      case ShapeType.table:
+        _renderTableSvg(buffer, el, strokeColor, colors);
+        break;
+
       case ShapeType.image:
         if (el.imageBase64 != null) {
           final r = el.bounds;
@@ -517,5 +521,80 @@ class SvgExportService {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&apos;');
+  }
+
+  static void _renderTableSvg(
+    StringBuffer buffer,
+    BoardElement el,
+    String strokeColor,
+    BoardColors colors,
+  ) {
+    final r = el.bounds;
+    final table = el.safeTableData;
+    final rows = table.length;
+    final cols = table.isNotEmpty ? table.first.length : 1;
+    if (rows == 0 || cols == 0) return;
+
+    final cellW = r.width / cols;
+    final cellH = r.height / rows;
+    final hasHeader = el.tableHasHeader;
+    final isDark = colors.isDark;
+
+    final bgHex = el.fillColor != Colors.transparent
+        ? _colorToHex(colors.display(el.fillColor))
+        : (isDark ? '#1E222B' : '#FFFFFF');
+    final headerBgHex = isDark ? '#2C313D' : '#F1F3F9';
+    final zebraBgHex = isDark ? '#252A34' : '#F8F9FA';
+    final gridHex = isDark ? '#383E4C' : '#E2E6EE';
+    final textColor = isDark ? '#F1F3F5' : '#212529';
+    final headerTextColor = isDark ? '#FFFFFF' : '#111827';
+    final fontSize = math.max(10.0, math.min(el.fontSize, cellH * 0.45));
+
+    // Outer container card
+    buffer.writeln(
+        '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}" rx="8" fill="$bgHex" stroke="$strokeColor" stroke-width="${math.max(1.0, el.strokeWidth)}" />');
+
+    // Header & Zebra Rows
+    for (var row = 0; row < rows; row++) {
+      final isHeader = row == 0 && hasHeader;
+      final isEven = row % 2 == 1;
+      if (isHeader) {
+        buffer.writeln(
+            '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="$cellH" rx="8" fill="$headerBgHex" />');
+      } else if (isEven) {
+        buffer.writeln(
+            '    <rect x="${r.left}" y="${r.top + row * cellH}" width="${r.width}" height="$cellH" fill="$zebraBgHex" />');
+      }
+    }
+
+    // Grid Dividers
+    for (var row = 1; row < rows; row++) {
+      final y = r.top + row * cellH;
+      buffer.writeln(
+          '    <line x1="${r.left}" y1="$y" x2="${r.right}" y2="$y" stroke="$gridHex" stroke-width="1" />');
+    }
+    for (var col = 1; col < cols; col++) {
+      final x = r.left + col * cellW;
+      buffer.writeln(
+          '    <line x1="$x" y1="${r.top}" x2="$x" y2="${r.bottom}" stroke="$gridHex" stroke-width="1" />');
+    }
+
+    // Cell Texts
+    for (var row = 0; row < rows; row++) {
+      final isHeader = row == 0 && hasHeader;
+      for (var col = 0; col < cols; col++) {
+        if (col >= table[row].length) continue;
+        final rawText = table[row][col];
+        if (rawText.isEmpty) continue;
+        final escaped = _escapeXml(rawText);
+        final x = r.left + col * cellW + 8;
+        final y = r.top + row * cellH + cellH / 2 + (fontSize * 0.35);
+        final fill = isHeader ? headerTextColor : textColor;
+        final weight = isHeader ? 'bold' : '500';
+
+        buffer.writeln(
+            '    <text x="$x" y="$y" font-size="$fontSize" font-weight="$weight" fill="$fill">$escaped</text>');
+      }
+    }
   }
 }

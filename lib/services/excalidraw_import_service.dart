@@ -100,6 +100,7 @@ class ExcalidrawImportService {
       ShapeType.image => 30,
       ShapeType.stickyNote ||
       ShapeType.codeBlock ||
+      ShapeType.table ||
       ShapeType.text => 40,
     };
   }

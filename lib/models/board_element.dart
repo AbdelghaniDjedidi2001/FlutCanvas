@@ -40,6 +40,8 @@ class BoardElement {
     this.label,
     this.codeLanguage,
     this.showLineNumbers = true,
+    this.tableData,
+    this.tableHasHeader = true,
   });
 
   final String id;
@@ -70,6 +72,106 @@ class BoardElement {
   final String? label;
   final String? codeLanguage;
   final bool showLineNumbers;
+  final List<List<String>>? tableData;
+  final bool tableHasHeader;
+
+  List<List<String>> get safeTableData {
+    if (tableData != null && tableData!.isNotEmpty) return tableData!;
+    return const [
+      ['Column 1', 'Column 2', 'Column 3'],
+      ['Row 1', 'Data A', 'Data B'],
+      ['Row 2', 'Data C', 'Data D'],
+    ];
+  }
+
+  int get tableRowCount => safeTableData.length;
+  int get tableColCount => safeTableData.isNotEmpty ? safeTableData.first.length : 1;
+
+  Rect getCellRect(int row, int col) {
+    final b = bounds;
+    final rows = math.max(1, tableRowCount);
+    final cols = math.max(1, tableColCount);
+    final cellW = b.width / cols;
+    final cellH = b.height / rows;
+    return Rect.fromLTWH(
+      b.left + col * cellW,
+      b.top + row * cellH,
+      cellW,
+      cellH,
+    );
+  }
+
+  (int, int)? hitTestCell(Offset worldPos) {
+    if (type != ShapeType.table) return null;
+    final b = bounds;
+    if (!b.contains(worldPos)) return null;
+    final rows = math.max(1, tableRowCount);
+    final cols = math.max(1, tableColCount);
+    final cellW = b.width / cols;
+    final cellH = b.height / rows;
+    final col = ((worldPos.dx - b.left) / cellW).floor().clamp(0, cols - 1);
+    final row = ((worldPos.dy - b.top) / cellH).floor().clamp(0, rows - 1);
+    return (row, col);
+  }
+
+  BoardElement updateTableCell(int row, int col, String value) {
+    final current = [for (final r in safeTableData) [...r]];
+    if (row >= 0 && row < current.length && col >= 0 && col < current[row].length) {
+      current[row][col] = value;
+    }
+    return copyWith(tableData: current);
+  }
+
+  BoardElement addTableRow() {
+    final current = [for (final r in safeTableData) [...r]];
+    final cols = tableColCount;
+    final newRow = List.generate(cols, (i) => 'Cell ${current.length + 1}-${i + 1}');
+    current.add(newRow);
+    final rowHeight = bounds.height / math.max(1, current.length - 1);
+    return copyWith(
+      tableData: current,
+      end: Offset(end.dx, end.dy + rowHeight),
+    );
+  }
+
+  BoardElement removeTableRow() {
+    final current = [for (final r in safeTableData) [...r]];
+    if (current.length <= 1) return this;
+    final rowHeight = bounds.height / current.length;
+    current.removeLast();
+    return copyWith(
+      tableData: current,
+      end: Offset(end.dx, end.dy - rowHeight),
+    );
+  }
+
+  BoardElement addTableColumn() {
+    final current = [for (final r in safeTableData) [...r]];
+    for (var r = 0; r < current.length; r++) {
+      final label = (r == 0 && tableHasHeader)
+          ? 'Header ${current[r].length + 1}'
+          : 'Data';
+      current[r].add(label);
+    }
+    final colWidth = bounds.width / math.max(1, tableColCount);
+    return copyWith(
+      tableData: current,
+      end: Offset(end.dx + colWidth, end.dy),
+    );
+  }
+
+  BoardElement removeTableColumn() {
+    final current = [for (final r in safeTableData) [...r]];
+    if (tableColCount <= 1) return this;
+    final colWidth = bounds.width / tableColCount;
+    for (var r = 0; r < current.length; r++) {
+      if (current[r].isNotEmpty) current[r].removeLast();
+    }
+    return copyWith(
+      tableData: current,
+      end: Offset(end.dx - colWidth, end.dy),
+    );
+  }
 
   String get displayName {
     if (customName != null && customName!.trim().isNotEmpty) {
@@ -103,6 +205,7 @@ class BoardElement {
       ShapeType.frame => 'Frame',
       ShapeType.image => 'Image',
       ShapeType.codeBlock => 'Code (${codeLanguage ?? "Dart"})',
+      ShapeType.table => 'Table (${tableRowCount}x$tableColCount)',
     };
   }
 
@@ -135,6 +238,8 @@ class BoardElement {
     String? label,
     String? codeLanguage,
     bool? showLineNumbers,
+    List<List<String>>? tableData,
+    bool? tableHasHeader,
     bool clearStartBinding = false,
     bool clearEndBinding = false,
     bool clearGroupId = false,
@@ -172,6 +277,8 @@ class BoardElement {
       label: clearLabel ? null : (label ?? this.label),
       codeLanguage: clearCodeLanguage ? null : (codeLanguage ?? this.codeLanguage),
       showLineNumbers: showLineNumbers ?? this.showLineNumbers,
+      tableData: tableData ?? this.tableData,
+      tableHasHeader: tableHasHeader ?? this.tableHasHeader,
     );
   }
 
@@ -277,6 +384,7 @@ class BoardElement {
       case ShapeType.roundedRectangle:
       case ShapeType.stickyNote:
       case ShapeType.codeBlock:
+      case ShapeType.table:
       case ShapeType.text:
       case ShapeType.image:
       case ShapeType.frame:
@@ -356,6 +464,8 @@ class BoardElement {
       'label': label,
       'codeLanguage': codeLanguage,
       'showLineNumbers': showLineNumbers,
+      'tableData': tableData,
+      'tableHasHeader': tableHasHeader,
     };
   }
 
@@ -371,6 +481,13 @@ class BoardElement {
     final pts = (map['points'] as List<dynamic>? ?? [])
         .map((p) => parseOffset(p))
         .toList();
+
+    List<List<String>>? parsedTableData;
+    if (map['tableData'] is List) {
+      parsedTableData = (map['tableData'] as List<dynamic>)
+          .map((row) => (row as List<dynamic>).map((cell) => cell.toString()).toList())
+          .toList();
+    }
 
     return BoardElement(
       id: map['id'] as String? ??
@@ -423,6 +540,8 @@ class BoardElement {
       label: map['label'] as String?,
       codeLanguage: map['codeLanguage'] as String?,
       showLineNumbers: map['showLineNumbers'] as bool? ?? true,
+      tableData: parsedTableData,
+      tableHasHeader: map['tableHasHeader'] as bool? ?? true,
     );
   }
 

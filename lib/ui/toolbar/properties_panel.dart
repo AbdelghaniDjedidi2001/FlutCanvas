@@ -38,6 +38,11 @@ class PropertiesPanel extends StatelessWidget {
     this.onCodeLanguageChanged,
     this.onToggleLineNumbers,
     this.onCopyCode,
+    this.onAddTableRow,
+    this.onRemoveTableRow,
+    this.onAddTableColumn,
+    this.onRemoveTableColumn,
+    this.onToggleTableHeader,
     required this.onGroup,
     required this.onUngroup,
     required this.onBringToFront,
@@ -78,6 +83,11 @@ class PropertiesPanel extends StatelessWidget {
   final void Function(String language)? onCodeLanguageChanged;
   final void Function(bool showNumbers)? onToggleLineNumbers;
   final VoidCallback? onCopyCode;
+  final VoidCallback? onAddTableRow;
+  final VoidCallback? onRemoveTableRow;
+  final VoidCallback? onAddTableColumn;
+  final VoidCallback? onRemoveTableColumn;
+  final void Function(bool hasHeader)? onToggleTableHeader;
   final VoidCallback onGroup;
   final VoidCallback onUngroup;
   final VoidCallback onBringToFront;
@@ -97,6 +107,12 @@ class PropertiesPanel extends StatelessWidget {
 
   bool get _hasCodeBlock =>
       selectedElements.any((e) => e.type == ShapeType.codeBlock);
+
+  bool get _hasTable =>
+      selectedElements.any((e) => e.type == ShapeType.table);
+
+  BoardElement? get _firstTable =>
+      selectedElements.where((e) => e.type == ShapeType.table).firstOrNull;
 
   bool get _hasMarkdownText => selectedElements.any(
       (e) => e.type == ShapeType.stickyNote || e.type == ShapeType.text);
@@ -142,41 +158,52 @@ class PropertiesPanel extends StatelessWidget {
                     color: scheme.primary,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    selectedElements.isEmpty
-                        ? 'Style Settings'
-                        : '${selectedElements.length} selected',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onSurfaceVariant,
+                  Expanded(
+                    child: Text(
+                      selectedElements.isEmpty
+                          ? 'Style Settings'
+                          : '${selectedElements.length} selected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
                   if (selectedElements.isNotEmpty) ...[
                     IconButton(
                       tooltip: 'Duplicate (Ctrl+D)',
                       visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                       iconSize: 15,
                       onPressed: onDuplicate,
                       icon: const Icon(Icons.copy_rounded),
                     ),
+                    const SizedBox(width: 2),
                     IconButton(
                       tooltip: 'Delete (Del)',
                       visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                       iconSize: 15,
                       onPressed: onDelete,
                       icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                     ),
                   ],
-                  if (onClose != null)
+                  if (onClose != null) ...[
+                    const SizedBox(width: 2),
                     IconButton(
                       tooltip: 'Close panel',
                       visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                       iconSize: 15,
                       onPressed: onClose,
                       icon: const Icon(Icons.close),
                     ),
+                  ],
                 ],
               ),
               const Divider(height: 10),
@@ -405,6 +432,100 @@ class PropertiesPanel extends StatelessWidget {
                     ],
                   ],
                 ),
+                const SizedBox(height: 9),
+              ],
+
+              // 4.65 Table Controls (when Table elements are selected)
+              if (_hasTable) ...[
+                const Text('Table Grid Controls', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onAddTableRow,
+                        icon: const Icon(Icons.add, size: 13),
+                        label: const Text('+ Row', style: TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onRemoveTableRow,
+                        icon: const Icon(Icons.remove, size: 13),
+                        label: const Text('- Row', style: TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onAddTableColumn,
+                        icon: const Icon(Icons.add, size: 13),
+                        label: const Text('+ Col', style: TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        onPressed: onRemoveTableColumn,
+                        icon: const Icon(Icons.remove, size: 13),
+                        label: const Text('- Col', style: TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                if (_firstTable != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        backgroundColor: _firstTable!.tableHasHeader
+                            ? scheme.primaryContainer.withValues(alpha: 0.5)
+                            : null,
+                      ),
+                      onPressed: () {
+                        if (onToggleTableHeader != null) {
+                          onToggleTableHeader!(!_firstTable!.tableHasHeader);
+                        }
+                      },
+                      icon: Icon(
+                        Icons.view_headline_rounded,
+                        size: 13,
+                        color: _firstTable!.tableHasHeader ? scheme.primary : null,
+                      ),
+                      label: Text(
+                        _firstTable!.tableHasHeader ? 'Header Row: ON' : 'Header Row: OFF',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _firstTable!.tableHasHeader ? scheme.primary : null,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 9),
               ],
 

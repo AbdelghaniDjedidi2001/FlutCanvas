@@ -11,6 +11,9 @@ class InlineTextEditor extends StatefulWidget {
     required this.screenPosition,
     required this.isStickyNote,
     this.isCodeBlock = false,
+    this.isTableCell = false,
+    this.customWidth,
+    this.onNavigateCell,
     required this.onSubmitted,
     required this.onCanceled,
   });
@@ -21,6 +24,9 @@ class InlineTextEditor extends StatefulWidget {
   final Offset screenPosition;
   final bool isStickyNote;
   final bool isCodeBlock;
+  final bool isTableCell;
+  final double? customWidth;
+  final void Function(int dRow, int dCol, String currentText)? onNavigateCell;
   final void Function(String text) onSubmitted;
   final VoidCallback onCanceled;
 
@@ -53,7 +59,7 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
 
   void _finish() {
     final text = _controller.text.trim();
-    if (text.isNotEmpty) {
+    if (widget.isTableCell || text.isNotEmpty) {
       widget.onSubmitted(text);
     } else {
       widget.onCanceled();
@@ -92,6 +98,29 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
     final key = event.logicalKey;
     final kb = HardwareKeyboard.instance;
 
+    // Table cell navigation (Tab next cell, Enter next row)
+    if (widget.isTableCell) {
+      if (key == LogicalKeyboardKey.tab) {
+        if (kb.isShiftPressed) {
+          widget.onNavigateCell?.call(0, -1, _controller.text);
+        } else {
+          widget.onNavigateCell?.call(0, 1, _controller.text);
+        }
+        return KeyEventResult.handled;
+      }
+
+      if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+        widget.onNavigateCell?.call(1, 0, _controller.text);
+        return KeyEventResult.handled;
+      }
+
+      if (key == LogicalKeyboardKey.escape) {
+        _finish();
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
     // Tab key handling for code indentation
     if (key == LogicalKeyboardKey.tab) {
       _insertTab();
@@ -108,7 +137,6 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
           _finish();
           return KeyEventResult.handled;
         }
-        // Normal enter in code block inserts newline
         _insertNewline();
         return KeyEventResult.handled;
       }
@@ -119,8 +147,6 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
       }
     } else {
       // 1. Enter key handling for normal text / sticky notes:
-      //    - Shift + Enter: Inserts a newline at current cursor
-      //    - Enter (or Numpad Enter): Finishes editing
       if (key == LogicalKeyboardKey.enter ||
           key == LogicalKeyboardKey.numpadEnter) {
         if (kb.isShiftPressed) {
@@ -155,22 +181,29 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final containerWidth = widget.isCodeBlock
-        ? 380.0
-        : (widget.isStickyNote ? 220.0 : 280.0);
+    final containerWidth = widget.customWidth ??
+        (widget.isCodeBlock
+            ? 380.0
+            : (widget.isStickyNote ? 220.0 : (widget.isTableCell ? 160.0 : 280.0)));
 
-    final textStyle = widget.isCodeBlock
-        ? GoogleFonts.jetBrainsMono(
-            fontSize: widget.fontSize * 0.8,
-            color: isDark ? const Color(0xFFCDD6F4) : const Color(0xFF24292F),
-            fontWeight: FontWeight.w500,
-            height: 1.4,
-          )
-        : GoogleFonts.caveat(
+    final textStyle = widget.isTableCell
+        ? GoogleFonts.inter(
             fontSize: widget.fontSize,
             color: widget.color,
             fontWeight: FontWeight.w600,
-          );
+          )
+        : (widget.isCodeBlock
+            ? GoogleFonts.jetBrainsMono(
+                fontSize: widget.fontSize * 0.8,
+                color: isDark ? const Color(0xFFCDD6F4) : const Color(0xFF24292F),
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              )
+            : GoogleFonts.caveat(
+                fontSize: widget.fontSize,
+                color: widget.color,
+                fontWeight: FontWeight.w600,
+              ));
 
     final editorBg = widget.isCodeBlock
         ? (isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF8F9FA))
@@ -188,7 +221,7 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
             // Text Input Box
             Container(
               width: containerWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: editorBg,
                 borderRadius: BorderRadius.circular(8),
@@ -209,7 +242,9 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
-                  maxLines: widget.isCodeBlock ? 16 : (widget.isStickyNote ? 8 : null),
+                  maxLines: widget.isCodeBlock
+                      ? 16
+                      : (widget.isStickyNote ? 8 : (widget.isTableCell ? 2 : null)),
                   minLines: widget.isCodeBlock ? 4 : (widget.isStickyNote ? 3 : 1),
                   autofocus: true,
                   style: textStyle,
@@ -217,7 +252,9 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
                     border: InputBorder.none,
-                    hintText: widget.isCodeBlock ? '// Enter code here...' : 'Type text here...',
+                    hintText: widget.isCodeBlock
+                        ? '// Enter code here...'
+                        : (widget.isTableCell ? 'Cell value...' : 'Type text here...'),
                   ),
                   onTapOutside: (_) => _finish(),
                 ),
@@ -240,9 +277,11 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    widget.isCodeBlock
-                        ? '⌘↵ or Done to finish · ⇥ Tab indent'
-                        : '↵ Enter to finish · ⇧↵ New line',
+                    widget.isTableCell
+                        ? '⇥ Tab next cell · ↵ Enter next row'
+                        : (widget.isCodeBlock
+                            ? '⌘↵ or Done to finish · ⇥ Tab indent'
+                            : '↵ Enter to finish · ⇧↵ New line'),
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 10.5,
