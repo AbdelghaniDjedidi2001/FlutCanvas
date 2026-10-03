@@ -39,7 +39,7 @@ Migrate from a monolithic `setState`-based architecture to a feature-first clean
 |-------|-------------|--------|------------|
 | 0 | Project Setup & Dependencies | ✅ Complete | 5/5 |
 | 1 | Models → Freezed | ✅ Complete | 10/10 |
-| 2 | DI & Repository Layer | ⬜ Not Started | 0/8 |
+| 2 | DI & Repository Layer | ✅ Complete | 8/8 |
 | 3 | Extract BLoCs from God Widget | ⬜ Not Started | 0/14 |
 | 4 | Feature Extraction & UI Cleanup | ⬜ Not Started | 0/12 |
 | 5 | Testing & Validation | ⬜ Not Started | 0/10 |
@@ -114,23 +114,23 @@ Migrate from a monolithic `setState`-based architecture to a feature-first clean
 
 ### 2A — Abstract Repositories
 
-- [ ] **2.1** Create `BoardRepository` abstract class
-  - `saveBoard(BoardDocument)`, `loadBoard(String)`, `listBoards()`, `deleteBoard(String)`
-- [ ] **2.2** Create `ExportRepository` abstract class
-  - `exportAsPng(...)`, `exportAsSvg(...)`, `exportAsPdf(...)`, `exportAsJson(...)`, `importFromJson(...)`
-- [ ] **2.3** Create `ClipboardRepository` abstract class
-  - `copy(...)`, `paste()`, `toMermaid(...)`, `fromMermaid(...)`
+- [x] **2.1** Create `BoardRepository` abstract class
+  - `saveWorkspace(...)`, `loadWorkspace()`, `clearWorkspace()`
+- [x] **2.2** Create `ExportRepository` abstract class
+  - `renderToPng(...)`, `exportToSvg(...)`, `exportToPdf(...)`, `exportToJson(...)`, `importFromJson(...)`
+- [x] **2.3** Create `ClipboardRepository` abstract class
+  - `copy(...)`, `duplicate()`, `pasteFromSystem(...)`, `createImageElement(...)`
 
 ### 2B — Concrete Implementations
 
-- [ ] **2.4** Implement `SharedPrefsBoardRepository` (migrated from `StorageService`)
-- [ ] **2.5** Implement `DefaultExportRepository` (migrated from `ExportService`)
-- [ ] **2.6** Implement `DefaultClipboardRepository` (migrated from `ClipboardService`, eliminate global static state)
+- [x] **2.4** Implement `SharedPrefsBoardRepository` (migrated from `StorageService`)
+- [x] **2.5** Implement `DefaultExportRepository` (migrated from `ExportService`)
+- [x] **2.6** Implement `DefaultClipboardRepository` (migrated from `ClipboardService`, eliminate global static state)
 
 ### 2C — Wire Up DI
 
-- [ ] **2.7** Register all repositories and services in `injection.dart` using `@injectable` / `@module`
-- [ ] **2.8** Initialize `GetIt` in `main.dart` before `runApp()`
+- [x] **2.7** Register all repositories and services in `injection.dart` using `@injectable` / `@module`
+- [x] **2.8** Initialize `GetIt` in `main.dart` before `runApp()`
 
 **Acceptance Criteria:**  
 ✅ All data access goes through abstract repository interfaces  

@@ -12,14 +12,45 @@
 
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:shared_preferences/shared_preferences.dart' as _i460;
+
+import '../../features/canvas/data/repositories/shared_prefs_board_repository.dart'
+    as _i388;
+import '../../features/canvas/domain/repositories/board_repository.dart'
+    as _i818;
+import '../../features/clipboard/data/services/default_clipboard_repository.dart'
+    as _i680;
+import '../../features/clipboard/domain/repositories/clipboard_repository.dart'
+    as _i10;
+import '../../features/export/data/services/default_export_repository.dart'
+    as _i158;
+import '../../features/export/domain/repositories/export_repository.dart'
+    as _i1051;
+import 'app_module.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
-  _i174.GetIt init({
+  Future<_i174.GetIt> init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
-  }) {
-    _i526.GetItHelper(this, environment, environmentFilter);
+  }) async {
+    final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    final appModule = _$AppModule();
+    await gh.factoryAsync<_i460.SharedPreferences>(
+      () => appModule.prefs,
+      preResolve: true,
+    );
+    gh.lazySingleton<_i10.ClipboardRepository>(
+      () => _i680.DefaultClipboardRepository(),
+    );
+    gh.lazySingleton<_i1051.ExportRepository>(
+      () => _i158.DefaultExportRepository(),
+    );
+    gh.lazySingleton<_i818.BoardRepository>(
+      () => _i388.SharedPrefsBoardRepository(gh<_i460.SharedPreferences>()),
+    );
     return this;
   }
 }
+
+class _$AppModule extends _i460.AppModule {}
