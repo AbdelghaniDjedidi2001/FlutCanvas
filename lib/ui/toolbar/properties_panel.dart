@@ -1,40 +1,46 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../features/canvas/data/services/alignment_service.dart';
+import '../../features/canvas/presentation/bloc/canvas_bloc.dart';
+import '../../features/canvas/presentation/bloc/canvas_event.dart';
+import '../../features/canvas/presentation/bloc/canvas_state.dart';
+import '../../features/toolbar/presentation/bloc/tool_cubit.dart';
+import '../../features/toolbar/presentation/bloc/tool_state.dart';
 import '../../models/board_colors.dart';
 import '../../models/board_element.dart';
 import '../../models/connector_style.dart';
 import '../../models/shape_type.dart';
 import '../../models/stroke_fill_style.dart';
-import '../../services/syntax_highlighter_service.dart';
 
 class PropertiesPanel extends StatelessWidget {
   const PropertiesPanel({
     super.key,
-    required this.selectedElements,
-    required this.currentColor,
-    required this.currentFillColor,
-    required this.currentStrokeWidth,
-    required this.currentStrokeStyle,
-    required this.currentFillStyle,
-    required this.currentDrawStyle,
-    required this.currentFontSize,
-    required this.currentOpacity,
-    required this.currentRotation,
-    this.currentConnectorStyle = ConnectorStyle.straight,
+    this.selectedElements,
+    this.currentColor,
+    this.currentFillColor,
+    this.currentStrokeWidth,
+    this.currentStrokeStyle,
+    this.currentFillStyle,
+    this.currentDrawStyle,
+    this.currentFontSize,
+    this.currentOpacity,
+    this.currentRotation,
+    this.currentConnectorStyle,
     this.currentCodeLanguage,
-    this.currentShowLineNumbers = true,
-    required this.onColorChanged,
-    required this.onFillColorChanged,
-    required this.onStrokeWidthChanged,
-    required this.onStrokeStyleChanged,
-    required this.onFillStyleChanged,
-    required this.onDrawStyleChanged,
-    required this.onFontSizeChanged,
-    required this.onOpacityChanged,
-    required this.onRotationChanged,
-    required this.onConnectorStyleChanged,
-    required this.onEditConnectorLabel,
+    this.currentShowLineNumbers,
+    this.onColorChanged,
+    this.onFillColorChanged,
+    this.onStrokeWidthChanged,
+    this.onStrokeStyleChanged,
+    this.onFillStyleChanged,
+    this.onDrawStyleChanged,
+    this.onFontSizeChanged,
+    this.onOpacityChanged,
+    this.onRotationChanged,
+    this.onConnectorStyleChanged,
+    this.onEditConnectorLabel,
     this.onCodeLanguageChanged,
     this.onToggleLineNumbers,
     this.onCopyCode,
@@ -43,43 +49,43 @@ class PropertiesPanel extends StatelessWidget {
     this.onAddTableColumn,
     this.onRemoveTableColumn,
     this.onToggleTableHeader,
-    required this.onGroup,
-    required this.onUngroup,
-    required this.onBringToFront,
-    required this.onSendToBack,
-    required this.onDuplicate,
-    required this.onDelete,
-    required this.onAlign,
-    required this.onDistribute,
-    required this.onToggleLock,
+    this.onGroup,
+    this.onUngroup,
+    this.onBringToFront,
+    this.onSendToBack,
+    this.onDuplicate,
+    this.onDelete,
+    this.onAlign,
+    this.onDistribute,
+    this.onToggleLock,
     this.onClose,
   });
 
-  final List<BoardElement> selectedElements;
-  final Color currentColor;
-  final Color currentFillColor;
-  final double currentStrokeWidth;
-  final StrokeStyle currentStrokeStyle;
-  final FillStyle currentFillStyle;
-  final DrawStyle currentDrawStyle;
-  final double currentFontSize;
-  final double currentOpacity;
-  final double currentRotation;
-  final ConnectorStyle currentConnectorStyle;
+  final List<BoardElement>? selectedElements;
+  final Color? currentColor;
+  final Color? currentFillColor;
+  final double? currentStrokeWidth;
+  final StrokeStyle? currentStrokeStyle;
+  final FillStyle? currentFillStyle;
+  final DrawStyle? currentDrawStyle;
+  final double? currentFontSize;
+  final double? currentOpacity;
+  final double? currentRotation;
+  final ConnectorStyle? currentConnectorStyle;
   final String? currentCodeLanguage;
-  final bool currentShowLineNumbers;
+  final bool? currentShowLineNumbers;
 
-  final void Function(Color color) onColorChanged;
-  final void Function(Color color) onFillColorChanged;
-  final void Function(double width) onStrokeWidthChanged;
-  final void Function(StrokeStyle style) onStrokeStyleChanged;
-  final void Function(FillStyle style) onFillStyleChanged;
-  final void Function(DrawStyle style) onDrawStyleChanged;
-  final void Function(double size) onFontSizeChanged;
-  final void Function(double opacity) onOpacityChanged;
-  final void Function(double radians) onRotationChanged;
-  final void Function(ConnectorStyle style) onConnectorStyleChanged;
-  final VoidCallback onEditConnectorLabel;
+  final void Function(Color color)? onColorChanged;
+  final void Function(Color color)? onFillColorChanged;
+  final void Function(double width)? onStrokeWidthChanged;
+  final void Function(StrokeStyle style)? onStrokeStyleChanged;
+  final void Function(FillStyle style)? onFillStyleChanged;
+  final void Function(DrawStyle style)? onDrawStyleChanged;
+  final void Function(double size)? onFontSizeChanged;
+  final void Function(double opacity)? onOpacityChanged;
+  final void Function(double radians)? onRotationChanged;
+  final void Function(ConnectorStyle style)? onConnectorStyleChanged;
+  final VoidCallback? onEditConnectorLabel;
   final void Function(String language)? onCodeLanguageChanged;
   final void Function(bool showNumbers)? onToggleLineNumbers;
   final VoidCallback? onCopyCode;
@@ -88,43 +94,192 @@ class PropertiesPanel extends StatelessWidget {
   final VoidCallback? onAddTableColumn;
   final VoidCallback? onRemoveTableColumn;
   final void Function(bool hasHeader)? onToggleTableHeader;
-  final VoidCallback onGroup;
-  final VoidCallback onUngroup;
-  final VoidCallback onBringToFront;
-  final VoidCallback onSendToBack;
-  final VoidCallback onDuplicate;
-  final VoidCallback onDelete;
-  final void Function(String alignment) onAlign;
-  final void Function(String direction) onDistribute;
-  final VoidCallback onToggleLock;
+  final VoidCallback? onGroup;
+  final VoidCallback? onUngroup;
+  final VoidCallback? onBringToFront;
+  final VoidCallback? onSendToBack;
+  final VoidCallback? onDuplicate;
+  final VoidCallback? onDelete;
+  final void Function(String alignment)? onAlign;
+  final void Function(String direction)? onDistribute;
+  final VoidCallback? onToggleLock;
   final VoidCallback? onClose;
 
-  bool get _hasConnectors => selectedElements.isEmpty ||
-      selectedElements.any((e) =>
+  bool _hasConnectors(List<BoardElement> list) =>
+      list.isEmpty ||
+      list.any((e) =>
           e.type == ShapeType.line ||
           e.type == ShapeType.arrow ||
           e.type == ShapeType.doubleArrow);
 
-  bool get _hasCodeBlock =>
-      selectedElements.any((e) => e.type == ShapeType.codeBlock);
+  bool _hasTable(List<BoardElement> list) =>
+      list.any((e) => e.type == ShapeType.table);
 
-  bool get _hasTable =>
-      selectedElements.any((e) => e.type == ShapeType.table);
+  BoardElement? _firstTable(List<BoardElement> list) =>
+      list.where((e) => e.type == ShapeType.table).firstOrNull;
 
-  BoardElement? get _firstTable =>
-      selectedElements.where((e) => e.type == ShapeType.table).firstOrNull;
-
-  bool get _hasMarkdownText => selectedElements.any(
-      (e) => e.type == ShapeType.stickyNote || e.type == ShapeType.text);
-
-  bool get _hasGroupedElements =>
-      selectedElements.any((e) => e.groupId != null);
+  bool _hasGroupedElements(List<BoardElement> list) =>
+      list.any((e) => e.groupId != null);
 
   @override
   Widget build(BuildContext context) {
+    final toolCubit = context.watch<ToolCubit?>();
+    final canvasBloc = context.watch<CanvasBloc?>();
+
+    final toolState = toolCubit?.state ?? const ToolState();
+    final canvasState = canvasBloc?.state ?? const CanvasState();
+
+    final activeSelectedElements =
+        selectedElements ?? canvasState.selectedElements;
+    final activeColor = currentColor ?? toolState.strokeColor;
+    final activeFillColor = currentFillColor ?? toolState.fillColor;
+    final activeStrokeWidth = currentStrokeWidth ?? toolState.strokeWidth;
+    final activeStrokeStyle = currentStrokeStyle ?? toolState.strokeStyle;
+    final activeFillStyle = currentFillStyle ?? toolState.fillStyle;
+    final activeDrawStyle = currentDrawStyle ?? toolState.drawStyle;
+    final activeFontSize = currentFontSize ?? toolState.fontSize;
+    final activeOpacity = currentOpacity ?? toolState.opacity;
+    final activeConnectorStyle =
+        currentConnectorStyle ?? toolState.connectorStyle;
+
     final scheme = Theme.of(context).colorScheme;
     final colors = BoardColors.of(context);
     final mqHeight = MediaQuery.of(context).size.height;
+
+    final hasConn = _hasConnectors(activeSelectedElements);
+    final hasTbl = _hasTable(activeSelectedElements);
+    final tblEl = _firstTable(activeSelectedElements);
+    final hasGrouped = _hasGroupedElements(activeSelectedElements);
+
+    void applyColor(Color c) {
+      if (onColorChanged != null) {
+        onColorChanged!(c);
+      } else {
+        toolCubit?.setStrokeColor(c);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements) el.copyWith(color: c)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyFillColor(Color c) {
+      if (onFillColorChanged != null) {
+        onFillColorChanged!(c);
+      } else {
+        toolCubit?.setFillColor(c);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements) el.copyWith(fillColor: c)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyStrokeWidth(double w) {
+      if (onStrokeWidthChanged != null) {
+        onStrokeWidthChanged!(w);
+      } else {
+        toolCubit?.setStrokeWidth(w);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements)
+              el.copyWith(strokeWidth: w)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyStrokeStyle(StrokeStyle s) {
+      if (onStrokeStyleChanged != null) {
+        onStrokeStyleChanged!(s);
+      } else {
+        toolCubit?.setStrokeStyle(s);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements)
+              el.copyWith(strokeStyle: s)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyFillStyle(FillStyle f) {
+      if (onFillStyleChanged != null) {
+        onFillStyleChanged!(f);
+      } else {
+        toolCubit?.setFillStyle(f);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements) el.copyWith(fillStyle: f)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyDrawStyle(DrawStyle d) {
+      if (onDrawStyleChanged != null) {
+        onDrawStyleChanged!(d);
+      } else {
+        toolCubit?.setDrawStyle(d);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements) el.copyWith(drawStyle: d)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyFontSize(double s) {
+      if (onFontSizeChanged != null) {
+        onFontSizeChanged!(s);
+      } else {
+        toolCubit?.setFontSize(s);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements) el.copyWith(fontSize: s)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+    void applyOpacity(double o) {
+      if (onOpacityChanged != null) {
+        onOpacityChanged!(o);
+      } else {
+        toolCubit?.setOpacity(o);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements) el.copyWith(opacity: o)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
+
+
+    void applyConnectorStyle(ConnectorStyle s) {
+      if (onConnectorStyleChanged != null) {
+        onConnectorStyleChanged!(s);
+      } else {
+        toolCubit?.setConnectorStyle(s);
+        if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
+          final updated = [
+            for (final el in activeSelectedElements)
+              el.copyWith(connectorStyle: s)
+          ];
+          canvasBloc.add(CanvasEvent.updateElements(updated));
+        }
+      }
+    }
 
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -153,79 +308,62 @@ class PropertiesPanel extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    selectedElements.isEmpty ? Icons.tune_rounded : Icons.edit_note_rounded,
+                    activeSelectedElements.isEmpty
+                        ? Icons.tune_rounded
+                        : Icons.edit_note_rounded,
                     size: 15,
                     color: scheme.primary,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      selectedElements.isEmpty
-                          ? 'Style Settings'
-                          : '${selectedElements.length} selected',
+                      activeSelectedElements.isEmpty
+                          ? 'Default Style'
+                          : '${activeSelectedElements.length} selected',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.bold,
-                        color: scheme.onSurfaceVariant,
+                        color: scheme.onSurface,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (selectedElements.isNotEmpty) ...[
-                    IconButton(
-                      tooltip: 'Duplicate (Ctrl+D)',
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                      iconSize: 15,
-                      onPressed: onDuplicate,
-                      icon: const Icon(Icons.copy_rounded),
+                  if (onClose != null || toolCubit != null)
+                    InkWell(
+                      onTap: onClose ??
+                          () => toolCubit?.setPropertiesOpen(false),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: Icon(
+                          Icons.close,
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 2),
-                    IconButton(
-                      tooltip: 'Delete (Del)',
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                      iconSize: 15,
-                      onPressed: onDelete,
-                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                    ),
-                  ],
-                  if (onClose != null) ...[
-                    const SizedBox(width: 2),
-                    IconButton(
-                      tooltip: 'Close panel',
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                      iconSize: 15,
-                      onPressed: onClose,
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
                 ],
               ),
               const Divider(height: 10),
 
               // 1. Draw Style (Clean vs Hand-drawn Sketch)
-              const Text('Aesthetic Style', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              const Text('Aesthetic Style',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               Row(
                 children: [
                   _segmentedOption<DrawStyle>(
                     label: 'Clean',
                     value: DrawStyle.clean,
-                    groupValue: currentDrawStyle,
-                    onSelect: onDrawStyleChanged,
+                    groupValue: activeDrawStyle,
+                    onSelect: applyDrawStyle,
                     scheme: scheme,
                   ),
                   const SizedBox(width: 4),
                   _segmentedOption<DrawStyle>(
                     label: '✏️ Sketchy',
                     value: DrawStyle.sketch,
-                    groupValue: currentDrawStyle,
-                    onSelect: onDrawStyleChanged,
+                    groupValue: activeDrawStyle,
+                    onSelect: applyDrawStyle,
                     scheme: scheme,
                   ),
                 ],
@@ -233,7 +371,8 @@ class PropertiesPanel extends StatelessWidget {
               const SizedBox(height: 9),
 
               // 2. Stroke Color
-              const Text('Stroke Color', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              const Text('Stroke Color',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               Wrap(
                 spacing: 5,
@@ -242,8 +381,8 @@ class PropertiesPanel extends StatelessWidget {
                   for (final c in BoardColors.strokePalette)
                     _colorBubble(
                       color: colors.display(c),
-                      isSelected: currentColor == c,
-                      onTap: () => onColorChanged(c),
+                      isSelected: activeColor == c,
+                      onTap: () => applyColor(c),
                       selectionColor: scheme.primary,
                     ),
                 ],
@@ -251,54 +390,55 @@ class PropertiesPanel extends StatelessWidget {
               const SizedBox(height: 9),
 
               // 3. Fill Style & Color
-              const Text('Fill Style', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              const Text('Fill Style',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               Row(
                 children: [
                   _segmentedOption<FillStyle>(
                     label: 'None',
                     value: FillStyle.none,
-                    groupValue: currentFillStyle,
-                    onSelect: onFillStyleChanged,
+                    groupValue: activeFillStyle,
+                    onSelect: applyFillStyle,
                     scheme: scheme,
                   ),
                   const SizedBox(width: 3),
                   _segmentedOption<FillStyle>(
                     label: 'Semi',
                     value: FillStyle.semi,
-                    groupValue: currentFillStyle,
-                    onSelect: onFillStyleChanged,
+                    groupValue: activeFillStyle,
+                    onSelect: applyFillStyle,
                     scheme: scheme,
                   ),
                   const SizedBox(width: 3),
                   _segmentedOption<FillStyle>(
                     label: 'Solid',
                     value: FillStyle.solid,
-                    groupValue: currentFillStyle,
-                    onSelect: onFillStyleChanged,
+                    groupValue: activeFillStyle,
+                    onSelect: applyFillStyle,
                     scheme: scheme,
                   ),
                   const SizedBox(width: 3),
                   _segmentedOption<FillStyle>(
                     label: 'Hatch',
                     value: FillStyle.hatch,
-                    groupValue: currentFillStyle,
-                    onSelect: onFillStyleChanged,
+                    groupValue: activeFillStyle,
+                    onSelect: applyFillStyle,
                     scheme: scheme,
                   ),
                 ],
               ),
-              if (currentFillStyle != FillStyle.none) ...[
-                const SizedBox(height: 5),
+              if (activeFillStyle != FillStyle.none) ...[
+                const SizedBox(height: 6),
                 Wrap(
                   spacing: 5,
                   runSpacing: 5,
                   children: [
-                    for (final c in BoardColors.strokePalette)
+                    for (final c in BoardColors.stickyNoteColors)
                       _colorBubble(
                         color: colors.display(c),
-                        isSelected: currentFillColor == c,
-                        onTap: () => onFillColorChanged(c),
+                        isSelected: activeFillColor == c,
+                        onTap: () => applyFillColor(c),
                         selectionColor: scheme.primary,
                       ),
                   ],
@@ -306,517 +446,439 @@ class PropertiesPanel extends StatelessWidget {
               ],
               const SizedBox(height: 9),
 
-              // 4. Stroke Width & Style
-              const Text('Stroke Width & Style', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              // 4. Stroke Width
+              const Text('Stroke Thickness',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               Row(
                 children: [
-                  for (final p in StrokeWidthPreset.values) ...[
-                    _strokeWidthOption(p, scheme),
-                    if (p != StrokeWidthPreset.values.last) const SizedBox(width: 4),
+                  for (final preset in StrokeWidthPreset.values) ...[
+                    _strokeWidthOption(
+                        preset, activeStrokeWidth, applyStrokeWidth, scheme),
+                    if (preset != StrokeWidthPreset.values.last)
+                      const SizedBox(width: 3),
                   ],
-                ],
-              ),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  _strokeStyleOption(StrokeStyle.solid, Icons.remove, scheme),
-                  const SizedBox(width: 4),
-                  _strokeStyleOption(StrokeStyle.dashed, Icons.more_horiz, scheme),
-                  const SizedBox(width: 4),
-                  _strokeStyleOption(StrokeStyle.dotted, Icons.grain, scheme),
                 ],
               ),
               const SizedBox(height: 9),
 
-              // 4.5 Connector Routing (when connectors are present/selected)
-              if (_hasConnectors) ...[
-                const Text('Connector Routing', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    _connectorStyleOption(ConnectorStyle.straight, Icons.straighten_rounded, 'Straight', scheme),
-                    const SizedBox(width: 4),
-                    _connectorStyleOption(ConnectorStyle.orthogonal, Icons.call_split_rounded, 'Elbow', scheme),
-                    const SizedBox(width: 4),
-                    _connectorStyleOption(ConnectorStyle.curved, Icons.gesture_rounded, 'Curved', scheme),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    minimumSize: const Size.fromHeight(26),
-                  ),
-                  onPressed: onEditConnectorLabel,
-                  icon: const Icon(Icons.label_outline_rounded, size: 13),
-                  label: const Text('Add / Edit Line Label', style: TextStyle(fontSize: 11)),
-                ),
-                const SizedBox(height: 9),
-              ],
-
-              // 4.6 Code Block Settings (when code blocks are present/selected)
-              if (_hasCodeBlock) ...[
-                const Text('Code Block Settings', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Container(
-                  height: 30,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: currentCodeLanguage ?? 'dart',
-                      isDense: true,
-                      isExpanded: true,
-                      icon: const Icon(Icons.arrow_drop_down, size: 18),
-                      style: TextStyle(fontSize: 12, color: scheme.onSurface, fontWeight: FontWeight.w600),
-                      items: [
-                        for (final lang in SyntaxHighlighterService.supportedLanguages)
-                          DropdownMenuItem(
-                            value: lang,
-                            child: Text(SyntaxHighlighterService.getDisplayName(lang)),
-                          ),
-                      ],
-                      onChanged: (val) {
-                        if (val != null && onCodeLanguageChanged != null) {
-                          onCodeLanguageChanged!(val);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          backgroundColor: currentShowLineNumbers ? scheme.primaryContainer.withValues(alpha: 0.5) : null,
-                        ),
-                        onPressed: () {
-                          if (onToggleLineNumbers != null) {
-                            onToggleLineNumbers!(!currentShowLineNumbers);
-                          }
-                        },
-                        icon: Icon(
-                          Icons.format_list_numbered_rounded,
-                          size: 13,
-                          color: currentShowLineNumbers ? scheme.primary : null,
-                        ),
-                        label: Text(
-                          currentShowLineNumbers ? 'Line # On' : 'Line # Off',
-                          style: TextStyle(fontSize: 11, color: currentShowLineNumbers ? scheme.primary : null),
-                        ),
-                      ),
-                    ),
-                    if (onCopyCode != null) ...[
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                          ),
-                          onPressed: onCopyCode,
-                          icon: const Icon(Icons.copy_rounded, size: 13),
-                          label: const Text('Copy', style: TextStyle(fontSize: 11)),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 9),
-              ],
-
-              // 4.65 Table Controls (when Table elements are selected)
-              if (_hasTable) ...[
-                const Text('Table Grid Controls', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onAddTableRow,
-                        icon: const Icon(Icons.add, size: 13),
-                        label: const Text('+ Row', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onRemoveTableRow,
-                        icon: const Icon(Icons.remove, size: 13),
-                        label: const Text('- Row', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onAddTableColumn,
-                        icon: const Icon(Icons.add, size: 13),
-                        label: const Text('+ Col', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onRemoveTableColumn,
-                        icon: const Icon(Icons.remove, size: 13),
-                        label: const Text('- Col', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                if (_firstTable != null) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        backgroundColor: _firstTable!.tableHasHeader
-                            ? scheme.primaryContainer.withValues(alpha: 0.5)
-                            : null,
-                      ),
-                      onPressed: () {
-                        if (onToggleTableHeader != null) {
-                          onToggleTableHeader!(!_firstTable!.tableHasHeader);
-                        }
-                      },
-                      icon: Icon(
-                        Icons.view_headline_rounded,
-                        size: 13,
-                        color: _firstTable!.tableHasHeader ? scheme.primary : null,
-                      ),
-                      label: Text(
-                        _firstTable!.tableHasHeader ? 'Header Row: ON' : 'Header Row: OFF',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: _firstTable!.tableHasHeader ? scheme.primary : null,
-                        ),
-                      ),
-                    ),
-                  ),
+              // 5. Stroke Style
+              const Text('Stroke Pattern',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  _strokeStyleOption(StrokeStyle.solid, Icons.horizontal_rule,
+                      activeStrokeStyle, applyStrokeStyle, scheme),
+                  const SizedBox(width: 3),
+                  _strokeStyleOption(StrokeStyle.dashed, Icons.more_horiz,
+                      activeStrokeStyle, applyStrokeStyle, scheme),
+                  const SizedBox(width: 3),
+                  _strokeStyleOption(StrokeStyle.dotted, Icons.grain,
+                      activeStrokeStyle, applyStrokeStyle, scheme),
                 ],
+              ),
+              const SizedBox(height: 9),
+
+              // 6. Connectors section
+              if (hasConn) ...[
+                const Text('Connector Route',
+                    style:
+                        TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    _connectorStyleOption(
+                      ConnectorStyle.straight,
+                      Icons.linear_scale,
+                      'Line',
+                      activeConnectorStyle,
+                      applyConnectorStyle,
+                      scheme,
+                    ),
+                    const SizedBox(width: 3),
+                    _connectorStyleOption(
+                      ConnectorStyle.orthogonal,
+                      Icons.timeline,
+                      'Elbow',
+                      activeConnectorStyle,
+                      applyConnectorStyle,
+                      scheme,
+                    ),
+                    const SizedBox(width: 3),
+                    _connectorStyleOption(
+                      ConnectorStyle.curved,
+                      Icons.show_chart,
+                      'Curve',
+                      activeConnectorStyle,
+                      applyConnectorStyle,
+                      scheme,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 9),
               ],
 
-              // 4.7 Markdown Tips (when sticky notes / text elements are selected)
-              if (_hasMarkdownText) ...[
+              // 7. Table Controls
+              if (hasTbl && tblEl != null) ...[
+                const Text('Table Grid Controls',
+                    style:
+                        TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 5),
                 Container(
-                  padding: const EdgeInsets.all(6),
-                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+                    color: scheme.surfaceContainerHighest
+                        .withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.3),
+                      width: 1.0,
+                    ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.text_fields_rounded, size: 12, color: scheme.primary),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: onAddTableRow ??
+                                  () {
+                                    if (canvasBloc != null) {
+                                      final updated = tblEl.addTableRow();
+                                      canvasBloc.add(
+                                          CanvasEvent.updateElement(updated));
+                                    }
+                                  },
+                              icon: const Icon(Icons.add, size: 13),
+                              label: const Text('+ Row',
+                                  style: TextStyle(fontSize: 10)),
+                            ),
+                          ),
                           const SizedBox(width: 4),
-                          Text(
-                            'Markdown Supported',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: scheme.onSurfaceVariant),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: onRemoveTableRow ??
+                                  () {
+                                    if (canvasBloc != null) {
+                                      final updated = tblEl.removeTableRow();
+                                      canvasBloc.add(
+                                          CanvasEvent.updateElement(updated));
+                                    }
+                                  },
+                              icon: const Icon(Icons.remove, size: 13),
+                              label: const Text('- Row',
+                                  style: TextStyle(fontSize: 10)),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '**bold** *italic* `code` # H1 - list',
-                        style: TextStyle(fontSize: 9.5, color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: onAddTableColumn ??
+                                  () {
+                                    if (canvasBloc != null) {
+                                      final updated = tblEl.addTableColumn();
+                                      canvasBloc.add(
+                                          CanvasEvent.updateElement(updated));
+                                    }
+                                  },
+                              icon: const Icon(Icons.add, size: 13),
+                              label: const Text('+ Col',
+                                  style: TextStyle(fontSize: 10)),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: onRemoveTableColumn ??
+                                  () {
+                                    if (canvasBloc != null) {
+                                      final updated =
+                                          tblEl.removeTableColumn();
+                                      canvasBloc.add(
+                                          CanvasEvent.updateElement(updated));
+                                    }
+                                  },
+                              icon: const Icon(Icons.remove, size: 13),
+                              label: const Text('- Col',
+                                  style: TextStyle(fontSize: 10)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          onPressed: () {
+                            if (onToggleTableHeader != null) {
+                              onToggleTableHeader!(!tblEl.tableHasHeader);
+                            } else if (canvasBloc != null) {
+                              final updated = tblEl.copyWith(
+                                tableHasHeader: !tblEl.tableHasHeader,
+                              );
+                              canvasBloc
+                                  .add(CanvasEvent.updateElement(updated));
+                            }
+                          },
+                          icon: Icon(
+                            tblEl.tableHasHeader
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                            size: 13,
+                          ),
+                          label: Text(
+                            tblEl.tableHasHeader
+                                ? 'Header Row: ON'
+                                : 'Header Row: OFF',
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(height: 9),
               ],
 
-              // 5. Text Size
-              const Text('Font Size', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              // 8. Typography
+              const Text('Font Size',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               Row(
                 children: [
-                  for (final p in FontSizePreset.values) ...[
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => onFontSizeChanged(p.size),
-                        borderRadius: BorderRadius.circular(6),
-                        child: Container(
-                          height: 24,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: (currentFontSize - p.size).abs() < 2
-                                ? scheme.primaryContainer
-                                : scheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: (currentFontSize - p.size).abs() < 2
-                                  ? scheme.primary.withValues(alpha: 0.5)
-                                  : Colors.transparent,
-                            ),
-                          ),
-                          child: Text(
-                            p.label,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: (currentFontSize - p.size).abs() < 2
-                                  ? scheme.onPrimaryContainer
-                                  : scheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (p != FontSizePreset.values.last) const SizedBox(width: 4),
+                  for (final preset in FontSizePreset.values) ...[
+                    _fontSizeOption(
+                        preset, activeFontSize, applyFontSize, scheme),
+                    if (preset != FontSizePreset.values.last)
+                      const SizedBox(width: 3),
                   ],
                 ],
               ),
               const SizedBox(height: 9),
 
-              // 6. Rotation Slider
+              // 9. Opacity Slider
               Row(
                 children: [
-                  const Text('Rotation', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                  const Text('Opacity',
+                      style: TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w600)),
                   const Spacer(),
-                  Text('${((currentRotation * 180 / math.pi).round() % 360)}°', style: const TextStyle(fontSize: 11)),
+                  Text(
+                    '${(activeOpacity * 100).toInt()}%',
+                    style: TextStyle(
+                        fontSize: 10, color: scheme.onSurfaceVariant),
+                  ),
                 ],
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 2.5,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                  thumbShape:
+                      const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 10),
                 ),
                 child: Slider(
-                  value: (currentRotation % (2 * math.pi)),
-                  min: 0.0,
-                  max: 2 * math.pi,
-                  onChanged: onRotationChanged,
-                ),
-              ),
-
-              // 7. Opacity Slider
-              Row(
-                children: [
-                  const Text('Opacity', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                  const Spacer(),
-                  Text('${(currentOpacity * 100).round()}%', style: const TextStyle(fontSize: 11)),
-                ],
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 2.5,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                ),
-                child: Slider(
-                  value: currentOpacity,
+                  value: activeOpacity,
                   min: 0.1,
                   max: 1.0,
-                  onChanged: onOpacityChanged,
+                  onChanged: applyOpacity,
                 ),
               ),
 
-              // 8. Grouping & Alignment (when selected)
-              if (selectedElements.isNotEmpty) ...[
-                const Divider(height: 8),
-                const Text('Group & Arrange', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              // 10. Actions (Align, Distribute, Group, Front, Back, Delete)
+              if (activeSelectedElements.isNotEmpty) ...[
+                const Divider(height: 12),
+                const Text('Layout & Arrange',
+                    style:
+                        TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 5),
-                Row(
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: selectedElements.length > 1 ? onGroup : null,
-                        icon: const Icon(Icons.group_work_outlined, size: 13),
-                        label: const Text('Group', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                    if (_hasGroupedElements) ...[
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                          ),
-                          onPressed: onUngroup,
-                          icon: const Icon(Icons.workspaces_outline, size: 13),
-                          label: const Text('Ungroup', style: TextStyle(fontSize: 11)),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onBringToFront,
-                        icon: const Icon(Icons.flip_to_front, size: 13),
-                        label: const Text('Front', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onSendToBack,
-                        icon: const Icon(Icons.flip_to_back, size: 13),
-                        label: const Text('Back', style: TextStyle(fontSize: 11)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                        ),
-                        onPressed: onToggleLock,
-                        icon: Icon(
-                          selectedElements.any((e) => e.isLocked)
-                              ? Icons.lock_open_rounded
-                              : Icons.lock_outline_rounded,
-                          size: 13,
-                        ),
-                        label: Text(
-                          selectedElements.any((e) => e.isLocked)
-                              ? 'Unlock (Ctrl+L)'
-                              : 'Lock (Ctrl+L)',
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (selectedElements.length >= 2) ...[
-                  const SizedBox(height: 8),
-                  const Text('Align & Distribute', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(
+                    if (activeSelectedElements.length >= 2) ...[
+                      _actionButton(
+                        icon: Icons.align_horizontal_left,
                         tooltip: 'Align Left',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: () => onAlign('left'),
-                        icon: const Icon(Icons.align_horizontal_left),
+                        onTap: () {
+                          if (onAlign != null) {
+                            onAlign!('left');
+                          } else {
+                            canvasBloc?.add(const CanvasEvent.alignSelected(
+                                AlignDirection.left));
+                          }
+                        },
+                        scheme: scheme,
                       ),
-                      IconButton(
+                      _actionButton(
+                        icon: Icons.align_horizontal_center,
                         tooltip: 'Align Center',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: () => onAlign('center'),
-                        icon: const Icon(Icons.align_horizontal_center),
+                        onTap: () {
+                          if (onAlign != null) {
+                            onAlign!('center');
+                          } else {
+                            canvasBloc?.add(const CanvasEvent.alignSelected(
+                                AlignDirection.center));
+                          }
+                        },
+                        scheme: scheme,
                       ),
-                      IconButton(
+                      _actionButton(
+                        icon: Icons.align_horizontal_right,
                         tooltip: 'Align Right',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: () => onAlign('right'),
-                        icon: const Icon(Icons.align_horizontal_right),
+                        onTap: () {
+                          if (onAlign != null) {
+                            onAlign!('right');
+                          } else {
+                            canvasBloc?.add(const CanvasEvent.alignSelected(
+                                AlignDirection.right));
+                          }
+                        },
+                        scheme: scheme,
                       ),
-                      IconButton(
-                        tooltip: selectedElements.length >= 3
-                            ? 'Distribute Horizontally'
-                            : 'Distribute Horizontally (select 3+)',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: selectedElements.length >= 3
-                            ? () => onDistribute('horizontal')
-                            : null,
-                        icon: const Icon(Icons.horizontal_distribute),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(
+                      _actionButton(
+                        icon: Icons.align_vertical_top,
                         tooltip: 'Align Top',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: () => onAlign('top'),
-                        icon: const Icon(Icons.align_vertical_top),
-                      ),
-                      IconButton(
-                        tooltip: 'Align Middle',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: () => onAlign('middle'),
-                        icon: const Icon(Icons.align_vertical_center),
-                      ),
-                      IconButton(
-                        tooltip: 'Align Bottom',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: () => onAlign('bottom'),
-                        icon: const Icon(Icons.align_vertical_bottom),
-                      ),
-                      IconButton(
-                        tooltip: selectedElements.length >= 3
-                            ? 'Distribute Vertically'
-                            : 'Distribute Vertically (select 3+)',
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 16,
-                        onPressed: selectedElements.length >= 3
-                            ? () => onDistribute('vertical')
-                            : null,
-                        icon: const Icon(Icons.vertical_distribute),
+                        onTap: () {
+                          if (onAlign != null) {
+                            onAlign!('top');
+                          } else {
+                            canvasBloc?.add(const CanvasEvent.alignSelected(
+                                AlignDirection.top));
+                          }
+                        },
+                        scheme: scheme,
                       ),
                     ],
-                  ),
-                ],
+                    if (activeSelectedElements.length >= 3) ...[
+                      _actionButton(
+                        icon: Icons.horizontal_distribute,
+                        tooltip: 'Distribute Horizontally',
+                        onTap: () {
+                          if (onDistribute != null) {
+                            onDistribute!('horizontal');
+                          } else {
+                            canvasBloc?.add(
+                                const CanvasEvent.distributeSelected(
+                                    DistributeDirection.horizontal));
+                          }
+                        },
+                        scheme: scheme,
+                      ),
+                    ],
+                    if (activeSelectedElements.length >= 2)
+                      _actionButton(
+                        icon: Icons.group,
+                        tooltip: 'Group (Ctrl+G)',
+                        onTap: onGroup ??
+                            () => canvasBloc
+                                ?.add(const CanvasEvent.groupSelected()),
+                        scheme: scheme,
+                      ),
+                    if (hasGrouped)
+                      _actionButton(
+                        icon: Icons.group_remove_outlined,
+                        tooltip: 'Ungroup (Ctrl+Shift+G)',
+                        onTap: onUngroup ??
+                            () => canvasBloc
+                                ?.add(const CanvasEvent.ungroupSelected()),
+                        scheme: scheme,
+                      ),
+                    _actionButton(
+                      icon: Icons.flip_to_front,
+                      tooltip: 'Bring to Front (])',
+                      onTap: onBringToFront ??
+                          () => canvasBloc
+                              ?.add(const CanvasEvent.bringSelectedToFront()),
+                      scheme: scheme,
+                    ),
+                    _actionButton(
+                      icon: Icons.flip_to_back,
+                      tooltip: 'Send to Back ([)',
+                      onTap: onSendToBack ??
+                          () => canvasBloc
+                              ?.add(const CanvasEvent.sendSelectedToBack()),
+                      scheme: scheme,
+                    ),
+                    _actionButton(
+                      icon: Icons.lock_outline,
+                      tooltip: 'Toggle Lock',
+                      onTap: onToggleLock ??
+                          () => canvasBloc
+                              ?.add(const CanvasEvent.toggleLockSelected()),
+                      scheme: scheme,
+                    ),
+                    _actionButton(
+                      icon: Icons.delete_outline,
+                      tooltip: 'Delete (Del)',
+                      color: Colors.redAccent,
+                      onTap: onDelete ??
+                          () => canvasBloc
+                              ?.add(const CanvasEvent.deleteSelected()),
+                      scheme: scheme,
+                    ),
+                  ],
+                ),
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    required ColorScheme scheme,
+    Color? color,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 26,
+          height: 26,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(icon, size: 14, color: color ?? scheme.onSurfaceVariant),
         ),
       ),
     );
@@ -839,7 +901,7 @@ class PropertiesPanel extends StatelessWidget {
             color: color,
             shape: BoxShape.circle,
             border: Border.all(
-              color: isSelected ? selectionColor : Colors.black26,
+              color: isSelected ? selectionColor : Colors.grey.shade400,
               width: isSelected ? 2.5 : 1.0,
             ),
           ),
@@ -852,7 +914,7 @@ class PropertiesPanel extends StatelessWidget {
     required String label,
     required T value,
     required T groupValue,
-    required void Function(T val) onSelect,
+    required void Function(T value) onSelect,
     required ColorScheme scheme,
   }) {
     final isSelected = value == groupValue;
@@ -875,9 +937,9 @@ class PropertiesPanel extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? scheme.onPrimaryContainer : null,
+              color: isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
             ),
           ),
         ),
@@ -885,11 +947,16 @@ class PropertiesPanel extends StatelessWidget {
     );
   }
 
-  Widget _strokeWidthOption(StrokeWidthPreset preset, ColorScheme scheme) {
-    final isSelected = (currentStrokeWidth - preset.width).abs() < 0.2;
+  Widget _strokeWidthOption(
+    StrokeWidthPreset preset,
+    double currentWidth,
+    void Function(double w) onSelect,
+    ColorScheme scheme,
+  ) {
+    final isSelected = (currentWidth - preset.width).abs() < 0.2;
     return Expanded(
       child: InkWell(
-        onTap: () => onStrokeWidthChanged(preset.width),
+        onTap: () => onSelect(preset.width),
         borderRadius: BorderRadius.circular(6),
         child: Container(
           height: 24,
@@ -916,11 +983,17 @@ class PropertiesPanel extends StatelessWidget {
     );
   }
 
-  Widget _strokeStyleOption(StrokeStyle style, IconData icon, ColorScheme scheme) {
-    final isSelected = currentStrokeStyle == style;
+  Widget _strokeStyleOption(
+    StrokeStyle style,
+    IconData icon,
+    StrokeStyle currentStyle,
+    void Function(StrokeStyle s) onSelect,
+    ColorScheme scheme,
+  ) {
+    final isSelected = currentStyle == style;
     return Expanded(
       child: InkWell(
-        onTap: () => onStrokeStyleChanged(style),
+        onTap: () => onSelect(style),
         borderRadius: BorderRadius.circular(6),
         child: Container(
           height: 24,
@@ -934,7 +1007,8 @@ class PropertiesPanel extends StatelessWidget {
                   : scheme.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
-          child: Icon(icon, size: 15, color: isSelected ? scheme.primary : Colors.grey),
+          child: Icon(icon,
+              size: 15, color: isSelected ? scheme.primary : Colors.grey),
         ),
       ),
     );
@@ -944,12 +1018,14 @@ class PropertiesPanel extends StatelessWidget {
     ConnectorStyle style,
     IconData icon,
     String label,
+    ConnectorStyle currentStyle,
+    void Function(ConnectorStyle s) onSelect,
     ColorScheme scheme,
   ) {
-    final isSelected = currentConnectorStyle == style;
+    final isSelected = currentStyle == style;
     return Expanded(
       child: InkWell(
-        onTap: () => onConnectorStyleChanged(style),
+        onTap: () => onSelect(style),
         borderRadius: BorderRadius.circular(6),
         child: Container(
           height: 24,
@@ -977,10 +1053,47 @@ class PropertiesPanel extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
+                  color:
+                      isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _fontSizeOption(
+    FontSizePreset preset,
+    double currentSize,
+    void Function(double s) onSelect,
+    ColorScheme scheme,
+  ) {
+    final isSelected = (currentSize - preset.size).abs() < 1.0;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onSelect(preset.size),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? scheme.primaryContainer : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isSelected
+                  ? scheme.primary.withValues(alpha: 0.6)
+                  : scheme.outlineVariant.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Text(
+            preset.label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
+            ),
           ),
         ),
       ),

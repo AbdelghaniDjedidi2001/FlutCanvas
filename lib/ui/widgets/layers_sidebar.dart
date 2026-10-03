@@ -1,7 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../features/canvas/presentation/bloc/canvas_bloc.dart';
+import '../../features/canvas/presentation/bloc/canvas_event.dart';
+import '../../features/comments/presentation/bloc/comments_cubit.dart';
 import '../../models/board_comment.dart';
 import '../../models/board_element.dart';
 import '../../models/shape_type.dart';
@@ -9,38 +13,38 @@ import '../../models/shape_type.dart';
 class LayersSidebar extends StatefulWidget {
   const LayersSidebar({
     super.key,
-    required this.elements,
-    required this.selectedIds,
-    this.comments = const [],
+    this.elements,
+    this.selectedIds,
+    this.comments,
     this.activeCommentId,
-    required this.onSelectElement,
-    required this.onToggleVisibility,
-    required this.onToggleLock,
-    required this.onRenameElement,
-    required this.onDeleteElement,
-    required this.onReorderElements,
+    this.onSelectElement,
+    this.onToggleVisibility,
+    this.onToggleLock,
+    this.onRenameElement,
+    this.onDeleteElement,
+    this.onReorderElements,
     this.onSelectComment,
     this.onToggleResolveComment,
     this.onDeleteComment,
     this.initialTab = 0,
-    required this.onClose,
+    this.onClose,
   });
 
-  final List<BoardElement> elements;
-  final Set<String> selectedIds;
-  final List<BoardComment> comments;
+  final List<BoardElement>? elements;
+  final Set<String>? selectedIds;
+  final List<BoardComment>? comments;
   final String? activeCommentId;
-  final void Function(String id, bool multiSelect) onSelectElement;
-  final void Function(String id) onToggleVisibility;
-  final void Function(String id) onToggleLock;
-  final void Function(String id, String newName) onRenameElement;
-  final void Function(String id) onDeleteElement;
-  final void Function(int oldIndex, int newIndex) onReorderElements;
+  final void Function(String id, bool multiSelect)? onSelectElement;
+  final void Function(String id)? onToggleVisibility;
+  final void Function(String id)? onToggleLock;
+  final void Function(String id, String newName)? onRenameElement;
+  final void Function(String id)? onDeleteElement;
+  final void Function(int oldIndex, int newIndex)? onReorderElements;
   final void Function(String id)? onSelectComment;
   final void Function(String id)? onToggleResolveComment;
   final void Function(String id)? onDeleteComment;
   final int initialTab;
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
 
   @override
   State<LayersSidebar> createState() => _LayersSidebarState();
@@ -81,11 +85,57 @@ class _LayersSidebarState extends State<LayersSidebar> {
     });
   }
 
+  List<BoardElement> _getElements(BuildContext context) {
+    if (widget.elements != null) return widget.elements!;
+    try {
+      return context.watch<CanvasBloc>().state.elements;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Set<String> _getSelectedIds(BuildContext context) {
+    if (widget.selectedIds != null) return widget.selectedIds!;
+    try {
+      return context.watch<CanvasBloc>().state.selectedIds;
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  List<BoardComment> _getComments(BuildContext context) {
+    if (widget.comments != null) return widget.comments!;
+    try {
+      return context.watch<CommentsCubit>().state.comments;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  String? _getActiveCommentId(BuildContext context) {
+    if (widget.activeCommentId != null) return widget.activeCommentId;
+    try {
+      return context.watch<CommentsCubit>().state.activeCommentId;
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _commitRename() {
     if (_editingElementId != null) {
       final text = _renameController.text.trim();
       if (text.isNotEmpty) {
-        widget.onRenameElement(_editingElementId!, text);
+        if (widget.onRenameElement != null) {
+          widget.onRenameElement!(_editingElementId!, text);
+        } else {
+          try {
+            final elements = context.read<CanvasBloc>().state.elements;
+            final el = elements.firstWhere((e) => e.id == _editingElementId);
+            context.read<CanvasBloc>().add(
+                  CanvasEvent.updateElement(el.copyWith(customName: text)),
+                );
+          } catch (_) {}
+        }
       }
       setState(() {
         _editingElementId = null;
@@ -120,7 +170,12 @@ class _LayersSidebarState extends State<LayersSidebar> {
     final scheme = Theme.of(context).colorScheme;
     final mqHeight = MediaQuery.of(context).size.height;
 
-    final openCommentsCount = widget.comments.where((c) => !c.isResolved).length;
+    final elements = _getElements(context);
+    final selectedIds = _getSelectedIds(context);
+    final comments = _getComments(context);
+    final activeCommentId = _getActiveCommentId(context);
+
+    final openCommentsCount = comments.where((c) => !c.isResolved).length;
 
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -155,7 +210,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
                       children: [
                         _tabButton(
                           title: 'Layers',
-                          count: widget.elements.length,
+                          count: elements.length,
                           index: 0,
                           icon: Icons.layers_outlined,
                           scheme: scheme,
@@ -239,7 +294,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
                     _commentFilterChip('Open ($openCommentsCount)', 1, scheme),
                     const SizedBox(width: 4),
                     _commentFilterChip(
-                      'Resolved (${widget.comments.length - openCommentsCount})',
+                      'Resolved (${comments.length - openCommentsCount})',
                       2,
                       scheme,
                     ),
@@ -253,7 +308,9 @@ class _LayersSidebarState extends State<LayersSidebar> {
             const SizedBox(height: 4),
 
             // Content List
-            _currentTab == 0 ? _buildLayersList(scheme) : _buildCommentsList(scheme),
+            _currentTab == 0
+                ? _buildLayersList(scheme, elements, selectedIds)
+                : _buildCommentsList(scheme, comments, activeCommentId),
           ],
         ),
       ),
@@ -351,8 +408,12 @@ class _LayersSidebarState extends State<LayersSidebar> {
     );
   }
 
-  Widget _buildLayersList(ColorScheme scheme) {
-    final displayElements = widget.elements.reversed.toList();
+  Widget _buildLayersList(
+    ColorScheme scheme,
+    List<BoardElement> elements,
+    Set<String> selectedIds,
+  ) {
+    final displayElements = elements.reversed.toList();
     final filtered = _searchQuery.isEmpty
         ? displayElements
         : displayElements
@@ -365,7 +426,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
       return Expanded(
         child: Center(
           child: Text(
-            widget.elements.isEmpty ? 'No elements on canvas' : 'No matching layers',
+            elements.isEmpty ? 'No elements on canvas' : 'No matching layers',
             style: TextStyle(
               fontSize: 11,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
@@ -387,19 +448,27 @@ class _LayersSidebarState extends State<LayersSidebar> {
           buildDefaultDragHandles: false,
           // ignore: deprecated_member_use
           onReorder: (oldIndex, newIndex) {
-            final realOldIndex = widget.elements.length - 1 - oldIndex;
-            var realNewIndex = widget.elements.length - 1 - newIndex;
+            final realOldIndex = elements.length - 1 - oldIndex;
+            var realNewIndex = elements.length - 1 - newIndex;
             if (oldIndex < newIndex) {
               realNewIndex += 1;
             }
-            widget.onReorderElements(
-              realOldIndex.clamp(0, widget.elements.length - 1),
-              realNewIndex.clamp(0, widget.elements.length - 1),
-            );
+            final clampedOld = realOldIndex.clamp(0, elements.length - 1);
+            final clampedNew = realNewIndex.clamp(0, elements.length - 1);
+            if (widget.onReorderElements != null) {
+              widget.onReorderElements!(clampedOld, clampedNew);
+            } else {
+              try {
+                final list = List<BoardElement>.from(elements);
+                final item = list.removeAt(clampedOld);
+                list.insert(clampedNew, item);
+                context.read<CanvasBloc>().add(CanvasEvent.loadElements(list));
+              } catch (_) {}
+            }
           },
           itemBuilder: (context, index) {
             final el = filtered[index];
-            final isSelected = widget.selectedIds.contains(el.id);
+            final isSelected = selectedIds.contains(el.id);
             final isEditing = _editingElementId == el.id;
 
             return Material(
@@ -456,7 +525,15 @@ class _LayersSidebarState extends State<LayersSidebar> {
                           : GestureDetector(
                               onTap: () {
                                 final isShift = HardwareKeyboard.instance.isShiftPressed;
-                                widget.onSelectElement(el.id, isShift);
+                                if (widget.onSelectElement != null) {
+                                  widget.onSelectElement!(el.id, isShift);
+                                } else {
+                                  try {
+                                    context.read<CanvasBloc>().add(
+                                          CanvasEvent.selectElement(el.id, toggle: isShift),
+                                        );
+                                  } catch (_) {}
+                                }
                               },
                               onDoubleTap: () => _startRenaming(el),
                               child: Text(
@@ -474,7 +551,16 @@ class _LayersSidebarState extends State<LayersSidebar> {
                             ),
                     ),
                     InkWell(
-                      onTap: () => widget.onToggleLock(el.id),
+                      onTap: () {
+                        if (widget.onToggleLock != null) {
+                          widget.onToggleLock!(el.id);
+                        } else {
+                          try {
+                            final updated = el.copyWith(isLocked: !el.isLocked);
+                            context.read<CanvasBloc>().add(CanvasEvent.updateElement(updated));
+                          } catch (_) {}
+                        }
+                      },
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(
                         padding: const EdgeInsets.all(2),
@@ -489,7 +575,16 @@ class _LayersSidebarState extends State<LayersSidebar> {
                     ),
                     const SizedBox(width: 2),
                     InkWell(
-                      onTap: () => widget.onToggleVisibility(el.id),
+                      onTap: () {
+                        if (widget.onToggleVisibility != null) {
+                          widget.onToggleVisibility!(el.id);
+                        } else {
+                          try {
+                            final updated = el.copyWith(isVisible: !el.isVisible);
+                            context.read<CanvasBloc>().add(CanvasEvent.updateElement(updated));
+                          } catch (_) {}
+                        }
+                      },
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(
                         padding: const EdgeInsets.all(2),
@@ -504,7 +599,15 @@ class _LayersSidebarState extends State<LayersSidebar> {
                     ),
                     const SizedBox(width: 2),
                     InkWell(
-                      onTap: () => widget.onDeleteElement(el.id),
+                      onTap: () {
+                        if (widget.onDeleteElement != null) {
+                          widget.onDeleteElement!(el.id);
+                        } else {
+                          try {
+                            context.read<CanvasBloc>().add(CanvasEvent.deleteElements({el.id}));
+                          } catch (_) {}
+                        }
+                      },
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(
                         padding: const EdgeInsets.all(2),
@@ -525,8 +628,12 @@ class _LayersSidebarState extends State<LayersSidebar> {
     );
   }
 
-  Widget _buildCommentsList(ColorScheme scheme) {
-    var filtered = widget.comments;
+  Widget _buildCommentsList(
+    ColorScheme scheme,
+    List<BoardComment> comments,
+    String? activeCommentId,
+  ) {
+    var filtered = comments;
     if (_commentFilter == 1) {
       filtered = filtered.where((c) => !c.isResolved).toList();
     } else if (_commentFilter == 2) {
@@ -546,7 +653,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
       return Expanded(
         child: Center(
           child: Text(
-            widget.comments.isEmpty
+            comments.isEmpty
                 ? 'No comments yet\n(Use Comment Pin tool to add)'
                 : 'No matching comments',
             textAlign: TextAlign.center,
@@ -565,13 +672,21 @@ class _LayersSidebarState extends State<LayersSidebar> {
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final c = filtered[index];
-          final isActive = widget.activeCommentId == c.id;
+          final isActive = activeCommentId == c.id;
 
           return Material(
             key: ValueKey(c.id),
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => widget.onSelectComment?.call(c.id),
+              onTap: () {
+                if (widget.onSelectComment != null) {
+                  widget.onSelectComment!(c.id);
+                } else {
+                  try {
+                    context.read<CommentsCubit>().setActiveCommentId(c.id);
+                  } catch (_) {}
+                }
+              },
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 2),
@@ -633,7 +748,15 @@ class _LayersSidebarState extends State<LayersSidebar> {
                         const SizedBox(width: 4),
                         // Resolve checkbox
                         InkWell(
-                          onTap: () => widget.onToggleResolveComment?.call(c.id),
+                          onTap: () {
+                            if (widget.onToggleResolveComment != null) {
+                              widget.onToggleResolveComment!(c.id);
+                            } else {
+                              try {
+                                context.read<CommentsCubit>().toggleResolved(c.id);
+                              } catch (_) {}
+                            }
+                          },
                           borderRadius: BorderRadius.circular(4),
                           child: Padding(
                             padding: const EdgeInsets.all(2),
@@ -651,7 +774,15 @@ class _LayersSidebarState extends State<LayersSidebar> {
                         const SizedBox(width: 2),
                         // Delete icon
                         InkWell(
-                          onTap: () => widget.onDeleteComment?.call(c.id),
+                          onTap: () {
+                            if (widget.onDeleteComment != null) {
+                              widget.onDeleteComment!(c.id);
+                            } else {
+                              try {
+                                context.read<CommentsCubit>().deleteComment(c.id);
+                              } catch (_) {}
+                            }
+                          },
                           borderRadius: BorderRadius.circular(4),
                           child: Padding(
                             padding: const EdgeInsets.all(2),

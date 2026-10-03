@@ -1,54 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../features/canvas/presentation/bloc/canvas_bloc.dart';
+import '../../features/canvas/presentation/bloc/canvas_event.dart';
+import '../../features/canvas/presentation/bloc/canvas_state.dart';
+import '../../features/comments/presentation/bloc/comments_cubit.dart';
+import '../../features/comments/presentation/bloc/comments_state.dart';
+import '../../features/toolbar/presentation/bloc/tool_cubit.dart';
+import '../../features/toolbar/presentation/bloc/tool_state.dart';
 import '../../models/board_colors.dart';
+import '../../models/shape_type.dart';
 import '../../models/tool.dart';
 
 class MainToolbar extends StatelessWidget {
+  final Tool? currentTool;
+  final Color? currentColor;
+  final bool? canUndo;
+  final bool? canRedo;
+  final bool? hasElements;
+  final bool? hasFrames;
+  final int? openCommentsCount;
+  final void Function(Tool tool)? onSelectTool;
+  final void Function(Color color)? onSelectColor;
+  final VoidCallback? onUndo;
+  final VoidCallback? onRedo;
+  final VoidCallback? onClear;
+  final VoidCallback? onOpenExport;
+  final VoidCallback? onOpenTemplates;
+  final VoidCallback? onStartPresentation;
+  final VoidCallback? onToggleProperties;
+  final bool? isPropertiesOpen;
+  final VoidCallback? onToggleLayers;
+  final bool? isLayersOpen;
+
   const MainToolbar({
     super.key,
-    required this.currentTool,
-    required this.currentColor,
-    required this.canUndo,
-    required this.canRedo,
-    required this.hasElements,
-    required this.hasFrames,
-    required this.onSelectTool,
-    required this.onSelectColor,
-    required this.onUndo,
-    required this.onRedo,
-    required this.onClear,
-    required this.onOpenExport,
-    required this.onOpenTemplates,
-    required this.onStartPresentation,
-    required this.onToggleProperties,
-    required this.isPropertiesOpen,
-    required this.onToggleLayers,
-    required this.isLayersOpen,
-    this.openCommentsCount = 0,
+    this.currentTool,
+    this.currentColor,
+    this.canUndo,
+    this.canRedo,
+    this.hasElements,
+    this.hasFrames,
+    this.onSelectTool,
+    this.onSelectColor,
+    this.onUndo,
+    this.onRedo,
+    this.onClear,
+    this.onOpenExport,
+    this.onOpenTemplates,
+    this.onStartPresentation,
+    this.onToggleProperties,
+    this.isPropertiesOpen,
+    this.onToggleLayers,
+    this.isLayersOpen,
+    this.openCommentsCount,
   });
-
-  final Tool currentTool;
-  final Color currentColor;
-  final bool canUndo;
-  final bool canRedo;
-  final bool hasElements;
-  final bool hasFrames;
-  final int openCommentsCount;
-  final void Function(Tool tool) onSelectTool;
-  final void Function(Color color) onSelectColor;
-  final VoidCallback onUndo;
-  final VoidCallback onRedo;
-  final VoidCallback onClear;
-  final VoidCallback onOpenExport;
-  final VoidCallback onOpenTemplates;
-  final VoidCallback onStartPresentation;
-  final VoidCallback onToggleProperties;
-  final bool isPropertiesOpen;
-  final VoidCallback onToggleLayers;
-  final bool isLayersOpen;
 
   @override
   Widget build(BuildContext context) {
+    final toolCubit = context.watch<ToolCubit?>();
+    final canvasBloc = context.watch<CanvasBloc?>();
+    final commentsCubit = context.watch<CommentsCubit?>();
+
+    final toolState = toolCubit?.state ?? const ToolState();
+    final canvasState = canvasBloc?.state ?? const CanvasState();
+    final commentsState = commentsCubit?.state ?? const CommentsState();
+
+    final activeTool = currentTool ?? toolState.currentTool;
+    final activeColor = currentColor ?? toolState.strokeColor;
+    final activeCanUndo = canUndo ?? canvasState.canUndo;
+    final activeCanRedo = canRedo ?? canvasState.canRedo;
+    final activeHasElements = hasElements ?? canvasState.elements.isNotEmpty;
+    final activeHasFrames = hasFrames ??
+        canvasState.elements.any((e) => e.type == ShapeType.frame);
+    final activeIsPropertiesOpen =
+        isPropertiesOpen ?? toolState.isPropertiesOpen;
+    final activeIsLayersOpen = isLayersOpen ?? toolState.isLayersOpen;
+    final activeCommentsCount = openCommentsCount ??
+        commentsState.comments.where((c) => !c.isResolved).length;
+
     final scheme = Theme.of(context).colorScheme;
     final colors = BoardColors.of(context);
 
@@ -72,44 +102,44 @@ class MainToolbar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // 1. Navigation & Selection
-              _toolButton(Tool.select, scheme),
-              _toolButton(Tool.hand, scheme),
+              _toolButton(context, Tool.select, activeTool, scheme),
+              _toolButton(context, Tool.hand, activeTool, scheme),
               _divider(scheme),
 
               // 2. Geometric Shapes
-              _toolButton(Tool.rectangle, scheme),
-              _toolButton(Tool.roundedRectangle, scheme),
-              _toolButton(Tool.ellipse, scheme),
-              _toolButton(Tool.diamond, scheme),
-              _toolButton(Tool.triangle, scheme),
-              _toolButton(Tool.star, scheme),
+              _toolButton(context, Tool.rectangle, activeTool, scheme),
+              _toolButton(context, Tool.roundedRectangle, activeTool, scheme),
+              _toolButton(context, Tool.ellipse, activeTool, scheme),
+              _toolButton(context, Tool.diamond, activeTool, scheme),
+              _toolButton(context, Tool.triangle, activeTool, scheme),
+              _toolButton(context, Tool.star, activeTool, scheme),
               _divider(scheme),
 
               // 3. Connectors
-              _toolButton(Tool.line, scheme),
-              _toolButton(Tool.arrow, scheme),
+              _toolButton(context, Tool.line, activeTool, scheme),
+              _toolButton(context, Tool.arrow, activeTool, scheme),
               _divider(scheme),
 
               // 4. Drawing, Text & Cards
-              _toolButton(Tool.pen, scheme),
-              _toolButton(Tool.highlighter, scheme),
-              _toolButton(Tool.text, scheme),
-              _toolButton(Tool.stickyNote, scheme),
-              _toolButton(Tool.codeBlock, scheme),
-              _toolButton(Tool.table, scheme),
-              _toolButton(Tool.comment, scheme),
-              _toolButton(Tool.image, scheme),
-              _toolButton(Tool.frame, scheme),
+              _toolButton(context, Tool.pen, activeTool, scheme),
+              _toolButton(context, Tool.highlighter, activeTool, scheme),
+              _toolButton(context, Tool.text, activeTool, scheme),
+              _toolButton(context, Tool.stickyNote, activeTool, scheme),
+              _toolButton(context, Tool.codeBlock, activeTool, scheme),
+              _toolButton(context, Tool.table, activeTool, scheme),
+              _toolButton(context, Tool.comment, activeTool, scheme),
+              _toolButton(context, Tool.image, activeTool, scheme),
+              _toolButton(context, Tool.frame, activeTool, scheme),
               _divider(scheme),
 
               // 5. Utility
-              _toolButton(Tool.eraser, scheme),
-              _toolButton(Tool.laser, scheme),
+              _toolButton(context, Tool.eraser, activeTool, scheme),
+              _toolButton(context, Tool.laser, activeTool, scheme),
               _divider(scheme),
 
               // 6. Quick Palette Swatches
               for (final c in BoardColors.strokePalette.take(5))
-                _swatch(c, colors, scheme),
+                _swatch(context, c, activeColor, colors, scheme),
               _divider(scheme),
 
               // 7. Templates & Slides
@@ -123,14 +153,16 @@ class MainToolbar extends StatelessWidget {
                 ),
               ),
               Tooltip(
-                message: hasFrames ? 'Start Presentation (F5)' : 'Add a Frame to Present',
+                message: activeHasFrames
+                    ? 'Start Presentation (F5)'
+                    : 'Add a Frame to Present',
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
-                  onPressed: hasFrames ? onStartPresentation : null,
+                  onPressed: activeHasFrames ? onStartPresentation : null,
                   icon: Icon(
                     Icons.slideshow_rounded,
-                    color: hasFrames ? scheme.primary : null,
+                    color: activeHasFrames ? scheme.primary : null,
                   ),
                 ),
               ),
@@ -142,7 +174,15 @@ class MainToolbar extends StatelessWidget {
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
-                  onPressed: canUndo ? onUndo : null,
+                  onPressed: activeCanUndo
+                      ? () {
+                          if (onUndo != null) {
+                            onUndo!();
+                          } else {
+                            canvasBloc?.add(const CanvasEvent.undo());
+                          }
+                        }
+                      : null,
                   icon: const Icon(Icons.undo),
                 ),
               ),
@@ -151,7 +191,15 @@ class MainToolbar extends StatelessWidget {
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
-                  onPressed: canRedo ? onRedo : null,
+                  onPressed: activeCanRedo
+                      ? () {
+                          if (onRedo != null) {
+                            onRedo!();
+                          } else {
+                            canvasBloc?.add(const CanvasEvent.redo());
+                          }
+                        }
+                      : null,
                   icon: const Icon(Icons.redo),
                 ),
               ),
@@ -159,28 +207,30 @@ class MainToolbar extends StatelessWidget {
 
               // 9. Layers & Comments Sidebar Toggle
               Tooltip(
-                message: openCommentsCount > 0
-                    ? 'Layers & Comments ($openCommentsCount unread) (Alt+L)'
+                message: activeCommentsCount > 0
+                    ? 'Layers & Comments ($activeCommentsCount unread) (Alt+L)'
                     : 'Layers & Comments (Alt+L)',
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
-                  style: isLayersOpen
+                  style: activeIsLayersOpen
                       ? IconButton.styleFrom(
                           backgroundColor: scheme.primaryContainer,
                           foregroundColor: scheme.onPrimaryContainer,
                         )
                       : null,
-                  onPressed: onToggleLayers,
+                  onPressed: onToggleLayers ??
+                      () => toolCubit?.toggleLayersSidebar(),
                   icon: Badge(
-                    isLabelVisible: openCommentsCount > 0,
+                    isLabelVisible: activeCommentsCount > 0,
                     label: Text(
-                      '$openCommentsCount',
-                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                      '$activeCommentsCount',
+                      style: const TextStyle(
+                          fontSize: 9, fontWeight: FontWeight.bold),
                     ),
                     child: Icon(
                       Icons.layers_outlined,
-                      color: isLayersOpen ? scheme.primary : null,
+                      color: activeIsLayersOpen ? scheme.primary : null,
                     ),
                   ),
                 ),
@@ -192,21 +242,22 @@ class MainToolbar extends StatelessWidget {
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
-                  style: isPropertiesOpen
+                  style: activeIsPropertiesOpen
                       ? IconButton.styleFrom(
                           backgroundColor: scheme.primaryContainer,
                           foregroundColor: scheme.onPrimaryContainer,
                         )
                       : null,
-                  onPressed: onToggleProperties,
+                  onPressed: onToggleProperties ??
+                      () => toolCubit?.togglePropertiesPanel(),
                   icon: Icon(
                     Icons.palette_outlined,
-                    color: isPropertiesOpen ? scheme.primary : null,
+                    color: activeIsPropertiesOpen ? scheme.primary : null,
                   ),
                 ),
               ),
 
-              // 10. Export & Clear
+              // 11. Export & Clear
               Tooltip(
                 message: 'Export / Save / Load',
                 child: IconButton(
@@ -221,7 +272,9 @@ class MainToolbar extends StatelessWidget {
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
-                  onPressed: hasElements ? () => _confirmClear(context) : null,
+                  onPressed: activeHasElements
+                      ? () => _confirmClear(context, canvasBloc)
+                      : null,
                   icon: const Icon(Icons.layers_clear_outlined),
                 ),
               ),
@@ -232,14 +285,21 @@ class MainToolbar extends StatelessWidget {
     );
   }
 
-  Widget _toolButton(Tool t, ColorScheme scheme) {
+  Widget _toolButton(
+      BuildContext context, Tool t, Tool currentTool, ColorScheme scheme) {
     final selected = currentTool == t;
     return Tooltip(
       message: t.label,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 1.5),
         child: InkWell(
-          onTap: () => onSelectTool(t),
+          onTap: () {
+            if (onSelectTool != null) {
+              onSelectTool!(t);
+            } else {
+              context.read<ToolCubit?>()?.setTool(t);
+            }
+          },
           borderRadius: BorderRadius.circular(8),
           child: Container(
             width: 32,
@@ -273,10 +333,17 @@ class MainToolbar extends StatelessWidget {
         color: scheme.outlineVariant.withValues(alpha: 0.4),
       );
 
-  Widget _swatch(Color c, BoardColors colors, ColorScheme scheme) {
+  Widget _swatch(BuildContext context, Color c, Color currentColor,
+      BoardColors colors, ColorScheme scheme) {
     final selected = currentColor == c;
     return GestureDetector(
-      onTap: () => onSelectColor(c),
+      onTap: () {
+        if (onSelectColor != null) {
+          onSelectColor!(c);
+        } else {
+          context.read<ToolCubit?>()?.setStrokeColor(c);
+        }
+      },
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: Container(
@@ -287,7 +354,8 @@ class MainToolbar extends StatelessWidget {
             color: colors.display(c),
             shape: BoxShape.circle,
             border: Border.all(
-              color: selected ? colors.selection : scheme.surfaceContainerHighest,
+              color:
+                  selected ? colors.selection : scheme.surfaceContainerHighest,
               width: selected ? 2.5 : 1.0,
             ),
             boxShadow: const [
@@ -299,7 +367,7 @@ class MainToolbar extends StatelessWidget {
     );
   }
 
-  void _confirmClear(BuildContext context) {
+  void _confirmClear(BuildContext context, CanvasBloc? canvasBloc) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -316,7 +384,13 @@ class MainToolbar extends StatelessWidget {
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () {
               Navigator.of(ctx).pop();
-              onClear();
+              if (onClear != null) {
+                onClear!();
+              } else {
+                final allIds =
+                    canvasBloc?.state.elements.map((e) => e.id).toSet() ?? {};
+                canvasBloc?.add(CanvasEvent.deleteElements(allIds));
+              }
             },
             child: const Text('Clear All'),
           ),

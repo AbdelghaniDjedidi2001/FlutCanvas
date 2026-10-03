@@ -12,9 +12,9 @@ class SharedPrefsBoardRepository implements BoardRepository {
   static const String _workspaceKey = 'mini_whiteboard_workspace_v2';
   static const String _legacyKey = 'mini_whiteboard_state_v1';
 
-  final SharedPreferences _prefs;
+  final SharedPreferences? _prefs;
 
-  SharedPrefsBoardRepository(this._prefs);
+  SharedPrefsBoardRepository([this._prefs]);
 
   @override
   Future<void> saveWorkspace({
@@ -29,7 +29,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
             activeBoardIndex.clamp(0, boards.isEmpty ? 0 : boards.length - 1),
         'boards': boards.map((b) => b.toMap()).toList(),
       };
-      await _prefs.setString(_workspaceKey, jsonEncode(data));
+      await _prefs?.setString(_workspaceKey, jsonEncode(data));
     } catch (e) {
       debugPrint('Error saving workspace: $e');
     }
@@ -38,7 +38,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
   @override
   Future<SavedWorkspaceState?> loadWorkspace() async {
     try {
-      final raw = _prefs.getString(_workspaceKey);
+      final raw = _prefs?.getString(_workspaceKey);
       if (raw != null && raw.isNotEmpty) {
         final data = jsonDecode(raw) as Map<String, dynamic>;
         final rawBoards = data['boards'] as List<dynamic>? ?? [];
@@ -56,7 +56,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
       }
 
       // Fallback: Check legacy single-board key
-      final legacyRaw = _prefs.getString(_legacyKey);
+      final legacyRaw = _prefs?.getString(_legacyKey);
       if (legacyRaw != null && legacyRaw.isNotEmpty) {
         final data = jsonDecode(legacyRaw) as Map<String, dynamic>;
         final panMap = data['pan'] as Map<String, dynamic>?;
@@ -91,7 +91,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
 
   @override
   Future<void> clearWorkspace() async {
-    await _prefs.remove(_workspaceKey);
-    await _prefs.remove(_legacyKey);
+    await _prefs?.remove(_workspaceKey);
+    await _prefs?.remove(_legacyKey);
   }
 }
