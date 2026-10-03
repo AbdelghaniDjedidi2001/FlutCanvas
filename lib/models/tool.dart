@@ -23,6 +23,7 @@ enum Tool {
   image,
   codeBlock,
   table,
+  comment,
 }
 
 extension ToolExtension on Tool {
@@ -43,6 +44,7 @@ extension ToolExtension on Tool {
         Tool.stickyNote => 'Sticky Note (N)',
         Tool.codeBlock => 'Code Block (C)',
         Tool.table => 'Table Grid',
+        Tool.comment => 'Comment Pin',
         Tool.eraser => 'Eraser (E)',
         Tool.laser => 'Laser Pointer (K)',
         Tool.frame => 'Frame / Slide (F)',
@@ -66,6 +68,7 @@ extension ToolExtension on Tool {
         Tool.stickyNote => Icons.sticky_note_2_outlined,
         Tool.codeBlock => Icons.code_rounded,
         Tool.table => Icons.table_chart_outlined,
+        Tool.comment => Icons.chat_bubble_outline_rounded,
         Tool.eraser => Icons.auto_fix_normal_outlined,
         Tool.laser => Icons.flare_rounded,
         Tool.frame => Icons.crop_free_rounded,

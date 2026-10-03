@@ -89,6 +89,7 @@ class ShortcutsHelpDialog extends StatelessWidget {
                         _ShortcutItem('Sticky Note', 'N'),
                         _ShortcutItem('Code Block', 'C'),
                         _ShortcutItem('Table Grid', 'Double-click cell to edit / Tab'),
+                        _ShortcutItem('Comment Pin', 'Click canvas to drop review pin'),
                         _ShortcutItem('Eraser', 'E'),
                         _ShortcutItem('Laser Pointer', 'K'),
                         _ShortcutItem('Slide Frame', 'F'),

@@ -24,6 +24,7 @@ class MainToolbar extends StatelessWidget {
     required this.isPropertiesOpen,
     required this.onToggleLayers,
     required this.isLayersOpen,
+    this.openCommentsCount = 0,
   });
 
   final Tool currentTool;
@@ -32,6 +33,7 @@ class MainToolbar extends StatelessWidget {
   final bool canRedo;
   final bool hasElements;
   final bool hasFrames;
+  final int openCommentsCount;
   final void Function(Tool tool) onSelectTool;
   final void Function(Color color) onSelectColor;
   final VoidCallback onUndo;
@@ -95,6 +97,7 @@ class MainToolbar extends StatelessWidget {
               _toolButton(Tool.stickyNote, scheme),
               _toolButton(Tool.codeBlock, scheme),
               _toolButton(Tool.table, scheme),
+              _toolButton(Tool.comment, scheme),
               _toolButton(Tool.image, scheme),
               _toolButton(Tool.frame, scheme),
               _divider(scheme),
@@ -154,9 +157,11 @@ class MainToolbar extends StatelessWidget {
               ),
               _divider(scheme),
 
-              // 9. Layers Sidebar Toggle
+              // 9. Layers & Comments Sidebar Toggle
               Tooltip(
-                message: 'Layers & Objects (Alt+L)',
+                message: openCommentsCount > 0
+                    ? 'Layers & Comments ($openCommentsCount unread) (Alt+L)'
+                    : 'Layers & Comments (Alt+L)',
                 child: IconButton(
                   visualDensity: VisualDensity.compact,
                   iconSize: 18,
@@ -167,9 +172,16 @@ class MainToolbar extends StatelessWidget {
                         )
                       : null,
                   onPressed: onToggleLayers,
-                  icon: Icon(
-                    Icons.layers_outlined,
-                    color: isLayersOpen ? scheme.primary : null,
+                  icon: Badge(
+                    isLabelVisible: openCommentsCount > 0,
+                    label: Text(
+                      '$openCommentsCount',
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                    ),
+                    child: Icon(
+                      Icons.layers_outlined,
+                      color: isLayersOpen ? scheme.primary : null,
+                    ),
                   ),
                 ),
               ),

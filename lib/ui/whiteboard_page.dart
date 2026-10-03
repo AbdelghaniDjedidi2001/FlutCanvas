@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/board_colors.dart';
+import '../models/board_comment.dart';
 import '../models/board_document.dart';
 import '../models/board_element.dart';
 import '../models/connection_binding.dart';
@@ -31,6 +32,8 @@ import 'presentation/presentation_overlay.dart';
 import 'toolbar/board_tabs_bar.dart';
 import 'toolbar/main_toolbar.dart';
 import 'toolbar/properties_panel.dart';
+import 'widgets/comment_card_popover.dart';
+import 'widgets/comment_pin_badge.dart';
 import 'widgets/empty_canvas_guide.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/layers_sidebar.dart';
@@ -74,7 +77,11 @@ class _WhiteboardPageState extends State<WhiteboardPage>
   List<BoardElement> get _elements => _currentBoard.elements;
   set _elements(List<BoardElement> val) => _currentBoard.elements = val;
 
+  List<BoardComment> get _comments => _currentBoard.comments;
+  set _comments(List<BoardComment> val) => _currentBoard.comments = val;
+
   Set<String> _selectedIds = {};
+  String? _activeCommentId;
   BoardElement? _draft;
   Rect? _marqueeRect;
   List<LaserPoint> _laserTrail = [];
@@ -989,6 +996,77 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     });
   }
 
+  // ── Canvas Comments & Annotations ──────────────────────────
+  void _insertComment(Offset world) {
+    final newId = 'comm_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+    final newComment = BoardComment(
+      id: newId,
+      worldPosition: world,
+      pinNumber: _comments.length + 1,
+      author: 'User',
+      text: '',
+      createdAt: DateTime.now(),
+    );
+    setState(() {
+      _comments = [..._comments, newComment];
+      _activeCommentId = newId;
+      _tool = Tool.select;
+    });
+    _scheduleAutoSave();
+  }
+
+  void _saveInitialCommentText(String commentId, String text) {
+    setState(() {
+      _comments = [
+        for (final c in _comments)
+          if (c.id == commentId) c.copyWith(text: text) else c,
+      ];
+    });
+    _scheduleAutoSave();
+    _showToast('Comment posted');
+  }
+
+  void _addCommentReply(String commentId, String text) {
+    setState(() {
+      _comments = [
+        for (final c in _comments)
+          if (c.id == commentId) c.addReply(author: 'User', text: text) else c,
+      ];
+    });
+    _scheduleAutoSave();
+  }
+
+  void _toggleResolveComment(String commentId) {
+    setState(() {
+      _comments = [
+        for (final c in _comments)
+          if (c.id == commentId) c.toggleResolved() else c,
+      ];
+    });
+    _scheduleAutoSave();
+  }
+
+  void _deleteComment(String commentId) {
+    setState(() {
+      _comments = _comments.where((c) => c.id != commentId).toList();
+      if (_activeCommentId == commentId) {
+        _activeCommentId = null;
+      }
+    });
+    _scheduleAutoSave();
+    _showToast('Comment deleted');
+  }
+
+  void _selectCommentFromSidebar(String commentId) {
+    final c = _comments.where((e) => e.id == commentId).firstOrNull;
+    if (c != null) {
+      setState(() {
+        _activeCommentId = commentId;
+        _pan = _viewSize.center(Offset.zero) - (c.worldPosition * _zoom);
+      });
+    }
+  }
+
   // ── Image Upload & Insertion ───────────────────────────────
   Future<void> _handleInsertImage() async {
     final picked = await ImageService.pickImage();
@@ -1209,12 +1287,24 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       return;
     }
 
+    if (_tool == Tool.comment) {
+      _insertComment(world);
+      return;
+    }
+
     if (_tool == Tool.text || _tool == Tool.stickyNote) {
       _openTextEditor(world, screen, isSticky: _tool == Tool.stickyNote);
       return;
     }
 
     if (_tool == Tool.select) {
+      if (_activeCommentId != null) {
+        final activeC = _comments.where((c) => c.id == _activeCommentId).firstOrNull;
+        if (activeC != null && activeC.text.trim().isEmpty) {
+          _comments = _comments.where((c) => c.id != _activeCommentId).toList();
+        }
+        setState(() => _activeCommentId = null);
+      }
       // 1. Check if clicking on transform handles (resize or rotation)
       final selectedBounds = _currentSelectedBounds;
       final anySelectedLocked = _elements
@@ -1898,6 +1988,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
     if (_tool == Tool.eraser) return SystemMouseCursors.cell;
     if (_tool == Tool.laser) return SystemMouseCursors.precise;
     if (_tool == Tool.text) return SystemMouseCursors.text;
+    if (_tool == Tool.comment) return SystemMouseCursors.click;
     return SystemMouseCursors.precise;
   }
 
@@ -2003,6 +2094,8 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                               hasFrames: _frames.isNotEmpty,
                               isPropertiesOpen: _isPropertiesOpen,
                               isLayersOpen: _isLayersOpen,
+                              openCommentsCount:
+                                  _comments.where((c) => !c.isResolved).length,
                               onSelectTool: (t) => setState(() {
                                 _tool = t;
                                 if (t != Tool.select) _selectedIds.clear();
@@ -2115,12 +2208,17 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                   child: LayersSidebar(
                     elements: _elements,
                     selectedIds: _selectedIds,
+                    comments: _comments,
+                    activeCommentId: _activeCommentId,
                     onSelectElement: _selectElementFromSidebar,
                     onToggleVisibility: _toggleVisibilityElement,
                     onToggleLock: _toggleLockElement,
                     onRenameElement: _renameElement,
                     onDeleteElement: _deleteElementById,
                     onReorderElements: _reorderElements,
+                    onSelectComment: _selectCommentFromSidebar,
+                    onToggleResolveComment: _toggleResolveComment,
+                    onDeleteComment: _deleteComment,
                     onClose: () => setState(() => _isLayersOpen = false),
                   ),
                 ),
@@ -2271,6 +2369,61 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                       _editingTableCell = null;
                       _editingScreenPos = null;
                     }),
+                  );
+                }),
+
+              // 7.5 Interactive Canvas Comment Pins
+              if (!_isPresentationMode)
+                for (final comment in _comments)
+                  Builder(builder: (context) {
+                    final screenPos = _toScreen(comment.worldPosition);
+                    if (screenPos.dx < -60 ||
+                        screenPos.dx > _viewSize.width + 60 ||
+                        screenPos.dy < -60 ||
+                        screenPos.dy > _viewSize.height + 60) {
+                      return const SizedBox.shrink();
+                    }
+                    final isSelected = _activeCommentId == comment.id;
+                    return Positioned(
+                      left: screenPos.dx - (isSelected ? 17 : 14),
+                      top: screenPos.dy - (isSelected ? 17 : 14),
+                      child: CommentPinBadge(
+                        comment: comment,
+                        isSelected: isSelected,
+                        onTap: () {
+                          setState(() {
+                            _activeCommentId = isSelected ? null : comment.id;
+                          });
+                        },
+                      ),
+                    );
+                  }),
+
+              // 7.6 Active Comment Popover Card
+              if (!_isPresentationMode && _activeCommentId != null)
+                Builder(builder: (context) {
+                  final activeComment =
+                      _comments.where((c) => c.id == _activeCommentId).firstOrNull;
+                  if (activeComment == null) return const SizedBox.shrink();
+                  final screenPos = _toScreen(activeComment.worldPosition);
+                  return CommentCardPopover(
+                    comment: activeComment,
+                    screenPosition: screenPos,
+                    viewSize: _viewSize,
+                    onAddReply: (text) => _addCommentReply(activeComment.id, text),
+                    onToggleResolved: () => _toggleResolveComment(activeComment.id),
+                    onDeleteComment: () => _deleteComment(activeComment.id),
+                    onSaveInitialText: (text) =>
+                        _saveInitialCommentText(activeComment.id, text),
+                    onClose: () {
+                      setState(() {
+                        if (activeComment.text.trim().isEmpty) {
+                          _comments =
+                              _comments.where((c) => c.id != activeComment.id).toList();
+                        }
+                        _activeCommentId = null;
+                      });
+                    },
                   );
                 }),
 
