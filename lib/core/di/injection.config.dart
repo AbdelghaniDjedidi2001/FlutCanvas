@@ -24,10 +24,15 @@ import '../../features/clipboard/data/services/default_clipboard_repository.dart
     as _i680;
 import '../../features/clipboard/domain/repositories/clipboard_repository.dart'
     as _i10;
+import '../../features/comments/presentation/bloc/comments_cubit.dart' as _i947;
 import '../../features/export/data/services/default_export_repository.dart'
     as _i158;
 import '../../features/export/domain/repositories/export_repository.dart'
     as _i1051;
+import '../../features/export/presentation/bloc/export_cubit.dart' as _i599;
+import '../../features/layers/presentation/bloc/layers_cubit.dart' as _i653;
+import '../../features/presentation_mode/presentation/bloc/presentation_cubit.dart'
+    as _i837;
 import '../../features/toolbar/presentation/bloc/tool_cubit.dart' as _i453;
 import 'app_module.dart' as _i460;
 
@@ -44,12 +49,18 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
     );
     gh.factory<_i796.CanvasBloc>(() => _i796.CanvasBloc());
+    gh.factory<_i947.CommentsCubit>(() => _i947.CommentsCubit());
+    gh.factory<_i653.LayersCubit>(() => _i653.LayersCubit());
+    gh.factory<_i837.PresentationCubit>(() => _i837.PresentationCubit());
     gh.factory<_i453.ToolCubit>(() => _i453.ToolCubit());
     gh.lazySingleton<_i10.ClipboardRepository>(
       () => _i680.DefaultClipboardRepository(),
     );
     gh.lazySingleton<_i1051.ExportRepository>(
       () => _i158.DefaultExportRepository(),
+    );
+    gh.factory<_i599.ExportCubit>(
+      () => _i599.ExportCubit(gh<_i1051.ExportRepository>()),
     );
     gh.lazySingleton<_i818.BoardRepository>(
       () => _i388.SharedPrefsBoardRepository(gh<_i460.SharedPreferences>()),
