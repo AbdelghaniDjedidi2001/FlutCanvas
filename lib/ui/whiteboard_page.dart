@@ -75,10 +75,12 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   BoardDocument get _currentBoard => _boards[_activeBoardIndex];
   List<BoardElement> get _elements => _currentBoard.elements;
-  set _elements(List<BoardElement> val) => _currentBoard.elements = val;
+  set _elements(List<BoardElement> val) =>
+      _boards[_activeBoardIndex] = _currentBoard.copyWith(elements: val);
 
   List<BoardComment> get _comments => _currentBoard.comments;
-  set _comments(List<BoardComment> val) => _currentBoard.comments = val;
+  set _comments(List<BoardComment> val) =>
+      _boards[_activeBoardIndex] = _currentBoard.copyWith(comments: val);
 
   Set<String> _selectedIds = {};
   String? _activeCommentId;
@@ -122,10 +124,12 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   // Viewport / Camera
   Offset get _pan => _currentBoard.pan;
-  set _pan(Offset val) => _currentBoard.pan = val;
+  set _pan(Offset val) =>
+      _boards[_activeBoardIndex] = _currentBoard.copyWith(pan: val);
 
   double get _zoom => _currentBoard.zoom;
-  set _zoom(double val) => _currentBoard.zoom = val;
+  set _zoom(double val) =>
+      _boards[_activeBoardIndex] = _currentBoard.copyWith(zoom: val);
 
   Size _viewSize = Size.zero;
 
@@ -254,7 +258,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
 
   void _renameBoard(int index, String newTitle) {
     setState(() {
-      _boards[index].title = newTitle;
+      _boards[index] = _boards[index].copyWith(title: newTitle);
     });
     _scheduleAutoSave();
   }
@@ -552,7 +556,7 @@ class _WhiteboardPageState extends State<WhiteboardPage>
       _elements = [
         for (final el in _elements)
           if (_selectedIds.contains(el.id))
-            el.copyWith(clearGroupId: true)
+            el.copyWith(groupId: null)
           else
             el,
       ];
@@ -2344,7 +2348,6 @@ class _WhiteboardPageState extends State<WhiteboardPage>
                                           label: newText.trim().isEmpty
                                               ? null
                                               : newText.trim(),
-                                          clearLabel: newText.trim().isEmpty,
                                         )
                                       : el.copyWith(text: newText))
                             else

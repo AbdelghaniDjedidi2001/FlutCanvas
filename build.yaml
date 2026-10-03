@@ -10,3 +10,4 @@ targets:
         options:
           from_json: true
           to_json: true
+          make_collections_unmodifiable: false

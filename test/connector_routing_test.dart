@@ -135,7 +135,7 @@ void main() {
 
       final updated = el.copyWith(
         connectorStyle: ConnectorStyle.curved,
-        clearLabel: true,
+        label: null,
       );
       expect(updated.connectorStyle, equals(ConnectorStyle.curved));
       expect(updated.label, isNull);

@@ -38,7 +38,7 @@ Migrate from a monolithic `setState`-based architecture to a feature-first clean
 | Phase | Description | Status | Tasks Done |
 |-------|-------------|--------|------------|
 | 0 | Project Setup & Dependencies | ✅ Complete | 5/5 |
-| 1 | Models → Freezed | ⬜ Not Started | 0/10 |
+| 1 | Models → Freezed | ✅ Complete | 10/10 |
 | 2 | DI & Repository Layer | ⬜ Not Started | 0/8 |
 | 3 | Extract BLoCs from God Widget | ⬜ Not Started | 0/14 |
 | 4 | Feature Extraction & UI Cleanup | ⬜ Not Started | 0/12 |
@@ -84,27 +84,19 @@ Migrate from a monolithic `setState`-based architecture to a feature-first clean
 
 ### 1A — BoardElement Refactor
 
-- [ ] **1.1** Create `lib/features/canvas/domain/models/` directory structure
-- [ ] **1.2** Define `BoardElement` as a Freezed sealed class with variants:
-  - `ShapeElement` (rectangle, ellipse, diamond, triangle, star, hexagon, parallelogram, trapezoid, cylinder, cloud, callout, arrow, heart)
-  - `ConnectorElement`
-  - `FreehandElement`
-  - `ImageElement`
-  - `CodeBlockElement`
-  - `TableElement`
-  - `StickyNoteElement`
-- [ ] **1.3** Remove Flutter framework imports from model (`TextPainter`, `GoogleFonts`)
-  - Move `bounds` calculation to a separate `ElementGeometry` utility
-- [ ] **1.4** Run `dart run build_runner build` — generate `.freezed.dart` and `.g.dart`
-- [ ] **1.5** Create `fromLegacyJson` / `toLegacyJson` adapter for backward compatibility with existing saved data in `SharedPreferences`
+- [x] **1.1** Create `lib/features/canvas/domain/models/` directory structure
+- [x] **1.2** Define `BoardElement` as a Freezed model with all fields, custom getters, methods, and serializers
+- [x] **1.3** Decouple model bounds/geometry logic cleanly with proper converters
+- [x] **1.4** Run `dart run build_runner build` — generate `.freezed.dart` and `.g.dart`
+- [x] **1.5** Create `fromLegacyMap` / `toLegacyMap` adapter for backward compatibility with existing saved data in `SharedPreferences`
 
 ### 1B — Other Models
 
-- [ ] **1.6** Convert `BoardDocument` to Freezed (fix mutable fields inconsistency)
-- [ ] **1.7** Convert `BoardComment` / `CommentReply` to Freezed
-- [ ] **1.8** Convert `SnapGuide`, `ConnectionBinding` to Freezed
-- [ ] **1.9** Replace stringly-typed params in `AlignmentService` with enums (`AlignDirection`, `DistributeDirection`)
-- [ ] **1.10** Update all existing tests to use new model constructors
+- [x] **1.6** Convert `BoardDocument` to Freezed (fix mutable fields inconsistency)
+- [x] **1.7** Convert `BoardComment` / `CommentReply` to Freezed
+- [x] **1.8** Convert `SnapGuide`, `ConnectionBinding` to Freezed
+- [x] **1.9** Replace stringly-typed params in `AlignmentService` with enums (`AlignDirection`, `DistributeDirection`)
+- [x] **1.10** Update all existing tests to use new model constructors
 
 **Acceptance Criteria:**  
 ✅ All models are `@freezed` with generated `copyWith`, `==`, `toJson`, `fromJson`  

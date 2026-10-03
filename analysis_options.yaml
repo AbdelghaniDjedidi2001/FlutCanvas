@@ -13,6 +13,9 @@ analyzer:
   exclude:
     - build/**
     - web/**
+    - "**/*.freezed.dart"
+    - "**/*.g.dart"
+    - "**/*.config.dart"
 
 linter:
   # The lint rules applied to this project can be customized in the
