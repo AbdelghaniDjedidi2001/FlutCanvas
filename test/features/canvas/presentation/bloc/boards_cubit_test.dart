@@ -18,7 +18,7 @@ void main() {
             boards: any(named: 'boards'),
             activeBoardIndex: any(named: 'activeBoardIndex'),
           )).thenAnswer((_) async {});
-      cubit = BoardsCubit(repository);
+      cubit = BoardsCubit.fromRepository(repository);
     });
 
     tearDown(() {

@@ -5,31 +5,52 @@ import 'package:injectable/injectable.dart';
 import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/usecases/load_workspace_usecase.dart';
+import 'package:flutcanvas/features/canvas/domain/usecases/save_workspace_usecase.dart';
 import '../../domain/repositories/board_repository.dart';
 import 'boards_state.dart';
 
 @injectable
 class BoardsCubit extends Cubit<BoardsState> {
-  final BoardRepository _repository;
+  final LoadWorkspaceUseCase _loadWorkspace;
+  final SaveWorkspaceUseCase _saveWorkspace;
 
-  BoardsCubit(this._repository) : super(const BoardsState());
+  BoardsCubit(
+    this._loadWorkspace,
+    this._saveWorkspace,
+  ) : super(const BoardsState());
+
+  /// Convenience factory for instantiating from a [BoardRepository] directly.
+  factory BoardsCubit.fromRepository(BoardRepository repository) {
+    return BoardsCubit(
+      LoadWorkspaceUseCase(repository),
+      SaveWorkspaceUseCase(repository),
+    );
+  }
 
   Future<void> loadWorkspace() async {
     emit(state.copyWith(isLoading: true));
-    final saved = await _repository.loadWorkspace();
-    if (saved != null && saved.boards.isNotEmpty) {
-      emit(state.copyWith(
-        boards: saved.boards,
-        activeBoardIndex: saved.activeBoardIndex,
-        isLoading: false,
-      ));
-    } else {
-      emit(state.copyWith(isLoading: false));
-    }
+    final result = await _loadWorkspace();
+    result.fold(
+      onSuccess: (saved) {
+        if (saved != null && saved.boards.isNotEmpty) {
+          emit(state.copyWith(
+            boards: saved.boards,
+            activeBoardIndex: saved.activeBoardIndex,
+            isLoading: false,
+          ));
+        } else {
+          emit(state.copyWith(isLoading: false));
+        }
+      },
+      onFailure: (_) {
+        emit(state.copyWith(isLoading: false));
+      },
+    );
   }
 
   void saveWorkspace() {
-    _repository.saveWorkspace(
+    _saveWorkspace(
       boards: state.boards,
       activeBoardIndex: state.activeBoardIndex,
     );

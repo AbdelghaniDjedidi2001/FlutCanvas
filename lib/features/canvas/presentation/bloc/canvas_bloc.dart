@@ -3,18 +3,30 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:flutcanvas/features/canvas/data/services/history_manager.dart';
-import '../../data/services/alignment_service.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/usecases/align_elements_usecase.dart';
+import 'package:flutcanvas/features/canvas/domain/usecases/distribute_elements_usecase.dart';
+import 'package:flutcanvas/features/canvas/domain/usecases/group_elements_usecase.dart';
+import 'package:flutcanvas/features/canvas/domain/usecases/ungroup_elements_usecase.dart';
 import 'canvas_event.dart';
 import 'canvas_state.dart';
 
 @injectable
 class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
+  final AlignElementsUseCase alignElements;
+  final DistributeElementsUseCase distributeElements;
+  final GroupElementsUseCase groupElements;
+  final UngroupElementsUseCase ungroupElements;
   final HistoryManager _history = HistoryManager();
 
-  CanvasBloc() : super(const CanvasState()) {
+  CanvasBloc({
+    this.alignElements = const AlignElementsUseCase(),
+    this.distributeElements = const DistributeElementsUseCase(),
+    this.groupElements = const GroupElementsUseCase(),
+    this.ungroupElements = const UngroupElementsUseCase(),
+  }) : super(const CanvasState()) {
     on<LoadElements>(_onLoadElements);
     on<AddElement>(_onAddElement);
     on<AddElements>(_onAddElements);
@@ -234,13 +246,11 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     if (state.selectedIds.length < 2) return;
     _pushHistory(state.elements);
     final groupId = 'group_${DateTime.now().millisecondsSinceEpoch}';
-    final updated = [
-      for (final el in state.elements)
-        if (state.selectedIds.contains(el.id))
-          el.copyWith(groupId: groupId)
-        else
-          el,
-    ];
+    final updated = groupElements(
+      allElements: state.elements,
+      selectedIds: state.selectedIds,
+      groupId: groupId,
+    );
     emit(state.copyWith(
       elements: updated,
       canUndo: _history.canUndo,
@@ -251,13 +261,10 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   void _onUngroupSelected(UngroupSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
     _pushHistory(state.elements);
-    final updated = [
-      for (final el in state.elements)
-        if (state.selectedIds.contains(el.id))
-          el.copyWith(groupId: null)
-        else
-          el,
-    ];
+    final updated = ungroupElements(
+      allElements: state.elements,
+      selectedIds: state.selectedIds,
+    );
     emit(state.copyWith(
       elements: updated,
       canUndo: _history.canUndo,
@@ -336,10 +343,10 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   void _onAlignSelected(AlignSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.length < 2) return;
     _pushHistory(state.elements);
-    final aligned = AlignmentService.alignElements(
+    final aligned = alignElements(
       allElements: state.elements,
       selectedIds: state.selectedIds,
-      alignment: event.direction,
+      direction: event.direction,
     );
     emit(state.copyWith(
       elements: _recalculateConnectedArrows(aligned),
@@ -352,7 +359,7 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
       DistributeSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.length < 3) return;
     _pushHistory(state.elements);
-    final distributed = AlignmentService.distributeElements(
+    final distributed = distributeElements(
       allElements: state.elements,
       selectedIds: state.selectedIds,
       direction: event.direction,
