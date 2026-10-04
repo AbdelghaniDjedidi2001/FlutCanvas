@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import 'package:flutcanvas/features/canvas/data/services/history_manager.dart';
+import 'package:flutcanvas/features/canvas/domain/commands/canvas_command.dart';
+import 'package:flutcanvas/features/canvas/domain/commands/command_history_manager.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
@@ -19,7 +20,7 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   final DistributeElementsUseCase distributeElements;
   final GroupElementsUseCase groupElements;
   final UngroupElementsUseCase ungroupElements;
-  final HistoryManager _history = HistoryManager();
+  final CommandHistoryManager _commandHistory = CommandHistoryManager();
 
   CanvasBloc({
     this.alignElements = const AlignElementsUseCase(),
@@ -57,12 +58,17 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
     on<ClearHistory>(_onClearHistory);
   }
 
-  void _pushHistory(List<BoardElement> elements) {
-    _history.push(elements);
+  void _pushHistory(List<BoardElement> before, List<BoardElement> after,
+      [String description = 'Canvas change']) {
+    _commandHistory.push(ReplaceElementsCommand(
+      before: before,
+      after: after,
+      description: description,
+    ));
   }
 
   void _onLoadElements(LoadElements event, Emitter<CanvasState> emit) {
-    _history.clear();
+    _commandHistory.clear();
     emit(state.copyWith(
       elements: event.elements,
       selectedIds: {},
@@ -75,82 +81,93 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   }
 
   void _onAddElement(AddElement event, Emitter<CanvasState> emit) {
-    _pushHistory(state.elements);
-    final updated = [...state.elements, event.element];
+    final cmd = AddElementCommand(event.element);
+    _commandHistory.push(cmd);
+    final updated = cmd.execute(state.elements);
     emit(state.copyWith(
       elements: updated,
       draft: null,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onAddElements(AddElements event, Emitter<CanvasState> emit) {
     if (event.elements.isEmpty) return;
-    _pushHistory(state.elements);
-    final updated = [...state.elements, ...event.elements];
+    final cmd = AddElementsCommand(event.elements);
+    _commandHistory.push(cmd);
+    final updated = cmd.execute(state.elements);
     emit(state.copyWith(
       elements: updated,
       selectedIds: event.elements.map((e) => e.id).toSet(),
       draft: null,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onUpdateElement(UpdateElement event, Emitter<CanvasState> emit) {
     final idx = state.elements.indexWhere((e) => e.id == event.element.id);
     if (idx == -1) return;
-    _pushHistory(state.elements);
-    final updated = List<BoardElement>.from(state.elements);
-    updated[idx] = event.element;
+    final before = state.elements[idx];
+    final cmd = UpdateElementCommand(before: before, after: event.element);
+    _commandHistory.push(cmd);
+    final updated = cmd.execute(state.elements);
     emit(state.copyWith(
       elements: _recalculateConnectedArrows(updated),
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onUpdateElements(UpdateElements event, Emitter<CanvasState> emit) {
     if (event.elements.isEmpty) return;
-    _pushHistory(state.elements);
     final elementMap = {for (final e in event.elements) e.id: e};
     final updated = [
       for (final el in state.elements) elementMap[el.id] ?? el,
     ];
+    _pushHistory(
+      state.elements,
+      updated,
+      'Update ${event.elements.length} elements',
+    );
     emit(state.copyWith(
       elements: _recalculateConnectedArrows(updated),
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onDeleteSelected(DeleteSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
-    _pushHistory(state.elements);
-    final updated = state.elements
-        .where((e) => !state.selectedIds.contains(e.id))
+    final toDelete = state.elements
+        .where((e) => state.selectedIds.contains(e.id))
         .toList();
+    final cmd = DeleteElementsCommand(toDelete);
+    _commandHistory.push(cmd);
+    final updated = cmd.execute(state.elements);
     emit(state.copyWith(
       elements: updated,
       selectedIds: {},
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onDeleteElements(DeleteElements event, Emitter<CanvasState> emit) {
     if (event.ids.isEmpty) return;
-    _pushHistory(state.elements);
-    final updated =
-        state.elements.where((e) => !event.ids.contains(e.id)).toList();
+    final toDelete =
+        state.elements.where((e) => event.ids.contains(e.id)).toList();
+    final cmd = DeleteElementsCommand(toDelete);
+    _commandHistory.push(cmd);
+    final updated = cmd.execute(state.elements);
     final newSelected =
         state.selectedIds.where((id) => !event.ids.contains(id)).toSet();
     emit(state.copyWith(
       elements: updated,
       selectedIds: newSelected,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
@@ -244,68 +261,69 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
 
   void _onGroupSelected(GroupSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.length < 2) return;
-    _pushHistory(state.elements);
     final groupId = 'group_${DateTime.now().millisecondsSinceEpoch}';
     final updated = groupElements(
       allElements: state.elements,
       selectedIds: state.selectedIds,
       groupId: groupId,
     );
+    _pushHistory(state.elements, updated, 'Group elements');
     emit(state.copyWith(
       elements: updated,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onUngroupSelected(UngroupSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
-    _pushHistory(state.elements);
     final updated = ungroupElements(
       allElements: state.elements,
       selectedIds: state.selectedIds,
     );
+    _pushHistory(state.elements, updated, 'Ungroup elements');
     emit(state.copyWith(
       elements: updated,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onBringSelectedToFront(
       BringSelectedToFront event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
-    _pushHistory(state.elements);
     final unselected =
         state.elements.where((e) => !state.selectedIds.contains(e.id)).toList();
     final selected =
         state.elements.where((e) => state.selectedIds.contains(e.id)).toList();
+    final updated = [...unselected, ...selected];
+    _pushHistory(state.elements, updated, 'Bring to front');
     emit(state.copyWith(
-      elements: [...unselected, ...selected],
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      elements: updated,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onSendSelectedToBack(
       SendSelectedToBack event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
-    _pushHistory(state.elements);
     final unselected =
         state.elements.where((e) => !state.selectedIds.contains(e.id)).toList();
     final selected =
         state.elements.where((e) => state.selectedIds.contains(e.id)).toList();
+    final updated = [...selected, ...unselected];
+    _pushHistory(state.elements, updated, 'Send to back');
     emit(state.copyWith(
-      elements: [...selected, ...unselected],
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      elements: updated,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onToggleLockSelected(
       ToggleLockSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
-    _pushHistory(state.elements);
     final allLocked = state.selectedElements.every((e) => e.isLocked);
     final updated = [
       for (final el in state.elements)
@@ -314,17 +332,17 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
         else
           el,
     ];
+    _pushHistory(state.elements, updated, 'Toggle lock');
     emit(state.copyWith(
       elements: updated,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onToggleVisibilitySelected(
       ToggleVisibilitySelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.isEmpty) return;
-    _pushHistory(state.elements);
     final allVisible = state.selectedElements.every((e) => e.isVisible);
     final updated = [
       for (final el in state.elements)
@@ -333,41 +351,44 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
         else
           el,
     ];
+    _pushHistory(state.elements, updated, 'Toggle visibility');
     emit(state.copyWith(
       elements: updated,
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onAlignSelected(AlignSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.length < 2) return;
-    _pushHistory(state.elements);
     final aligned = alignElements(
       allElements: state.elements,
       selectedIds: state.selectedIds,
       direction: event.direction,
     );
+    final recalculated = _recalculateConnectedArrows(aligned);
+    _pushHistory(state.elements, recalculated, 'Align elements');
     emit(state.copyWith(
-      elements: _recalculateConnectedArrows(aligned),
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      elements: recalculated,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
   void _onDistributeSelected(
       DistributeSelected event, Emitter<CanvasState> emit) {
     if (state.selectedIds.length < 3) return;
-    _pushHistory(state.elements);
     final distributed = distributeElements(
       allElements: state.elements,
       selectedIds: state.selectedIds,
       direction: event.direction,
     );
+    final recalculated = _recalculateConnectedArrows(distributed);
+    _pushHistory(state.elements, recalculated, 'Distribute elements');
     emit(state.copyWith(
-      elements: _recalculateConnectedArrows(distributed),
-      canUndo: _history.canUndo,
-      canRedo: _history.canRedo,
+      elements: recalculated,
+      canUndo: _commandHistory.canUndo,
+      canRedo: _commandHistory.canRedo,
     ));
   }
 
@@ -383,31 +404,31 @@ class CanvasBloc extends Bloc<CanvasEvent, CanvasState> {
   }
 
   void _onUndo(Undo event, Emitter<CanvasState> emit) {
-    final previous = _history.undo(state.elements);
+    final previous = _commandHistory.undo(state.elements);
     if (previous != null) {
       emit(state.copyWith(
         elements: previous,
         selectedIds: {},
-        canUndo: _history.canUndo,
-        canRedo: _history.canRedo,
+        canUndo: _commandHistory.canUndo,
+        canRedo: _commandHistory.canRedo,
       ));
     }
   }
 
   void _onRedo(Redo event, Emitter<CanvasState> emit) {
-    final next = _history.redo(state.elements);
+    final next = _commandHistory.redo(state.elements);
     if (next != null) {
       emit(state.copyWith(
         elements: next,
         selectedIds: {},
-        canUndo: _history.canUndo,
-        canRedo: _history.canRedo,
+        canUndo: _commandHistory.canUndo,
+        canRedo: _commandHistory.canRedo,
       ));
     }
   }
 
   void _onClearHistory(ClearHistory event, Emitter<CanvasState> emit) {
-    _history.clear();
+    _commandHistory.clear();
     emit(state.copyWith(
       canUndo: false,
       canRedo: false,

@@ -157,3 +157,22 @@ class BatchCommand implements CanvasCommand {
     return state;
   }
 }
+
+class ReplaceElementsCommand implements CanvasCommand {
+  final List<BoardElement> before;
+  final List<BoardElement> after;
+  @override
+  final String description;
+
+  const ReplaceElementsCommand({
+    required this.before,
+    required this.after,
+    this.description = 'Update elements',
+  });
+
+  @override
+  List<BoardElement> execute(List<BoardElement> current) => after;
+
+  @override
+  List<BoardElement> undo(List<BoardElement> current) => before;
+}

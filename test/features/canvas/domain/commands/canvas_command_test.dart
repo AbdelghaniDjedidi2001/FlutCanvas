@@ -64,6 +64,23 @@ void main() {
       expect(reverted.end, const Offset(100, 100));
     });
 
+    test('ReplaceElementsCommand replaces and restores elements accurately', () {
+      final initial = [el1];
+      final target = [el2];
+      final cmd = ReplaceElementsCommand(
+        before: initial,
+        after: target,
+        description: 'Swap elements',
+      );
+
+      final executed = cmd.execute(initial);
+      expect(executed, equals(target));
+      expect(cmd.description, equals('Swap elements'));
+
+      final undone = cmd.undo(executed);
+      expect(undone, equals(initial));
+    });
+
     test('CommandHistoryManager maintains undo and redo stack correctly', () {
       final history = CommandHistoryManager(maxHistory: 5);
       var elements = <BoardElement>[];
