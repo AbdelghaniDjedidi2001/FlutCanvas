@@ -29,7 +29,7 @@ void main() {
 
     setUp(() {
       prefs = MockSharedPreferences();
-      repository = SharedPrefsBoardRepository(prefs);
+      repository = SharedPrefsBoardRepository.fromPrefs(prefs);
     });
 
     test('saveWorkspace encodes data and writes to SharedPreferences', () async {

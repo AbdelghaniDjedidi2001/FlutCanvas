@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutcanvas/features/canvas/data/datasources/board_local_data_source.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import '../../domain/repositories/board_repository.dart';
 
 @LazySingleton(as: BoardRepository)
 class SharedPrefsBoardRepository implements BoardRepository {
-  static const String _workspaceKey = 'mini_whiteboard_workspace_v2';
-  static const String _legacyKey = 'mini_whiteboard_state_v1';
+  final BoardLocalDataSource _localDataSource;
 
-  final SharedPreferences? _prefs;
+  SharedPrefsBoardRepository(this._localDataSource);
 
-  SharedPrefsBoardRepository([this._prefs]);
+  /// Backwards-compatible constructor for initializing with [SharedPreferences] directly.
+  factory SharedPrefsBoardRepository.fromPrefs([SharedPreferences? prefs]) {
+    return SharedPrefsBoardRepository(SharedPrefsBoardDataSource(prefs));
+  }
 
   @override
   Future<void> saveWorkspace({
@@ -29,7 +32,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
             activeBoardIndex.clamp(0, boards.isEmpty ? 0 : boards.length - 1),
         'boards': boards.map((b) => b.toMap()).toList(),
       };
-      await _prefs?.setString(_workspaceKey, jsonEncode(data));
+      await _localDataSource.saveWorkspaceJson(jsonEncode(data));
     } catch (e) {
       debugPrint('Error saving workspace: $e');
     }
@@ -38,7 +41,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
   @override
   Future<SavedWorkspaceState?> loadWorkspace() async {
     try {
-      final raw = _prefs?.getString(_workspaceKey);
+      final raw = await _localDataSource.getWorkspaceJson();
       if (raw != null && raw.isNotEmpty) {
         final data = jsonDecode(raw) as Map<String, dynamic>;
         final rawBoards = data['boards'] as List<dynamic>? ?? [];
@@ -56,7 +59,7 @@ class SharedPrefsBoardRepository implements BoardRepository {
       }
 
       // Fallback: Check legacy single-board key
-      final legacyRaw = _prefs?.getString(_legacyKey);
+      final legacyRaw = await _localDataSource.getLegacyWorkspaceJson();
       if (legacyRaw != null && legacyRaw.isNotEmpty) {
         final data = jsonDecode(legacyRaw) as Map<String, dynamic>;
         final panMap = data['pan'] as Map<String, dynamic>?;
@@ -91,7 +94,6 @@ class SharedPrefsBoardRepository implements BoardRepository {
 
   @override
   Future<void> clearWorkspace() async {
-    await _prefs?.remove(_workspaceKey);
-    await _prefs?.remove(_legacyKey);
+    await _localDataSource.clearWorkspace();
   }
 }

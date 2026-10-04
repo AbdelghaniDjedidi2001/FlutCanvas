@@ -14,6 +14,8 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../../features/canvas/data/datasources/board_local_data_source.dart'
+    as _i868;
 import '../../features/canvas/data/repositories/shared_prefs_board_repository.dart'
     as _i388;
 import '../../features/canvas/domain/repositories/board_repository.dart'
@@ -95,8 +97,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i599.ExportCubit>(
       () => _i599.ExportCubit(gh<_i1051.ExportRepository>()),
     );
+    gh.lazySingleton<_i868.BoardLocalDataSource>(
+      () => _i868.SharedPrefsBoardDataSource(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i818.BoardRepository>(
-      () => _i388.SharedPrefsBoardRepository(gh<_i460.SharedPreferences>()),
+      () => _i388.SharedPrefsBoardRepository(gh<_i868.BoardLocalDataSource>()),
     );
     gh.factory<_i161.LoadWorkspaceUseCase>(
       () => _i161.LoadWorkspaceUseCase(gh<_i818.BoardRepository>()),
