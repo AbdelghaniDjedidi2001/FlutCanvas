@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'connection_binding.dart';
 import 'connector_style.dart';
@@ -299,18 +298,15 @@ abstract class BoardElement with _$BoardElement {
     }
 
     if (type == ShapeType.text) {
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: text.isEmpty ? 'Type text...' : text,
-          style: GoogleFonts.caveat(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      return Rect.fromLTWH(
-          start.dx, start.dy, textPainter.width + 12, textPainter.height + 8);
+      final sample = text.isEmpty ? 'Type text...' : text;
+      final lines = sample.split('\n');
+      var maxLineLen = 0;
+      for (final l in lines) {
+        if (l.length > maxLineLen) maxLineLen = l.length;
+      }
+      final estimatedWidth = math.max(60.0, maxLineLen * (fontSize * 0.58) + 16.0);
+      final estimatedHeight = math.max(30.0, lines.length * (fontSize * 1.3) + 8.0);
+      return Rect.fromLTWH(start.dx, start.dy, estimatedWidth, estimatedHeight);
     }
 
     return Rect.fromPoints(start, end);
