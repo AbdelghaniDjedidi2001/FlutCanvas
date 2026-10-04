@@ -43,6 +43,55 @@ void main() {
       await tester.pump();
 
       expect(toolCubit.state.currentTool, equals(Tool.pen));
+
+      // Press 'G' for Grid Snap
+      expect(toolCubit.state.gridSnap, isFalse);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyG);
+      await tester.pump();
+      expect(toolCubit.state.gridSnap, isTrue);
+
+      // Press 'S' for Smart Guides
+      expect(toolCubit.state.smartGuides, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyS);
+      await tester.pump();
+      expect(toolCubit.state.smartGuides, isFalse);
+    });
+
+    testWidgets('press Shift+R and Shift+T selects roundedRectangle and triangle', (tester) async {
+      final canvasBloc = CanvasBloc();
+      final toolCubit = ToolCubit();
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: canvasBloc),
+            BlocProvider.value(value: toolCubit),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: CanvasShortcutsHandler(
+                child: SizedBox(key: Key('canvas_body')),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Hold Shift and press R
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+
+      expect(toolCubit.state.currentTool, equals(Tool.roundedRectangle));
+
+      // Hold Shift and press T
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyT);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+
+      expect(toolCubit.state.currentTool, equals(Tool.triangle));
     });
   });
 }

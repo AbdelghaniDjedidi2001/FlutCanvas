@@ -58,6 +58,12 @@ class CanvasViewportController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void panToCenter(Offset worldPos, Size viewSize) {
+    if (viewSize.isEmpty) return;
+    _pan = viewSize.center(Offset.zero) - (worldPos * _zoom);
+    notifyListeners();
+  }
+
   void zoomToFit(List<BoardElement> items, Size viewSize, {double padding = 60.0}) {
     if (items.isEmpty || viewSize.isEmpty) return;
 

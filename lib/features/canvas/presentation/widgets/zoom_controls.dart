@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutcanvas/features/canvas/presentation/controllers/canvas_viewport_controller.dart';
+import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
 
 class ZoomControls extends StatelessWidget {
   const ZoomControls({
@@ -9,11 +11,11 @@ class ZoomControls extends StatelessWidget {
     this.onZoomIn,
     this.onZoomOut,
     this.onResetZoom,
-    this.isGridSnap = false,
+    this.isGridSnap,
     this.onToggleGridSnap,
-    this.isSmartGuides = true,
+    this.isSmartGuides,
     this.onToggleSmartGuides,
-    this.isShapeSnapping = true,
+    this.isShapeSnapping,
     this.onToggleShapeSnapping,
   });
 
@@ -22,16 +24,44 @@ class ZoomControls extends StatelessWidget {
   final VoidCallback? onZoomIn;
   final VoidCallback? onZoomOut;
   final VoidCallback? onResetZoom;
-  final bool isGridSnap;
+  final bool? isGridSnap;
   final VoidCallback? onToggleGridSnap;
-  final bool isSmartGuides;
+  final bool? isSmartGuides;
   final VoidCallback? onToggleSmartGuides;
-  final bool isShapeSnapping;
+  final bool? isShapeSnapping;
   final VoidCallback? onToggleShapeSnapping;
 
   @override
   Widget build(BuildContext context) {
+    if (controller != null) {
+      return ListenableBuilder(
+        listenable: controller!,
+        builder: (context, _) => _buildContent(context),
+      );
+    }
+    return _buildContent(context);
+  }
+
+  Widget _buildContent(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final toolCubit = context.watch<ToolCubit?>();
+    final toolState = toolCubit?.state;
+
+    final effectiveIsGridSnap = isGridSnap ?? toolState?.gridSnap ?? false;
+    final effectiveToggleGridSnap =
+        onToggleGridSnap ?? () => toolCubit?.toggleGridSnap();
+
+    final effectiveIsSmartGuides =
+        isSmartGuides ?? toolState?.smartGuides ?? true;
+    final effectiveToggleSmartGuides =
+        onToggleSmartGuides ?? () => toolCubit?.toggleSmartGuides();
+
+    final effectiveIsShapeSnapping =
+        isShapeSnapping ?? toolState?.autoShapeRecognition ?? true;
+    final effectiveToggleShapeSnapping =
+        onToggleShapeSnapping ?? () => toolCubit?.toggleAutoShapeRecognition();
+
+    final currentZoom = controller?.zoom ?? zoom;
 
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -60,7 +90,7 @@ class ZoomControls extends StatelessWidget {
                 ),
                 onPressed: onResetZoom ?? controller?.reset,
                 child: Text(
-                  '${((controller?.zoom ?? zoom) * 100).round()}%',
+                  '${(currentZoom * 100).round()}%',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -80,44 +110,48 @@ class ZoomControls extends StatelessWidget {
               color: scheme.outlineVariant,
             ),
             Tooltip(
-              message: isGridSnap ? 'Grid snapping: ON (G)' : 'Grid snapping: OFF (G)',
+              message: effectiveIsGridSnap
+                  ? 'Grid snapping: ON (G)'
+                  : 'Grid snapping: OFF (G)',
               child: IconButton(
-                onPressed: onToggleGridSnap,
+                onPressed: effectiveToggleGridSnap,
                 icon: Icon(
-                  isGridSnap ? Icons.grid_on : Icons.grid_off_outlined,
+                  effectiveIsGridSnap ? Icons.grid_on : Icons.grid_off_outlined,
                   size: 18,
-                  color: isGridSnap ? scheme.primary : null,
+                  color: effectiveIsGridSnap ? scheme.primary : null,
                 ),
               ),
             ),
-            if (onToggleSmartGuides != null)
-              Tooltip(
-                message: isSmartGuides
-                    ? 'Smart Alignment Guides: ON (S)'
-                    : 'Smart Alignment Guides: OFF (S)',
-                child: IconButton(
-                  onPressed: onToggleSmartGuides,
-                  icon: Icon(
-                    isSmartGuides ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                    size: 18,
-                    color: isSmartGuides ? scheme.primary : null,
-                  ),
+            Tooltip(
+              message: effectiveIsSmartGuides
+                  ? 'Smart Alignment Guides: ON (S)'
+                  : 'Smart Alignment Guides: OFF (S)',
+              child: IconButton(
+                onPressed: effectiveToggleSmartGuides,
+                icon: Icon(
+                  effectiveIsSmartGuides
+                      ? Icons.auto_awesome
+                      : Icons.auto_awesome_outlined,
+                  size: 18,
+                  color: effectiveIsSmartGuides ? scheme.primary : null,
                 ),
               ),
-            if (onToggleShapeSnapping != null)
-              Tooltip(
-                message: isShapeSnapping
-                    ? 'Sketch-to-Shape Auto Snap (Hold stroke): ON'
-                    : 'Sketch-to-Shape Auto Snap: OFF',
-                child: IconButton(
-                  onPressed: onToggleShapeSnapping,
-                  icon: Icon(
-                    isShapeSnapping ? Icons.polyline_rounded : Icons.polyline_outlined,
-                    size: 18,
-                    color: isShapeSnapping ? scheme.primary : null,
-                  ),
+            ),
+            Tooltip(
+              message: effectiveIsShapeSnapping
+                  ? 'Sketch-to-Shape Auto Snap (Hold stroke): ON'
+                  : 'Sketch-to-Shape Auto Snap: OFF',
+              child: IconButton(
+                onPressed: effectiveToggleShapeSnapping,
+                icon: Icon(
+                  effectiveIsShapeSnapping
+                      ? Icons.polyline_rounded
+                      : Icons.polyline_outlined,
+                  size: 18,
+                  color: effectiveIsShapeSnapping ? scheme.primary : null,
                 ),
               ),
+            ),
           ],
         ),
       ),

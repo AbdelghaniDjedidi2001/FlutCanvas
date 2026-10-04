@@ -13,6 +13,15 @@ class CanvasShortcutsHandler extends StatelessWidget {
   final VoidCallback? onPaste;
   final VoidCallback? onDuplicate;
   final VoidCallback? onDelete;
+  final VoidCallback? onStartPresentation;
+  final VoidCallback? onOpenTemplates;
+  final VoidCallback? onOpenExport;
+  final VoidCallback? onOpenHelp;
+  final VoidCallback? onToggleTheme;
+  final VoidCallback? onEscape;
+  final VoidCallback? onNextSlide;
+  final VoidCallback? onPreviousSlide;
+  final bool isPresentationMode;
 
   const CanvasShortcutsHandler({
     super.key,
@@ -21,6 +30,15 @@ class CanvasShortcutsHandler extends StatelessWidget {
     this.onPaste,
     this.onDuplicate,
     this.onDelete,
+    this.onStartPresentation,
+    this.onOpenTemplates,
+    this.onOpenExport,
+    this.onOpenHelp,
+    this.onToggleTheme,
+    this.onEscape,
+    this.onNextSlide,
+    this.onPreviousSlide,
+    this.isPresentationMode = false,
   });
 
   @override
@@ -33,6 +51,40 @@ class CanvasShortcutsHandler extends StatelessWidget {
         final isControlOrCmd = HardwareKeyboard.instance.isMetaPressed ||
             HardwareKeyboard.instance.isControlPressed;
         final isShift = HardwareKeyboard.instance.isShiftPressed;
+        final isAlt = HardwareKeyboard.instance.isAltPressed;
+
+        // Presentation Mode Navigation
+        if (isPresentationMode) {
+          if (event.logicalKey == LogicalKeyboardKey.escape) {
+            onEscape?.call();
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
+              event.logicalKey == LogicalKeyboardKey.space) {
+            onNextSlide?.call();
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            onPreviousSlide?.call();
+            return KeyEventResult.handled;
+          }
+        }
+
+        // F5: Start Presentation
+        if (event.logicalKey == LogicalKeyboardKey.f5) {
+          onStartPresentation?.call();
+          return KeyEventResult.handled;
+        }
+
+        // Escape: Exit presentation or clear selection
+        if (event.logicalKey == LogicalKeyboardKey.escape) {
+          if (onEscape != null) {
+            onEscape!();
+          } else {
+            context.read<CanvasBloc>().add(const CanvasEvent.clearSelection());
+          }
+          return KeyEventResult.handled;
+        }
 
         // Undo: Cmd+Z
         if (isControlOrCmd &&
@@ -99,6 +151,45 @@ class CanvasShortcutsHandler extends StatelessWidget {
           return KeyEventResult.handled;
         }
 
+        // Toggle Lock: Cmd+L
+        if (isControlOrCmd && event.logicalKey == LogicalKeyboardKey.keyL) {
+          context
+              .read<CanvasBloc>()
+              .add(const CanvasEvent.toggleLockSelected());
+          return KeyEventResult.handled;
+        }
+
+        // Toggle Layers Sidebar: Alt+L
+        if (isAlt && !isShift && event.logicalKey == LogicalKeyboardKey.keyL) {
+          context.read<ToolCubit>().toggleLayersSidebar();
+          return KeyEventResult.handled;
+        }
+
+        // Toggle Dark/Light Mode: Alt+Shift+D
+        if (isAlt && isShift && event.logicalKey == LogicalKeyboardKey.keyD) {
+          onToggleTheme?.call();
+          return KeyEventResult.handled;
+        }
+
+        // Diagram Templates: Cmd+O
+        if (isControlOrCmd && event.logicalKey == LogicalKeyboardKey.keyO) {
+          onOpenTemplates?.call();
+          return KeyEventResult.handled;
+        }
+
+        // Export Dialog: Cmd+E
+        if (isControlOrCmd && event.logicalKey == LogicalKeyboardKey.keyE) {
+          onOpenExport?.call();
+          return KeyEventResult.handled;
+        }
+
+        // Help / Shortcuts: ? or Shift+/
+        if ((event.logicalKey == LogicalKeyboardKey.slash && isShift) ||
+            event.logicalKey == LogicalKeyboardKey.question) {
+          onOpenHelp?.call();
+          return KeyEventResult.handled;
+        }
+
         // Bring to front: ]
         if (event.logicalKey == LogicalKeyboardKey.bracketRight) {
           context
@@ -126,12 +217,38 @@ class CanvasShortcutsHandler extends StatelessWidget {
           return KeyEventResult.handled;
         }
 
+        // Grid Snap toggle: G
+        if (!isControlOrCmd &&
+            !isAlt &&
+            event.logicalKey == LogicalKeyboardKey.keyG) {
+          context.read<ToolCubit>().toggleGridSnap();
+          return KeyEventResult.handled;
+        }
+
+        // Smart Alignment Guides toggle: S
+        if (!isControlOrCmd &&
+            !isAlt &&
+            event.logicalKey == LogicalKeyboardKey.keyS) {
+          context.read<ToolCubit>().toggleSmartGuides();
+          return KeyEventResult.handled;
+        }
+
         // Tool Shortcuts (when not holding Cmd/Ctrl)
-        if (!isControlOrCmd) {
-          final mappedTool = ToolExtension.shortcuts[event.logicalKey];
-          if (mappedTool != null) {
-            context.read<ToolCubit>().setTool(mappedTool);
+        if (!isControlOrCmd && !isAlt) {
+          if (isShift && event.logicalKey == LogicalKeyboardKey.keyR) {
+            context.read<ToolCubit>().setTool(Tool.roundedRectangle);
             return KeyEventResult.handled;
+          }
+          if (isShift && event.logicalKey == LogicalKeyboardKey.keyT) {
+            context.read<ToolCubit>().setTool(Tool.triangle);
+            return KeyEventResult.handled;
+          }
+          if (!isShift) {
+            final mappedTool = ToolExtension.shortcuts[event.logicalKey];
+            if (mappedTool != null) {
+              context.read<ToolCubit>().setTool(mappedTool);
+              return KeyEventResult.handled;
+            }
           }
         }
 

@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
+import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.dart';
 import '../bloc/canvas_bloc.dart';
 import '../bloc/canvas_event.dart';
 import '../controllers/canvas_interaction_controller.dart';
@@ -23,6 +25,7 @@ class CanvasGestureDispatcher extends StatefulWidget {
   final ToolRegistry toolRegistry;
   final void Function(Offset world, Offset screen, {required bool isSticky})?
       onOpenTextEditor;
+  final VoidCallback? onInsertImage;
   final Widget child;
 
   const CanvasGestureDispatcher({
@@ -31,6 +34,7 @@ class CanvasGestureDispatcher extends StatefulWidget {
     required this.interaction,
     required this.toolRegistry,
     this.onOpenTextEditor,
+    this.onInsertImage,
     required this.child,
   });
 
@@ -110,6 +114,28 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
       widget.interaction.setSnapGuides(guides);
 
   @override
+  void setConnectionAnchor({BoardElement? element, Offset? point}) =>
+      widget.interaction.setConnectionAnchor(element: element, point: point);
+
+  @override
+  bool get smartGuides => context.read<ToolCubit>().state.smartGuides;
+
+  @override
+  bool get autoShapeRecognition =>
+      context.read<ToolCubit>().state.autoShapeRecognition;
+
+  @override
+  bool get isShiftDown => HardwareKeyboard.instance.isShiftPressed;
+
+  @override
+  String get codeLanguage => context.read<ToolCubit>().state.codeLanguage;
+
+  @override
+  void updateElements(List<BoardElement> elements) {
+    context.read<CanvasBloc>().add(CanvasEvent.updateElements(elements));
+  }
+
+  @override
   void commitElement(BoardElement element) {
     context.read<CanvasBloc>().add(CanvasEvent.addElement(element));
   }
@@ -161,18 +187,37 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
     return widget.toolRegistry.get(activeToolType);
   }
 
+  Offset _toWorld(Offset screenPos) {
+    var world = widget.viewport.toWorld(screenPos);
+    final tool = context.read<ToolCubit>().state.currentTool;
+    final isFreehand = tool == Tool.pen ||
+        tool == Tool.highlighter ||
+        tool == Tool.laser;
+    if (context.read<ToolCubit>().state.gridSnap && !isFreehand) {
+      const snap = 24.0;
+      world = Offset(
+        (world.dx / snap).roundToDouble() * snap,
+        (world.dy / snap).roundToDouble() * snap,
+      );
+    }
+    return world;
+  }
+
   void _onPointerDown(PointerDownEvent event) {
     _lastScreenPos = event.position;
 
-    // Middle mouse button or Hand tool -> Pan canvas
+    // Middle mouse button, Hand tool, or Spacebar held -> Pan canvas
+    final isSpaceDown = HardwareKeyboard.instance.logicalKeysPressed
+        .contains(LogicalKeyboardKey.space);
     if (event.buttons == kMiddleMouseButton ||
-        context.read<ToolCubit>().state.currentTool == Tool.hand) {
+        context.read<ToolCubit>().state.currentTool == Tool.hand ||
+        isSpaceDown) {
       _isMiddlePanning = true;
       return;
     }
 
     final activeToolType = context.read<ToolCubit>().state.currentTool;
-    final world = widget.viewport.toWorld(event.localPosition);
+    final world = _toWorld(event.localPosition);
 
     if (activeToolType == Tool.text || activeToolType == Tool.stickyNote) {
       widget.onOpenTextEditor?.call(
@@ -180,6 +225,67 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
         event.localPosition,
         isSticky: activeToolType == Tool.stickyNote,
       );
+      return;
+    }
+
+    if (activeToolType == Tool.codeBlock) {
+      final newId = generateElementId();
+      final lang = codeLanguage;
+      final newElement = BoardElement(
+        id: newId,
+        type: ShapeType.codeBlock,
+        start: world,
+        end: world + const Offset(340, 200),
+        color: Colors.transparent,
+        fillColor: Colors.transparent,
+        fontSize: 16.0,
+        text: '// Code Snippet\nvoid main() {\n  print("Hello from FlutCanvas!");\n}',
+        codeLanguage: lang,
+        showLineNumbers: true,
+      );
+      commitElement(newElement);
+      selectElements({newId});
+      context.read<ToolCubit>().setTool(Tool.select);
+      return;
+    }
+
+    if (activeToolType == Tool.table) {
+      final newId = generateElementId();
+      final newElement = BoardElement(
+        id: newId,
+        type: ShapeType.table,
+        start: world,
+        end: world + const Offset(360, 180),
+        color: strokeColor,
+        fillColor: fillColor,
+        strokeWidth: 1.5,
+        fontSize: 14.0,
+        tableData: const [
+          ['Item', 'Qty', 'Price'],
+          ['Apple', '10', r'$2.50'],
+          ['Banana', '5', r'$1.20'],
+        ],
+        tableHasHeader: true,
+      );
+      commitElement(newElement);
+      selectElements({newId});
+      context.read<ToolCubit>().setTool(Tool.select);
+      return;
+    }
+
+    if (activeToolType == Tool.comment) {
+      context.read<CommentsCubit>().addComment(
+        position: world,
+        author: 'User',
+        text: '',
+      );
+      context.read<ToolCubit>().setTool(Tool.select);
+      return;
+    }
+
+    if (activeToolType == Tool.image) {
+      widget.onInsertImage?.call();
+      context.read<ToolCubit>().setTool(Tool.select);
       return;
     }
 
@@ -194,7 +300,7 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
       return;
     }
 
-    final world = widget.viewport.toWorld(event.localPosition);
+    final world = _toWorld(event.localPosition);
     _getActiveTool().onPointerMove(world, this);
     _lastScreenPos = event.position;
   }
@@ -205,7 +311,7 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
       return;
     }
 
-    final world = widget.viewport.toWorld(event.localPosition);
+    final world = _toWorld(event.localPosition);
     _getActiveTool().onPointerUp(world, this);
   }
 
@@ -233,8 +339,16 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
   @override
   Widget build(BuildContext context) {
     final tool = _getActiveTool();
+    final isSpaceDown = HardwareKeyboard.instance.logicalKeysPressed
+        .contains(LogicalKeyboardKey.space);
     return MouseRegion(
-      cursor: tool.cursor,
+      cursor: isSpaceDown ? SystemMouseCursors.grab : tool.cursor,
+      onHover: (event) {
+        if (!_isMiddlePanning) {
+          final world = _toWorld(event.localPosition);
+          tool.onPointerHover(world, this);
+        }
+      },
       child: Listener(
         onPointerDown: _onPointerDown,
         onPointerMove: _onPointerMove,
