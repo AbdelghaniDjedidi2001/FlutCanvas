@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutcanvas/core/di/injection.dart';
 import 'package:flutcanvas/main.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
@@ -11,8 +12,15 @@ import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart'
 import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
 import 'package:flutcanvas/services/export_service.dart';
 import 'package:flutcanvas/services/history_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    await configureDependencies();
+  });
+
   testWidgets('WhiteboardApp renders canvas, multi-board tabs, and toolbar smoke test',
       (WidgetTester tester) async {
     await tester.pumpWidget(const WhiteboardApp());

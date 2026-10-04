@@ -4,11 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'core/di/injection.dart';
-import 'features/canvas/data/repositories/shared_prefs_board_repository.dart';
 import 'features/canvas/presentation/bloc/boards_cubit.dart';
 import 'features/canvas/presentation/bloc/canvas_bloc.dart';
 import 'features/comments/presentation/bloc/comments_cubit.dart';
-import 'features/export/data/services/default_export_repository.dart';
 import 'features/export/presentation/bloc/export_cubit.dart';
 import 'features/layers/presentation/bloc/layers_cubit.dart';
 import 'features/presentation_mode/presentation/bloc/presentation_cubit.dart';
@@ -27,15 +25,6 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.invertedStylus,
         PointerDeviceKind.unknown,
       };
-}
-
-T _resolve<T extends Object>(T Function() fallback) {
-  try {
-    if (getIt.isRegistered<T>()) {
-      return getIt<T>();
-    }
-  } catch (_) {}
-  return fallback();
 }
 
 Future<void> main() async {
@@ -67,26 +56,14 @@ class _WhiteboardAppState extends State<WhiteboardApp> {
 
     return MultiBlocProvider(
       providers: [
-        BlocProvider<CanvasBloc>(create: (_) => _resolve(() => CanvasBloc())),
-        BlocProvider<ToolCubit>(create: (_) => _resolve(() => ToolCubit())),
-        BlocProvider<BoardsCubit>(
-          create: (_) => _resolve(
-            () => BoardsCubit(SharedPrefsBoardRepository(null)),
-          ),
-        ),
-        BlocProvider<CommentsCubit>(
-          create: (_) => _resolve(() => CommentsCubit()),
-        ),
-        BlocProvider<LayersCubit>(
-          create: (_) => _resolve(() => LayersCubit()),
-        ),
-        BlocProvider<ExportCubit>(
-          create: (_) => _resolve(
-            () => ExportCubit(DefaultExportRepository()),
-          ),
-        ),
+        BlocProvider<CanvasBloc>(create: (_) => getIt<CanvasBloc>()),
+        BlocProvider<ToolCubit>(create: (_) => getIt<ToolCubit>()),
+        BlocProvider<BoardsCubit>(create: (_) => getIt<BoardsCubit>()),
+        BlocProvider<CommentsCubit>(create: (_) => getIt<CommentsCubit>()),
+        BlocProvider<LayersCubit>(create: (_) => getIt<LayersCubit>()),
+        BlocProvider<ExportCubit>(create: (_) => getIt<ExportCubit>()),
         BlocProvider<PresentationCubit>(
-          create: (_) => _resolve(() => PresentationCubit()),
+          create: (_) => getIt<PresentationCubit>(),
         ),
       ],
       child: ScreenUtilInit(
