@@ -105,7 +105,7 @@ lib/
 
 ### Phase 5: Codebase Cleanup & Directory Consolidation
 - [x] **5.1 Eliminate Shims**: Remove `lib/models/` legacy export files and update all imports to `features/canvas/domain/models/`.
-- [ ] **5.2 Feature Relocation**: Move lingering files from `lib/services/` and `lib/painters/` into corresponding feature packages.
+- [x] **5.2 Feature Relocation**: Move lingering files from `lib/services/` and `lib/painters/` into corresponding feature packages.
 - [x] **5.3 Directory Pruning**: Delete empty folders in `lib/core/` and `lib/features/`.
 - [x] **5.4 Clean Dependency Injection**: Remove fallback `_resolve()` in `main.dart`; ensure clean `getIt` registration.
 
