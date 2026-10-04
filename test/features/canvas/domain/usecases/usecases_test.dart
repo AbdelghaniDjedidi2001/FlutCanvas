@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutcanvas/features/canvas/data/services/alignment_service.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/usecases/align_elements_usecase.dart';
-import 'package:flutcanvas/features/canvas/domain/usecases/distribute_elements_usecase.dart';
 import 'package:flutcanvas/features/canvas/domain/usecases/group_elements_usecase.dart';
 import 'package:flutcanvas/features/canvas/domain/usecases/ungroup_elements_usecase.dart';
 

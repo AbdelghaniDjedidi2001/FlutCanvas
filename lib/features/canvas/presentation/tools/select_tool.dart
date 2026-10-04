@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/board_element.dart';
 import '../../domain/models/tool.dart';
 import 'canvas_tool.dart';
 import 'canvas_tool_context.dart';
@@ -14,7 +13,6 @@ class SelectTool implements CanvasTool {
   _SelectSubMode _subMode = _SelectSubMode.none;
   Offset? _startPoint;
   Offset? _lastPoint;
-  bool _hasMoved = false;
 
   @override
   Tool get toolType => Tool.select;
@@ -30,7 +28,6 @@ class SelectTool implements CanvasTool {
   void onPointerDown(Offset worldPos, CanvasToolContext context) {
     _startPoint = worldPos;
     _lastPoint = worldPos;
-    _hasMoved = false;
 
     final hit = context.hitTestTopmost(worldPos);
 
@@ -74,7 +71,6 @@ class SelectTool implements CanvasTool {
     } else if (_subMode == _SelectSubMode.moving) {
       final delta = worldPos - _lastPoint!;
       if (delta.dx != 0 || delta.dy != 0) {
-        _hasMoved = true;
         // Translate all selected elements
         for (final el in context.elements) {
           if (context.selectedIds.contains(el.id) && !el.isLocked) {
@@ -94,7 +90,6 @@ class SelectTool implements CanvasTool {
     _subMode = _SelectSubMode.none;
     _startPoint = null;
     _lastPoint = null;
-    _hasMoved = false;
   }
 
   @override

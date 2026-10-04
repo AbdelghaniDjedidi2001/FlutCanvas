@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/models/board_element.dart';
 import '../../domain/models/connector_style.dart';
@@ -20,6 +21,8 @@ class CanvasGestureDispatcher extends StatefulWidget {
   final CanvasViewportController viewport;
   final CanvasInteractionController interaction;
   final ToolRegistry toolRegistry;
+  final void Function(Offset world, Offset screen, {required bool isSticky})?
+      onOpenTextEditor;
   final Widget child;
 
   const CanvasGestureDispatcher({
@@ -27,6 +30,7 @@ class CanvasGestureDispatcher extends StatefulWidget {
     required this.viewport,
     required this.interaction,
     required this.toolRegistry,
+    this.onOpenTextEditor,
     required this.child,
   });
 
@@ -160,14 +164,25 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
   void _onPointerDown(PointerDownEvent event) {
     _lastScreenPos = event.position;
 
-    // Middle mouse button or Pan tool -> Pan canvas
+    // Middle mouse button or Hand tool -> Pan canvas
     if (event.buttons == kMiddleMouseButton ||
-        context.read<ToolCubit>().state.currentTool == Tool.pan) {
+        context.read<ToolCubit>().state.currentTool == Tool.hand) {
       _isMiddlePanning = true;
       return;
     }
 
+    final activeToolType = context.read<ToolCubit>().state.currentTool;
     final world = widget.viewport.toWorld(event.localPosition);
+
+    if (activeToolType == Tool.text || activeToolType == Tool.stickyNote) {
+      widget.onOpenTextEditor?.call(
+        world,
+        event.localPosition,
+        isSticky: activeToolType == Tool.stickyNote,
+      );
+      return;
+    }
+
     _getActiveTool().onPointerDown(world, this);
   }
 

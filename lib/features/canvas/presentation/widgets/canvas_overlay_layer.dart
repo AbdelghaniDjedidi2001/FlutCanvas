@@ -81,7 +81,7 @@ class _OverlayCustomPainter extends CustomPainter {
 
     // 3. Laser trail
     if (laserTrail.isNotEmpty) {
-      LaserPainter.draw(canvas, laserTrail, zoom);
+      LaserPainter.draw(canvas, laserTrail, colors.laser);
     }
 
     canvas.restore();

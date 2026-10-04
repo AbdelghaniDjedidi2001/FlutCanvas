@@ -19,8 +19,10 @@ class CanvasViewport extends StatelessWidget {
         return ClipRect(
           child: Transform(
             transform: Matrix4.identity()
-              ..translate(controller.pan.dx, controller.pan.dy)
-              ..scale(controller.zoom),
+              ..setEntry(0, 0, controller.zoom)
+              ..setEntry(1, 1, controller.zoom)
+              ..setEntry(0, 3, controller.pan.dx)
+              ..setEntry(1, 3, controller.pan.dy),
             child: child,
           ),
         );

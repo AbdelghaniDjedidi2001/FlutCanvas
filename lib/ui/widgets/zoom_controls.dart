@@ -58,7 +58,7 @@ class ZoomControls extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
-                onPressed: onResetZoom ?? (controller != null ? controller!.reset : null),
+                onPressed: onResetZoom ?? controller?.reset,
                 child: Text(
                   '${((controller?.zoom ?? zoom) * 100).round()}%',
                   style: const TextStyle(fontWeight: FontWeight.w600),

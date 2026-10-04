@@ -28,16 +28,23 @@ class BoardTabsBar extends StatelessWidget {
     final boardsCubit = context.watch<BoardsCubit?>();
     final cubitState = boardsCubit?.state;
 
-    final effectiveBoards = boards ?? cubitState?.boards ?? [
-      BoardDocument(id: 'board_1', title: 'Main Board', elements: const []),
-    ];
+    final effectiveBoards = boards ??
+        cubitState?.boards ??
+        [
+          BoardDocument(id: 'board_1', title: 'Main Board', elements: const []),
+        ];
     final effectiveIndex = (activeIndex ?? cubitState?.activeBoardIndex ?? 0)
         .clamp(0, effectiveBoards.length - 1);
-    final effectiveSelectBoard = onSelectBoard ?? (i) => boardsCubit?.switchBoard(i);
-    final effectiveCreateBoard = onCreateBoard ?? () => boardsCubit?.addNewBoard();
-    final effectiveRenameBoard = onRenameBoard ?? (i, name) => boardsCubit?.renameBoard(i, name);
-    final effectiveDeleteBoard = onDeleteBoard ?? (i) => boardsCubit?.deleteBoard(i);
-    final effectiveDuplicateBoard = onDuplicateBoard ?? (i) => boardsCubit?.duplicateBoard(i);
+    final effectiveSelectBoard =
+        onSelectBoard ?? (i) => boardsCubit?.switchBoard(i);
+    final effectiveCreateBoard =
+        onCreateBoard ?? () => boardsCubit?.addNewBoard();
+    final effectiveRenameBoard =
+        onRenameBoard ?? (i, name) => boardsCubit?.renameBoard(i, name);
+    final effectiveDeleteBoard =
+        onDeleteBoard ?? (i) => boardsCubit?.deleteBoard(i);
+    final effectiveDuplicateBoard =
+        onDuplicateBoard ?? (i) => boardsCubit?.duplicateBoard(i);
 
     final scheme = Theme.of(context).colorScheme;
     final currentBoard = effectiveBoards[effectiveIndex];
@@ -67,30 +74,36 @@ class BoardTabsBar extends StatelessWidget {
               offset: const Offset(0, 42),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+                side: BorderSide(
+                    color: scheme.outlineVariant.withValues(alpha: 0.3)),
               ),
               color: scheme.surfaceContainerHigh,
-              onSelected: onSelectBoard,
+              onSelected: effectiveSelectBoard,
               itemBuilder: (ctx) => [
-                for (var i = 0; i < boards.length; i++)
+                for (var i = 0; i < effectiveBoards.length; i++)
                   PopupMenuItem<int>(
                     value: i,
                     child: Row(
                       children: [
                         Icon(
-                          i == activeIndex
+                          i == effectiveIndex
                               ? Icons.radio_button_checked
                               : Icons.radio_button_unchecked,
                           size: 16,
-                          color: i == activeIndex ? scheme.primary : scheme.onSurfaceVariant,
+                          color: i == effectiveIndex
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            boards[i].title,
+                            effectiveBoards[i].title,
                             style: TextStyle(
-                              fontWeight: i == activeIndex ? FontWeight.bold : FontWeight.normal,
-                              color: i == activeIndex ? scheme.primary : null,
+                              fontWeight: i == effectiveIndex
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color:
+                                  i == effectiveIndex ? scheme.primary : null,
                             ),
                           ),
                         ),
@@ -100,71 +113,85 @@ class BoardTabsBar extends StatelessWidget {
                 const PopupMenuDivider(),
                 PopupMenuItem<int>(
                   value: -1,
-                  onTap: onCreateBoard,
+                  onTap: effectiveCreateBoard,
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline, size: 16, color: scheme.primary),
+                      Icon(Icons.add_circle_outline,
+                          size: 16, color: scheme.primary),
                       const SizedBox(width: 8),
                       Text(
                         'Create New Board',
-                        style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
               ],
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.dashboard_rounded, size: 15, color: scheme.primary),
+                    Icon(
+                      Icons.dashboard_outlined,
+                      size: 16,
+                      color: scheme.primary,
+                    ),
                     const SizedBox(width: 6),
                     ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 110),
+                      constraints: const BoxConstraints(maxWidth: 120),
                       child: Text(
                         currentBoard.title,
-                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: scheme.onPrimaryContainer,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.arrow_drop_down, size: 16, color: scheme.onPrimaryContainer),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: 16,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(width: 4),
+            Container(
+              width: 1,
+              height: 18,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              color: scheme.outlineVariant.withValues(alpha: 0.3),
+            ),
 
-            // Quick Options for Active Board
+            // Context Menu: Rename / Duplicate / Delete
             PopupMenuButton<String>(
               tooltip: 'Board Settings',
               padding: EdgeInsets.zero,
               iconSize: 16,
-              icon: Icon(Icons.more_horiz, size: 16, color: scheme.onSurfaceVariant),
+              icon: Icon(Icons.more_horiz,
+                  size: 16, color: scheme.onSurfaceVariant),
               offset: const Offset(0, 42),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.3)),
+                side: BorderSide(
+                    color: scheme.outlineVariant.withValues(alpha: 0.3)),
               ),
               color: scheme.surfaceContainerHigh,
               onSelected: (val) {
                 if (val == 'rename') {
-                  _promptRename(context, activeIndex, currentBoard.title);
+                  _promptRename(context, effectiveIndex, currentBoard.title,
+                      effectiveRenameBoard);
                 } else if (val == 'duplicate') {
-                  onDuplicateBoard(activeIndex);
+                  effectiveDuplicateBoard(effectiveIndex);
                 } else if (val == 'delete') {
-                  onDeleteBoard(activeIndex);
+                  effectiveDeleteBoard(effectiveIndex);
                 }
               },
               itemBuilder: (ctx) => [
@@ -188,14 +215,16 @@ class BoardTabsBar extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (boards.length > 1)
+                if (effectiveBoards.length > 1)
                   const PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline, size: 16, color: Colors.redAccent),
+                        Icon(Icons.delete_outline,
+                            size: 16, color: Colors.redAccent),
                         SizedBox(width: 8),
-                        Text('Delete Board', style: TextStyle(color: Colors.redAccent)),
+                        Text('Delete Board',
+                            style: TextStyle(color: Colors.redAccent)),
                       ],
                     ),
                   ),
@@ -208,7 +237,7 @@ class BoardTabsBar extends StatelessWidget {
               child: IconButton(
                 visualDensity: VisualDensity.compact,
                 iconSize: 16,
-                onPressed: onCreateBoard,
+                onPressed: effectiveCreateBoard,
                 icon: const Icon(Icons.add),
               ),
             ),
@@ -218,7 +247,8 @@ class BoardTabsBar extends StatelessWidget {
     );
   }
 
-  void _promptRename(BuildContext context, int index, String currentTitle) {
+  void _promptRename(BuildContext context, int index, String currentTitle,
+      void Function(int, String) onRename) {
     final controller = TextEditingController(text: currentTitle);
     showDialog(
       context: context,
@@ -230,7 +260,7 @@ class BoardTabsBar extends StatelessWidget {
           decoration: const InputDecoration(labelText: 'Board Title'),
           onSubmitted: (val) {
             final t = val.trim();
-            if (t.isNotEmpty) onRenameBoard(index, t);
+            if (t.isNotEmpty) onRename(index, t);
             Navigator.of(ctx).pop();
           },
         ),
@@ -242,7 +272,7 @@ class BoardTabsBar extends StatelessWidget {
           FilledButton(
             onPressed: () {
               final t = controller.text.trim();
-              if (t.isNotEmpty) onRenameBoard(index, t);
+              if (t.isNotEmpty) onRename(index, t);
               Navigator.of(ctx).pop();
             },
             child: const Text('Save'),

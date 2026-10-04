@@ -77,7 +77,7 @@ class _ElementsCustomPainter extends CustomPainter {
     final selectedElements =
         elements.where((e) => selectedIds.contains(e.id)).toList();
     if (selectedElements.isNotEmpty) {
-      SelectionPainter.draw(canvas, selectedElements, zoom, colors);
+      SelectionPainter.drawSelection(canvas, selectedElements, zoom, colors);
     }
 
     canvas.restore();

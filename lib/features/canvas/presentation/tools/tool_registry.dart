@@ -42,8 +42,6 @@ class ToolRegistry {
     // Connectors
     register(ConnectorTool(toolType: Tool.line, shapeType: ShapeType.line));
     register(ConnectorTool(toolType: Tool.arrow, shapeType: ShapeType.arrow));
-    register(ConnectorTool(
-        toolType: Tool.doubleArrow, shapeType: ShapeType.doubleArrow));
 
     // Freehand
     register(FreehandTool(toolType: Tool.pen, isHighlighter: false));

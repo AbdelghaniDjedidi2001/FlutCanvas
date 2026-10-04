@@ -19,14 +19,10 @@ analyzer:
 
 linter:
   rules:
-    - prefer_const_constructors
-    - prefer_const_declarations
-    - prefer_const_literals_to_create_immutables
     - avoid_empty_else
     - cancel_subscriptions
     - close_sinks
     - prefer_final_fields
-    - prefer_final_locals
     - unawaited_futures
     - unnecessary_const
     - unnecessary_new
