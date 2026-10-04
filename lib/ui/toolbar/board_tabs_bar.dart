@@ -1,30 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../features/canvas/presentation/bloc/boards_cubit.dart';
 import '../../models/board_document.dart';
 
 class BoardTabsBar extends StatelessWidget {
   const BoardTabsBar({
     super.key,
-    required this.boards,
-    required this.activeIndex,
-    required this.onSelectBoard,
-    required this.onCreateBoard,
-    required this.onRenameBoard,
-    required this.onDeleteBoard,
-    required this.onDuplicateBoard,
+    this.boards,
+    this.activeIndex,
+    this.onSelectBoard,
+    this.onCreateBoard,
+    this.onRenameBoard,
+    this.onDeleteBoard,
+    this.onDuplicateBoard,
   });
 
-  final List<BoardDocument> boards;
-  final int activeIndex;
-  final void Function(int index) onSelectBoard;
-  final VoidCallback onCreateBoard;
-  final void Function(int index, String newTitle) onRenameBoard;
-  final void Function(int index) onDeleteBoard;
-  final void Function(int index) onDuplicateBoard;
+  final List<BoardDocument>? boards;
+  final int? activeIndex;
+  final void Function(int index)? onSelectBoard;
+  final VoidCallback? onCreateBoard;
+  final void Function(int index, String newTitle)? onRenameBoard;
+  final void Function(int index)? onDeleteBoard;
+  final void Function(int index)? onDuplicateBoard;
 
   @override
   Widget build(BuildContext context) {
+    final boardsCubit = context.watch<BoardsCubit?>();
+    final cubitState = boardsCubit?.state;
+
+    final effectiveBoards = boards ?? cubitState?.boards ?? [
+      BoardDocument(id: 'board_1', title: 'Main Board', elements: const []),
+    ];
+    final effectiveIndex = (activeIndex ?? cubitState?.activeBoardIndex ?? 0)
+        .clamp(0, effectiveBoards.length - 1);
+    final effectiveSelectBoard = onSelectBoard ?? (i) => boardsCubit?.switchBoard(i);
+    final effectiveCreateBoard = onCreateBoard ?? () => boardsCubit?.addNewBoard();
+    final effectiveRenameBoard = onRenameBoard ?? (i, name) => boardsCubit?.renameBoard(i, name);
+    final effectiveDeleteBoard = onDeleteBoard ?? (i) => boardsCubit?.deleteBoard(i);
+    final effectiveDuplicateBoard = onDuplicateBoard ?? (i) => boardsCubit?.duplicateBoard(i);
+
     final scheme = Theme.of(context).colorScheme;
-    final currentBoard = boards[activeIndex.clamp(0, boards.length - 1)];
+    final currentBoard = effectiveBoards[effectiveIndex];
 
     return Material(
       color: scheme.surfaceContainerHigh,

@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import '../../features/canvas/presentation/controllers/canvas_viewport_controller.dart';
 
 class ZoomControls extends StatelessWidget {
   const ZoomControls({
     super.key,
-    required this.zoom,
-    required this.onZoomIn,
-    required this.onZoomOut,
-    required this.onResetZoom,
-    required this.isGridSnap,
-    required this.onToggleGridSnap,
+    this.controller,
+    this.zoom = 1.0,
+    this.onZoomIn,
+    this.onZoomOut,
+    this.onResetZoom,
+    this.isGridSnap = false,
+    this.onToggleGridSnap,
     this.isSmartGuides = true,
     this.onToggleSmartGuides,
     this.isShapeSnapping = true,
     this.onToggleShapeSnapping,
   });
 
+  final CanvasViewportController? controller;
   final double zoom;
-  final VoidCallback onZoomIn;
-  final VoidCallback onZoomOut;
-  final VoidCallback onResetZoom;
+  final VoidCallback? onZoomIn;
+  final VoidCallback? onZoomOut;
+  final VoidCallback? onResetZoom;
   final bool isGridSnap;
-  final VoidCallback onToggleGridSnap;
+  final VoidCallback? onToggleGridSnap;
   final bool isSmartGuides;
   final VoidCallback? onToggleSmartGuides;
   final bool isShapeSnapping;
@@ -42,7 +45,10 @@ class ZoomControls extends StatelessWidget {
           children: [
             IconButton(
               tooltip: 'Zoom out',
-              onPressed: onZoomOut,
+              onPressed: onZoomOut ??
+                  (controller != null
+                      ? () => controller!.setZoom(controller!.zoom / 1.25)
+                      : null),
               icon: const Icon(Icons.remove, size: 18),
             ),
             Tooltip(
@@ -52,16 +58,19 @@ class ZoomControls extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
-                onPressed: onResetZoom,
+                onPressed: onResetZoom ?? (controller != null ? controller!.reset : null),
                 child: Text(
-                  '${(zoom * 100).round()}%',
+                  '${((controller?.zoom ?? zoom) * 100).round()}%',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
             IconButton(
               tooltip: 'Zoom in',
-              onPressed: onZoomIn,
+              onPressed: onZoomIn ??
+                  (controller != null
+                      ? () => controller!.setZoom(controller!.zoom * 1.25)
+                      : null),
               icon: const Icon(Icons.add, size: 18),
             ),
             Container(
