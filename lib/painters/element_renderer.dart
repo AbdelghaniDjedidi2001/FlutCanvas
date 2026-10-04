@@ -11,6 +11,7 @@ import '../services/image_service.dart';
 import '../services/markdown_text_service.dart';
 import '../services/syntax_highlighter_service.dart';
 import 'rough_sketch_painter.dart';
+import '../features/canvas/presentation/renderers/shape_renderer_registry.dart';
 
 class ElementRenderer {
   static void draw(Canvas canvas, BoardElement el, BoardColors colors) {
@@ -24,7 +25,14 @@ class ElementRenderer {
       canvas.translate(-c.dx, -c.dy);
     }
 
-    // 2. Element specific rendering
+    // 2. Element specific rendering (via registry or fallback)
+    final customRenderer = ShapeRendererRegistry.instance.getRenderer(el.type);
+    if (customRenderer != null) {
+      customRenderer.render(canvas, el, colors);
+      canvas.restore();
+      return;
+    }
+
     _drawElementContent(canvas, el, colors);
 
     canvas.restore();
