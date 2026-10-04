@@ -106,10 +106,10 @@ lib/
 ### Phase 5: Codebase Cleanup & Directory Consolidation
 - [x] **5.1 Eliminate Shims**: Remove `lib/models/` legacy export files and update all imports to `features/canvas/domain/models/`.
 - [ ] **5.2 Feature Relocation**: Move lingering files from `lib/services/` and `lib/painters/` into corresponding feature packages.
-- [ ] **5.3 Directory Pruning**: Delete empty folders in `lib/core/` and `lib/features/`.
-- [ ] **5.4 Clean Dependency Injection**: Remove fallback `_resolve()` in `main.dart`; ensure clean `getIt` registration.
+- [x] **5.3 Directory Pruning**: Delete empty folders in `lib/core/` and `lib/features/`.
+- [x] **5.4 Clean Dependency Injection**: Remove fallback `_resolve()` in `main.dart`; ensure clean `getIt` registration.
 
 ### Phase 6: Open-Source Collaboration & Quality Assurance
 - [x] **6.1 Add `CONTRIBUTING.md`**: Guide for new developers explaining architecture, how to add a tool, and how to add a shape.
-- [ ] **6.2 Lint & Analysis Hardening**: Update `analysis_options.yaml` with strict rules.
+- [x] **6.2 Lint & Analysis Hardening**: Update `analysis_options.yaml` with strict rules.
 - [x] **6.3 Comprehensive Test Suite**: Unit tests for Result pattern, Use Cases, Commands, and Tool Strategies.

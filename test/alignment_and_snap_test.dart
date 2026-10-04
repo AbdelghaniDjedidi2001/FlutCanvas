@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
-import 'package:flutcanvas/services/alignment_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/alignment_service.dart';
 
 void main() {
   group('AlignmentService tests', () {
