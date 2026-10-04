@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/board_document.dart';
-import '../models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 class SavedWorkspaceState {
   const SavedWorkspaceState({

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'board_element.dart';
-import '../../../comments/domain/models/board_comment.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 
 part 'board_document.freezed.dart';
 part 'board_document.g.dart';

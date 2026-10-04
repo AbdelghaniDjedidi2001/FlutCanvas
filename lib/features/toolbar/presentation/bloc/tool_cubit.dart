@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../canvas/domain/models/connector_style.dart';
-import '../../../canvas/domain/models/stroke_fill_style.dart';
-import '../../../canvas/domain/models/tool.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'tool_state.dart';
 
 @injectable

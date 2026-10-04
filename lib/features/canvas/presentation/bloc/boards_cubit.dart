@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../comments/domain/models/board_comment.dart';
-import '../../domain/models/board_document.dart';
-import '../../domain/models/board_element.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import '../../domain/repositories/board_repository.dart';
 import 'boards_state.dart';
 

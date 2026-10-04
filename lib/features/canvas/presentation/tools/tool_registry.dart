@@ -1,6 +1,6 @@
 import 'package:injectable/injectable.dart';
-import '../../domain/models/shape_type.dart';
-import '../../domain/models/tool.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'canvas_tool.dart';
 import 'connector_tool.dart';
 import 'eraser_tool.dart';

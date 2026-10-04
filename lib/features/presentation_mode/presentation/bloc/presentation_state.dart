@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../../models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 part 'presentation_state.freezed.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/tool.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'canvas_tool_context.dart';
 
 abstract interface class CanvasTool {

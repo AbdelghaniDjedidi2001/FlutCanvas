@@ -1,7 +1,7 @@
 import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/utils/result.dart';
-import '../models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import '../repositories/board_repository.dart';
 
 @injectable

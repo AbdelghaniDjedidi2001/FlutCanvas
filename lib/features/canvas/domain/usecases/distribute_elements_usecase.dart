@@ -1,6 +1,6 @@
 import 'package:injectable/injectable.dart';
 import '../../data/services/alignment_service.dart';
-import '../models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 @injectable
 class DistributeElementsUseCase {

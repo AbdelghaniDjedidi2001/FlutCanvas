@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 part 'board_comment.freezed.dart';
 part 'board_comment.g.dart';

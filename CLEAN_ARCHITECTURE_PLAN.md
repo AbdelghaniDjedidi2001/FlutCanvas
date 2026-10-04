@@ -100,11 +100,11 @@ lib/
   - `CanvasViewport`: Matrix-transformed rendering container.
   - `CanvasGestureDispatcher`: Routes pointer events to active `CanvasTool`.
   - Multi-layer `CustomPaint` (`CanvasBackgroundLayer`, `CanvasElementsLayer`, `CanvasOverlayLayer`).
-- [ ] **4.3 Clean UI Binding**:
+- [x] **4.3 Clean UI Binding**:
   - Integrate modular widgets into `WhiteboardPage` and eliminate prop-drilled callbacks.
 
 ### Phase 5: Codebase Cleanup & Directory Consolidation
-- [ ] **5.1 Eliminate Shims**: Remove `lib/models/` legacy export files and update all imports to `features/canvas/domain/models/`.
+- [x] **5.1 Eliminate Shims**: Remove `lib/models/` legacy export files and update all imports to `features/canvas/domain/models/`.
 - [ ] **5.2 Feature Relocation**: Move lingering files from `lib/services/` and `lib/painters/` into corresponding feature packages.
 - [ ] **5.3 Directory Pruning**: Delete empty folders in `lib/core/` and `lib/features/`.
 - [ ] **5.4 Clean Dependency Injection**: Remove fallback `_resolve()` in `main.dart`; ensure clean `getIt` registration.

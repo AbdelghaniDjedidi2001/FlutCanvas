@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/board_comment.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 
 /// A sleek floating pin badge widget rendered on top of the whiteboard canvas.
 class CommentPinBadge extends StatelessWidget {

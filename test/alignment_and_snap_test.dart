@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/shape_type.dart';
-import 'package:flutcanvas/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 import 'package:flutcanvas/services/alignment_service.dart';
 
 void main() {

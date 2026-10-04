@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../domain/models/board_element.dart';
-import '../../domain/models/shape_type.dart';
-import '../../domain/models/tool.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'canvas_tool.dart';
 import 'canvas_tool_context.dart';
 

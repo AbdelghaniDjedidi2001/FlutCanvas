@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../data/services/alignment_service.dart';
-import '../../domain/models/board_element.dart';
-import '../../domain/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 
 part 'canvas_event.freezed.dart';
 

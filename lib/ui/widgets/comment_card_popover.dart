@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../models/board_comment.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 
 /// Floating popover card for viewing, composing, and replying to a canvas comment.
 class CommentCardPopover extends StatefulWidget {

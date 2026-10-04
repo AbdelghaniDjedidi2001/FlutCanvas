@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../models/board_colors.dart';
-import '../models/board_document.dart';
-import '../models/board_element.dart';
-import '../models/shape_type.dart';
+import '../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import '../painters/element_renderer.dart';
 
 enum PdfExportMode {

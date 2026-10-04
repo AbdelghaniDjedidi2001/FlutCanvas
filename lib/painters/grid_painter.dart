@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import '../models/board_colors.dart';
+import '../core/constants/board_colors.dart';
 
 class GridPainter {
   static void draw(Canvas canvas, Size size, Offset pan, double zoom, BoardColors colors) {

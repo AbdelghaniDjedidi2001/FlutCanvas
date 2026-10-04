@@ -1,4 +1,4 @@
-import '../models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 class HistoryManager {
   final List<List<BoardElement>> _undoStack = [];

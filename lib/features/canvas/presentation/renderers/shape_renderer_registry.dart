@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/board_colors.dart';
-import '../../domain/models/board_element.dart';
-import '../../domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'shape_renderer.dart';
 
 class ShapeRendererRegistry {

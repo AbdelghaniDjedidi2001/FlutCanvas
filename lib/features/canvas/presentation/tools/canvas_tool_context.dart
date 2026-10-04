@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/board_element.dart';
-import '../../domain/models/connector_style.dart';
-import '../../domain/models/snap_guide.dart';
-import '../../domain/models/stroke_fill_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import '../../../../painters/laser_painter.dart';
 
 abstract interface class CanvasToolContext {

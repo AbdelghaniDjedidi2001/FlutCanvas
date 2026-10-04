@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../domain/models/board_document.dart';
-import '../../domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import '../../domain/repositories/board_repository.dart';
 
 @LazySingleton(as: BoardRepository)

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../domain/models/board_comment.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 
 part 'comments_state.freezed.dart';
 

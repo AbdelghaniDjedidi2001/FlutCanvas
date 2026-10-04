@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/shortcuts_handler.dart';
 import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
-import 'package:flutcanvas/models/tool.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 
 void main() {
   group('CanvasShortcutsHandler Widget Tests', () {

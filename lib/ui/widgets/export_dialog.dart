@@ -3,10 +3,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../models/board_colors.dart';
-import '../../models/board_document.dart';
-import '../../models/board_element.dart';
-import '../../models/shape_type.dart';
+import '../../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import '../../services/excalidraw_import_service.dart';
 import '../../services/export_service.dart';
 import '../../services/file_downloader.dart';

@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/services/shape_recognition_service.dart';
 import 'package:flutcanvas/ui/widgets/zoom_controls.dart';
 

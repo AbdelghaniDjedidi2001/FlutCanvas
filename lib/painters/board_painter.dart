@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../models/board_colors.dart';
-import '../models/board_element.dart';
-import '../models/snap_guide.dart';
+import '../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 import 'connection_anchor_painter.dart';
 import 'element_renderer.dart';
 import 'grid_painter.dart';

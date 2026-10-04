@@ -1,4 +1,4 @@
-import '../models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 
 class SavedWorkspaceState {
   const SavedWorkspaceState({

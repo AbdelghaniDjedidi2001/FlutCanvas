@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutcanvas/models/board_comment.dart';
-import 'package:flutcanvas/models/board_document.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/ui/widgets/comment_card_popover.dart';
 import 'package:flutcanvas/ui/widgets/comment_pin_badge.dart';
 import 'package:flutcanvas/ui/widgets/layers_sidebar.dart';

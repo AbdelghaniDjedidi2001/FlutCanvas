@@ -6,9 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/canvas/presentation/bloc/canvas_bloc.dart';
 import '../../features/canvas/presentation/bloc/canvas_event.dart';
 import '../../features/comments/presentation/bloc/comments_cubit.dart';
-import '../../models/board_comment.dart';
-import '../../models/board_element.dart';
-import '../../models/shape_type.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 
 class LayersSidebar extends StatefulWidget {
   const LayersSidebar({

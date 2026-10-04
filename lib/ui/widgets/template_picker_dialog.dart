@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/templates.dart';
+import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
 
 class TemplatePickerDialog extends StatelessWidget {
   const TemplatePickerDialog({

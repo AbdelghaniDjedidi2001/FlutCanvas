@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutcanvas/main.dart';
-import 'package:flutcanvas/models/board_document.dart';
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/connection_binding.dart';
-import 'package:flutcanvas/models/shape_type.dart';
-import 'package:flutcanvas/models/stroke_fill_style.dart';
-import 'package:flutcanvas/models/templates.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
 import 'package:flutcanvas/services/export_service.dart';
 import 'package:flutcanvas/services/history_manager.dart';
 

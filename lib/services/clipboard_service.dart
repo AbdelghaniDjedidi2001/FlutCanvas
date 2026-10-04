@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../models/board_element.dart';
-import '../models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'excalidraw_import_service.dart';
 import 'export_service.dart';
 import 'mermaid_parser_service.dart';

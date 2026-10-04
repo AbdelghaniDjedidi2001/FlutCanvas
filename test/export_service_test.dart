@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutcanvas/models/board_colors.dart';
-import 'package:flutcanvas/models/board_document.dart';
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/connector_style.dart';
-import 'package:flutcanvas/models/shape_type.dart';
-import 'package:flutcanvas/models/stroke_fill_style.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/services/export_service.dart';
 import 'package:flutcanvas/services/pdf_export_service.dart';
 import 'package:flutcanvas/ui/widgets/export_dialog.dart';

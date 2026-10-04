@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../domain/models/board_element.dart';
-import '../../domain/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 
 part 'canvas_state.freezed.dart';
 

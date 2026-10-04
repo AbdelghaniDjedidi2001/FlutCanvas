@@ -6,7 +6,7 @@ import '../../../../painters/selection_painter.dart';
 import '../bloc/canvas_bloc.dart';
 import '../bloc/canvas_state.dart';
 import '../controllers/canvas_viewport_controller.dart';
-import '../../domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 class CanvasElementsLayer extends StatelessWidget {
   final CanvasViewportController viewport;

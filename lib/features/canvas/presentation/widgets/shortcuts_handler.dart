@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../models/tool.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import '../../../toolbar/presentation/bloc/tool_cubit.dart';
 import '../bloc/canvas_bloc.dart';
 import '../bloc/canvas_event.dart';

@@ -2,8 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutcanvas/features/presentation_mode/presentation/bloc/presentation_cubit.dart';
 import 'package:flutcanvas/features/presentation_mode/presentation/bloc/presentation_state.dart';
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 
 void main() {
   group('PresentationCubit Tests', () {

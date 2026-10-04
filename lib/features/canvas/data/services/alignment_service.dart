@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 enum AlignDirection {
   left,

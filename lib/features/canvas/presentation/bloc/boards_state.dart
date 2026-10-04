@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../comments/domain/models/board_comment.dart';
-import '../../domain/models/board_document.dart';
-import '../../domain/models/board_element.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 part 'boards_state.freezed.dart';
 

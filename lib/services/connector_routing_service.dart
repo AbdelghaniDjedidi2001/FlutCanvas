@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-import '../models/board_element.dart';
-import '../models/connection_binding.dart';
-import '../models/connector_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 
 class ConnectorRoute {
   const ConnectorRoute({

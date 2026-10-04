@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:injectable/injectable.dart';
 
-import '../../../../models/board_colors.dart';
-import '../../../../models/board_document.dart';
-import '../../../../models/board_element.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import '../../../../services/export_service.dart';
 import '../../domain/repositories/export_repository.dart';
 

@@ -8,9 +8,9 @@ import '../../features/comments/presentation/bloc/comments_cubit.dart';
 import '../../features/comments/presentation/bloc/comments_state.dart';
 import '../../features/toolbar/presentation/bloc/tool_cubit.dart';
 import '../../features/toolbar/presentation/bloc/tool_state.dart';
-import '../../models/board_colors.dart';
-import '../../models/shape_type.dart';
-import '../../models/tool.dart';
+import '../../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 
 class MainToolbar extends StatelessWidget {
   final Tool? currentTool;

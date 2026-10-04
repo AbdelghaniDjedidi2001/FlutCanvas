@@ -4,9 +4,9 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../services/history_manager.dart';
 import '../../data/services/alignment_service.dart';
-import '../../domain/models/board_element.dart';
-import '../../domain/models/connection_binding.dart';
-import '../../domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'canvas_event.dart';
 import 'canvas_state.dart';
 

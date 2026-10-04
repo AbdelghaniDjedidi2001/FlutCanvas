@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
-import '../models/board_colors.dart';
-import '../models/board_document.dart';
-import '../models/board_element.dart';
+import '../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import '../painters/element_renderer.dart';
 import 'pdf_export_service.dart';
 import 'svg_export_service.dart';

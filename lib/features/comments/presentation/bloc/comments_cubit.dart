@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../domain/models/board_comment.dart';
+import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 import 'comments_state.dart';
 
 @injectable

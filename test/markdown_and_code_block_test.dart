@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutcanvas/models/board_colors.dart';
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/shape_type.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/services/clipboard_service.dart';
 import 'package:flutcanvas/services/markdown_text_service.dart';
 import 'package:flutcanvas/services/svg_export_service.dart';

@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../models/board_colors.dart';
-import '../models/board_element.dart';
-import '../models/snap_guide.dart';
-import '../models/transform_handle.dart';
+import '../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/domain/models/transform_handle.dart';
 
 class SelectionPainter {
   /// Draws dynamic magnetic snap guidelines while moving elements

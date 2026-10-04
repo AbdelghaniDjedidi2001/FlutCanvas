@@ -5,9 +5,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:flutcanvas/features/export/domain/repositories/export_repository.dart';
 import 'package:flutcanvas/features/export/presentation/bloc/export_cubit.dart';
 import 'package:flutcanvas/features/export/presentation/bloc/export_state.dart';
-import 'package:flutcanvas/models/board_colors.dart';
-import 'package:flutcanvas/models/board_element.dart';
-import 'package:flutcanvas/models/shape_type.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 
 class MockExportRepository extends Mock implements ExportRepository {}
 

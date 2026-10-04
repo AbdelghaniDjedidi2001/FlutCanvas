@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 
 abstract interface class CanvasCommand {
   String get description;
