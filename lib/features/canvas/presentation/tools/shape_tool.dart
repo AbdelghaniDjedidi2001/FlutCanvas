@@ -73,4 +73,7 @@ class ShapeTool implements CanvasTool {
     _currentDraft = null;
     context.setDraft(null);
   }
+
+  @override
+  void onPointerHover(Offset worldPos, CanvasToolContext context) {}
 }

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/connection_anchor_painter.dart';
 import 'package:flutcanvas/features/canvas/presentation/painters/element_renderer.dart';
 import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/selection_painter.dart';
 import '../controllers/canvas_interaction_controller.dart';
 import '../controllers/canvas_viewport_controller.dart';
 
@@ -28,6 +32,9 @@ class CanvasOverlayLayer extends StatelessWidget {
             draft: interaction.draft,
             marqueeRect: interaction.marqueeRect,
             laserTrail: interaction.laserTrail,
+            snapGuides: interaction.snapGuides,
+            hoveredAnchorElement: interaction.hoveredAnchorElement,
+            activeAnchorPoint: interaction.activeAnchorPoint,
             colors: colors,
           ),
           size: Size.infinite,
@@ -43,6 +50,9 @@ class _OverlayCustomPainter extends CustomPainter {
   final dynamic draft;
   final Rect? marqueeRect;
   final List<LaserPoint> laserTrail;
+  final List<SnapGuide> snapGuides;
+  final BoardElement? hoveredAnchorElement;
+  final Offset? activeAnchorPoint;
   final BoardColors colors;
 
   const _OverlayCustomPainter({
@@ -51,6 +61,9 @@ class _OverlayCustomPainter extends CustomPainter {
     required this.draft,
     required this.marqueeRect,
     required this.laserTrail,
+    required this.snapGuides,
+    required this.hoveredAnchorElement,
+    required this.activeAnchorPoint,
     required this.colors,
   });
 
@@ -67,21 +80,28 @@ class _OverlayCustomPainter extends CustomPainter {
 
     // 2. Marquee selection rectangle
     if (marqueeRect != null) {
-      final fillPaint = Paint()
-        ..color = const Color(0xFF3B5BDB).withValues(alpha: 0.08)
-        ..style = PaintingStyle.fill;
-      final borderPaint = Paint()
-        ..color = const Color(0xFF3B5BDB)
-        ..strokeWidth = 1.0 / zoom
-        ..style = PaintingStyle.stroke;
-
-      canvas.drawRect(marqueeRect!, fillPaint);
-      canvas.drawRect(marqueeRect!, borderPaint);
+      SelectionPainter.drawMarquee(canvas, marqueeRect!, zoom, colors);
     }
 
     // 3. Laser trail
     if (laserTrail.isNotEmpty) {
       LaserPainter.draw(canvas, laserTrail, colors.laser);
+    }
+
+    // 4. Snap guidelines
+    if (snapGuides.isNotEmpty) {
+      SelectionPainter.drawSnapGuides(canvas, snapGuides, zoom, colors);
+    }
+
+    // 5. Magnetic connection anchor highlights
+    if (hoveredAnchorElement != null) {
+      ConnectionAnchorPainter.drawAnchors(
+        canvas,
+        hoveredAnchorElement!,
+        activeAnchorPoint,
+        zoom,
+        colors,
+      );
     }
 
     canvas.restore();

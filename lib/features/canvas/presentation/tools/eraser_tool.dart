@@ -41,4 +41,7 @@ class EraserTool implements CanvasTool {
 
   @override
   void onPointerCancel(CanvasToolContext context) {}
+
+  @override
+  void onPointerHover(Offset worldPos, CanvasToolContext context) {}
 }

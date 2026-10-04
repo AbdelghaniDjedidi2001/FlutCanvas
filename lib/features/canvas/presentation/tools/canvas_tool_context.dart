@@ -22,16 +22,24 @@ abstract interface class CanvasToolContext {
   double get opacity;
   ConnectorStyle get connectorStyle;
 
+  // Options & Modifiers
+  bool get smartGuides;
+  bool get autoShapeRecognition;
+  bool get isShiftDown;
+  String get codeLanguage;
+
   // Transient State Setters
   void setDraft(BoardElement? draft);
   void setMarquee(Rect? marquee);
   void setLaserTrail(List<LaserPoint> trail);
   void setSnapGuides(List<SnapGuide> guides);
+  void setConnectionAnchor({BoardElement? element, Offset? point});
 
   // Committed State Mutations
   void commitElement(BoardElement element);
   void commitElements(List<BoardElement> elements);
   void updateElement(BoardElement element);
+  void updateElements(List<BoardElement> elements);
   void deleteElements(Set<String> ids);
   void selectElements(Set<String> ids);
   void clearSelection();

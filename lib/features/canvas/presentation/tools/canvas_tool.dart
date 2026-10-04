@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'canvas_tool_context.dart';
 
-abstract interface class CanvasTool {
+abstract class CanvasTool {
   Tool get toolType;
   MouseCursor get cursor;
 
@@ -10,4 +10,5 @@ abstract interface class CanvasTool {
   void onPointerMove(Offset worldPos, CanvasToolContext context);
   void onPointerUp(Offset worldPos, CanvasToolContext context);
   void onPointerCancel(CanvasToolContext context);
+  void onPointerHover(Offset worldPos, CanvasToolContext context) {}
 }

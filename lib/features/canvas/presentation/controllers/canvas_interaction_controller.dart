@@ -8,11 +8,15 @@ class CanvasInteractionController extends ChangeNotifier {
   Rect? _marqueeRect;
   List<LaserPoint> _laserTrail = const [];
   List<SnapGuide> _snapGuides = const [];
+  BoardElement? _hoveredAnchorElement;
+  Offset? _activeAnchorPoint;
 
   BoardElement? get draft => _draft;
   Rect? get marqueeRect => _marqueeRect;
   List<LaserPoint> get laserTrail => _laserTrail;
   List<SnapGuide> get snapGuides => _snapGuides;
+  BoardElement? get hoveredAnchorElement => _hoveredAnchorElement;
+  Offset? get activeAnchorPoint => _activeAnchorPoint;
 
   void setDraft(BoardElement? draft) {
     _draft = draft;
@@ -34,11 +38,20 @@ class CanvasInteractionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setConnectionAnchor({BoardElement? element, Offset? point}) {
+    if (_hoveredAnchorElement == element && _activeAnchorPoint == point) return;
+    _hoveredAnchorElement = element;
+    _activeAnchorPoint = point;
+    notifyListeners();
+  }
+
   void clear() {
     _draft = null;
     _marqueeRect = null;
     _laserTrail = const [];
     _snapGuides = const [];
+    _hoveredAnchorElement = null;
+    _activeAnchorPoint = null;
     notifyListeners();
   }
 }
