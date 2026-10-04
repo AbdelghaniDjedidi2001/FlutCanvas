@@ -6,7 +6,7 @@ import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/data/services/excalidraw_import_service.dart';
 import 'package:flutcanvas/features/export/data/services/export_service.dart';
 import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/syntax_highlighter_service.dart';
+import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
 
 class PasteResult {
   final List<BoardElement> elements;

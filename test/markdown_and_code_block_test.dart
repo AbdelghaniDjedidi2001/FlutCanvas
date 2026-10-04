@@ -5,9 +5,9 @@ import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/clipboard/data/services/clipboard_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/markdown_text_service.dart';
+import 'package:flutcanvas/core/services/text/markdown_text_service.dart';
 import 'package:flutcanvas/features/export/data/services/svg_export_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/syntax_highlighter_service.dart';
+import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

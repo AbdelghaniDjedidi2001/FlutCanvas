@@ -7,9 +7,9 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/image_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/markdown_text_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/syntax_highlighter_service.dart';
+import 'package:flutcanvas/core/services/media/image_service.dart';
+import 'package:flutcanvas/core/services/text/markdown_text_service.dart';
+import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
 import 'rough_sketch_painter.dart';
 import '../renderers/shape_renderer_registry.dart';
 

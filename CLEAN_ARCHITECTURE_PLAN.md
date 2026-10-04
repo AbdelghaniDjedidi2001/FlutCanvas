@@ -24,10 +24,16 @@ FlutCanvas is being architected as an extensible, community-driven open-source w
 ```
 lib/
 ├── core/
+│   ├── constants/                        # BoardColors, styles, palettes
 │   ├── di/                               # GetIt + Injectable registration
 │   ├── error/                            # Domain Failures & Result<T> pattern
 │   ├── extensions/                       # Rect, Offset, Matrix4, Color extensions
-│   ├── theme/                            # BoardColors, typography, theme mode
+│   ├── services/                         # Cross-cutting platform & infrastructure services
+│   │   ├── clipboard/                    # ClipboardPasteService (web/io/stub)
+│   │   ├── downloader/                   # FileDownloader (web/io/stub)
+│   │   ├── media/                        # ImageService (picker & compressor)
+│   │   └── text/                         # MarkdownText, SyntaxHighlighter, TextMeasurement
+│   ├── theme/                            # Typography, theme mode
 │   └── utils/                            # Geometry, Math, Bezier, Matrix utilities
 │
 └── features/

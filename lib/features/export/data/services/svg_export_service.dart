@@ -7,7 +7,7 @@ import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/syntax_highlighter_service.dart';
+import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
 
 class SvgExportService {
   static String exportToSvg({

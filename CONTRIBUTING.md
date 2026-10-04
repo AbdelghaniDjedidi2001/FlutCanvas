@@ -10,10 +10,12 @@ FlutCanvas follows **Feature-First Clean Architecture**:
 
 ```
 lib/
-├── core/                           # Cross-cutting concerns
+├── core/                           # Cross-cutting concerns & infrastructure
+│   ├── constants/                  # BoardColors and canvas styling
 │   ├── di/                         # Dependency injection (GetIt + Injectable)
 │   ├── error/                      # Failures & Result<T> pattern
-│   ├── theme/                      # BoardColors and canvas styling
+│   ├── extensions/                 # Geometry extensions (Rect, Offset, Matrix4)
+│   ├── services/                   # Infrastructure services (clipboard, downloader, media, text)
 │   └── utils/                      # Pure mathematical & geometric algorithms
 │
 └── features/

@@ -20,9 +20,9 @@ import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.da
 import 'package:flutcanvas/features/comments/presentation/bloc/comments_state.dart';
 import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
 import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
-import 'package:flutcanvas/features/clipboard/data/services/clipboard_paste_service.dart';
+import 'package:flutcanvas/core/services/clipboard/clipboard_paste_service.dart';
 import 'package:flutcanvas/features/clipboard/data/services/clipboard_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/services/image_service.dart';
+import 'package:flutcanvas/core/services/media/image_service.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/inline_text_editor.dart';
 import 'package:flutcanvas/features/presentation_mode/presentation/widgets/presentation_overlay.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/board_tabs_bar.dart';

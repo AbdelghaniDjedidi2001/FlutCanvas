@@ -9,7 +9,7 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/data/services/excalidraw_import_service.dart';
 import 'package:flutcanvas/features/export/data/services/export_service.dart';
-import 'package:flutcanvas/features/export/data/services/file_downloader.dart';
+import 'package:flutcanvas/core/services/downloader/file_downloader.dart';
 import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
 
 enum ExportFormatTab { png, svg, pdf, json }
