@@ -1,6 +1,6 @@
 import 'package:injectable/injectable.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/utils/result.dart';
+import 'package:flutcanvas/core/error/failures.dart';
+import 'package:flutcanvas/core/utils/result.dart';
 import '../repositories/board_repository.dart';
 
 @injectable

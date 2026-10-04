@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
-import '../../services/mermaid_parser_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
 
 class MermaidDialog extends StatefulWidget {
   const MermaidDialog({

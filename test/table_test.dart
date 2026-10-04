@@ -7,9 +7,9 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
-import 'package:flutcanvas/services/svg_export_service.dart';
-import 'package:flutcanvas/ui/inline_text_editor.dart';
-import 'package:flutcanvas/ui/toolbar/properties_panel.dart';
+import 'package:flutcanvas/features/export/data/services/svg_export_service.dart';
+import 'package:flutcanvas/features/canvas/presentation/widgets/inline_text_editor.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties_panel.dart';
 
 void main() {
   group('Table Data Model & Geometry Tests', () {

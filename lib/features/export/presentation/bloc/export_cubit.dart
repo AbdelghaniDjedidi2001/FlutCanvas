@@ -5,7 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
-import '../../../../services/pdf_export_service.dart';
+import 'package:flutcanvas/features/export/data/services/pdf_export_service.dart';
 import '../../domain/repositories/export_repository.dart';
 import 'export_state.dart';
 

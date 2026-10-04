@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../features/canvas/presentation/bloc/canvas_bloc.dart';
-import '../../features/canvas/presentation/bloc/canvas_event.dart';
-import '../../features/canvas/presentation/bloc/canvas_state.dart';
-import '../../features/comments/presentation/bloc/comments_cubit.dart';
-import '../../features/comments/presentation/bloc/comments_state.dart';
-import '../../features/toolbar/presentation/bloc/tool_cubit.dart';
-import '../../features/toolbar/presentation/bloc/tool_state.dart';
-import '../../core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_state.dart';
+import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.dart';
+import 'package:flutcanvas/features/comments/presentation/bloc/comments_state.dart';
+import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
+import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_state.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 

@@ -6,9 +6,9 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
-import 'package:flutcanvas/services/export_service.dart';
-import 'package:flutcanvas/services/pdf_export_service.dart';
-import 'package:flutcanvas/ui/widgets/export_dialog.dart';
+import 'package:flutcanvas/features/export/data/services/export_service.dart';
+import 'package:flutcanvas/features/export/data/services/pdf_export_service.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/export_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

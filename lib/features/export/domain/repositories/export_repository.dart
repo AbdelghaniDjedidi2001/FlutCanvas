@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
-import '../../../../services/pdf_export_service.dart';
+import 'package:flutcanvas/features/export/data/services/pdf_export_service.dart';
 
 abstract class ExportRepository {
   Future<Uint8List?> renderToPng({

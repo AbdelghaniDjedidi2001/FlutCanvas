@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../features/canvas/presentation/bloc/boards_cubit.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/boards_cubit.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 
 class BoardTabsBar extends StatelessWidget {

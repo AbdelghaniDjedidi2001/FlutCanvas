@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../features/canvas/presentation/bloc/canvas_bloc.dart';
-import '../../features/canvas/presentation/bloc/canvas_event.dart';
-import '../../features/comments/presentation/bloc/comments_cubit.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
+import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.dart';
 import 'package:flutcanvas/features/comments/domain/models/board_comment.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';

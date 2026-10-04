@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
-import 'excalidraw_import_service.dart';
-import 'export_service.dart';
-import 'mermaid_parser_service.dart';
-import 'syntax_highlighter_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/excalidraw_import_service.dart';
+import 'package:flutcanvas/features/export/data/services/export_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
+import 'package:flutcanvas/features/canvas/presentation/services/syntax_highlighter_service.dart';
 
 class PasteResult {
   final List<BoardElement> elements;

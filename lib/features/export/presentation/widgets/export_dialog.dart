@@ -3,14 +3,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/constants/board_colors.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
-import '../../services/excalidraw_import_service.dart';
-import '../../services/export_service.dart';
-import '../../services/file_downloader.dart';
-import '../../services/mermaid_parser_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/excalidraw_import_service.dart';
+import 'package:flutcanvas/features/export/data/services/export_service.dart';
+import 'package:flutcanvas/features/export/data/services/file_downloader.dart';
+import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
 
 enum ExportFormatTab { png, svg, pdf, json }
 

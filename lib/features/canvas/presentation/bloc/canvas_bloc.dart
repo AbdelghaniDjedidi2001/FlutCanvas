@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../services/history_manager.dart';
+import 'package:flutcanvas/features/canvas/data/services/history_manager.dart';
 import '../../data/services/alignment_service.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';

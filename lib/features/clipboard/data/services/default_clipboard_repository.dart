@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
-import '../../../../services/clipboard_service.dart';
+import 'package:flutcanvas/features/clipboard/data/services/clipboard_service.dart';
 import '../../domain/repositories/clipboard_repository.dart';
 
 @LazySingleton(as: ClipboardRepository)

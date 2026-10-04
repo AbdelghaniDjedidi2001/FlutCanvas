@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../features/canvas/presentation/controllers/canvas_viewport_controller.dart';
+import 'package:flutcanvas/features/canvas/presentation/controllers/canvas_viewport_controller.dart';
 
 class ZoomControls extends StatelessWidget {
   const ZoomControls({

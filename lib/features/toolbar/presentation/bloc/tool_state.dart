@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../../core/constants/board_colors.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';

@@ -10,8 +10,8 @@ import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
-import 'package:flutcanvas/services/export_service.dart';
-import 'package:flutcanvas/services/history_manager.dart';
+import 'package:flutcanvas/features/export/data/services/export_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/history_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

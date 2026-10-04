@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../../services/pdf_export_service.dart';
+import 'package:flutcanvas/features/export/data/services/pdf_export_service.dart';
 
 part 'export_state.freezed.dart';
 

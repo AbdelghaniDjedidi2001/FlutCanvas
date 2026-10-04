@@ -4,7 +4,7 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connection_binding.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
-import 'package:flutcanvas/services/connector_routing_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
 
 void main() {
   group('ConnectorRoutingService Unit Tests', () {

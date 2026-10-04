@@ -9,7 +9,7 @@ import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'package:flutcanvas/features/canvas/presentation/tools/canvas_tool_context.dart';
 import 'package:flutcanvas/features/canvas/presentation/tools/shape_tool.dart';
 import 'package:flutcanvas/features/canvas/presentation/tools/tool_registry.dart';
-import 'package:flutcanvas/painters/laser_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
 
 class MockToolContext implements CanvasToolContext {
   @override

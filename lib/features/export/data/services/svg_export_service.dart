@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-import '../core/constants/board_colors.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
-import 'connector_routing_service.dart';
-import 'syntax_highlighter_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
+import 'package:flutcanvas/features/canvas/presentation/services/syntax_highlighter_service.dart';
 
 class SvgExportService {
   static String exportToSvg({

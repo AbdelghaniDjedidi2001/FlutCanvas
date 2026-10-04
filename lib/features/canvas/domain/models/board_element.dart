@@ -7,7 +7,7 @@ import 'connection_binding.dart';
 import 'connector_style.dart';
 import 'shape_type.dart';
 import 'stroke_fill_style.dart';
-import '../../../../services/connector_routing_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
 
 part 'board_element.freezed.dart';
 part 'board_element.g.dart';

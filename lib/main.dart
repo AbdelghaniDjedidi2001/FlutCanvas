@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'core/di/injection.dart';
-import 'features/canvas/presentation/bloc/boards_cubit.dart';
-import 'features/canvas/presentation/bloc/canvas_bloc.dart';
-import 'features/comments/presentation/bloc/comments_cubit.dart';
-import 'features/export/presentation/bloc/export_cubit.dart';
-import 'features/layers/presentation/bloc/layers_cubit.dart';
-import 'features/presentation_mode/presentation/bloc/presentation_cubit.dart';
-import 'features/toolbar/presentation/bloc/tool_cubit.dart';
-import 'ui/whiteboard_page.dart';
+import 'package:flutcanvas/core/di/injection.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/boards_cubit.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
+import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.dart';
+import 'package:flutcanvas/features/export/presentation/bloc/export_cubit.dart';
+import 'package:flutcanvas/features/layers/presentation/bloc/layers_cubit.dart';
+import 'package:flutcanvas/features/presentation_mode/presentation/bloc/presentation_cubit.dart';
+import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
+import 'package:flutcanvas/features/canvas/presentation/pages/whiteboard_page.dart';
 
 class AppScrollBehavior extends MaterialScrollBehavior {
   const AppScrollBehavior();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/board_colors.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/presentation/painters/element_renderer.dart';
 import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
 import '../controllers/canvas_interaction_controller.dart';
