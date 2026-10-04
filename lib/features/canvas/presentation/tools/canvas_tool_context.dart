@@ -3,7 +3,7 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
-import '../../../../painters/laser_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
 
 abstract interface class CanvasToolContext {
   List<BoardElement> get elements;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
-import '../../../../painters/laser_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
 
 class CanvasInteractionController extends ChangeNotifier {
   BoardElement? _draft;

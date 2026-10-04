@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/board_colors.dart';
-import '../../../../painters/grid_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/grid_painter.dart';
 import '../controllers/canvas_viewport_controller.dart';
 
 class CanvasBackgroundLayer extends StatelessWidget {

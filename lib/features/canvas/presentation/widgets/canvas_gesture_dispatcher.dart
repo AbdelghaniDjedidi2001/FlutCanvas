@@ -7,7 +7,7 @@ import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
-import '../../../../painters/laser_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
 import '../bloc/canvas_bloc.dart';
 import '../bloc/canvas_event.dart';
 import '../controllers/canvas_interaction_controller.dart';

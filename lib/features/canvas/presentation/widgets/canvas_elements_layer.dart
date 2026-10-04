@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/board_colors.dart';
-import '../../../../painters/element_renderer.dart';
-import '../../../../painters/selection_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/element_renderer.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/selection_painter.dart';
 import '../bloc/canvas_bloc.dart';
 import '../bloc/canvas_state.dart';
 import '../controllers/canvas_viewport_controller.dart';

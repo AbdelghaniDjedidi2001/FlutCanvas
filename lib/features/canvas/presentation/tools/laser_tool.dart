@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
-import '../../../../painters/laser_painter.dart';
+import 'package:flutcanvas/features/canvas/presentation/painters/laser_painter.dart';
 import 'canvas_tool.dart';
 import 'canvas_tool_context.dart';
 
