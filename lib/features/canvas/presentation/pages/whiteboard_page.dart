@@ -71,8 +71,18 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
 
   void _openTextEditor(Offset world, Offset screen, {required bool isSticky}) {
     final toolState = context.read<ToolCubit>().state;
+    final colors = BoardColors.of(context);
     final newId =
         'el_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+    final initialColor = isSticky
+        ? const Color(0xFF212529)
+        : (colors.isDark ? Colors.white : kInk);
+    final strokeColor = (toolState.strokeColor == kInk ||
+            toolState.strokeColor == Colors.black ||
+            toolState.strokeColor == Colors.white)
+        ? initialColor
+        : toolState.strokeColor;
+
     final newElement = BoardElement(
       id: newId,
       type: isSticky ? ShapeType.stickyNote : ShapeType.text,
@@ -80,7 +90,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
       end: isSticky
           ? world + const Offset(180, 160)
           : world + const Offset(200, 40),
-      color: isSticky ? const Color(0xFF212529) : toolState.strokeColor,
+      color: strokeColor,
       fillColor:
           isSticky ? BoardColors.stickyNoteColors[0] : toolState.fillColor,
       fontSize: isSticky ? 18.0 : toolState.fontSize,
@@ -788,6 +798,16 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                               _viewport.zoom
                           : null;
 
+                      final isMonoOrDefault = editingEl.color == kInk ||
+                          editingEl.color == Colors.black ||
+                          editingEl.color == Colors.white ||
+                          editingEl.color.toARGB32() == 0xFF1F2430 ||
+                          editingEl.color.toARGB32() == 0xFF000000 ||
+                          editingEl.color.toARGB32() == 0xFFFFFFFF;
+                      final textNoteColor = isMonoOrDefault
+                          ? (colors.isDark ? Colors.white : const Color(0xFF212529))
+                          : editingEl.color;
+
                       return InlineTextEditor(
                         initialText: initialText,
                         fontSize: isConnector
@@ -799,7 +819,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                             ? editingEl.color
                             : (isTableCell
                                 ? (colors.isDark
-                                    ? const Color(0xFFF1F3F5)
+                                    ? Colors.white
                                     : const Color(0xFF212529))
                                 : (_isEditingSticky
                                     ? const Color(0xFF212529)
@@ -807,9 +827,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                                         ? (colors.isDark
                                             ? const Color(0xFFCDD6F4)
                                             : const Color(0xFF24292F))
-                                        : (editingEl.color != Colors.transparent
-                                            ? editingEl.color
-                                            : toolState.strokeColor)))),
+                                        : textNoteColor))),
                         screenPosition: _editingScreenPos!,
                         isStickyNote: _isEditingSticky,
                         isCodeBlock: _isEditingCode,
@@ -835,7 +853,12 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                                 .read<CanvasBloc>()
                                 .add(CanvasEvent.updateElement(updated));
                           } else {
-                            final updated = editingEl.copyWith(text: newText);
+                            final updated = editingEl.copyWith(
+                              text: newText,
+                              color: isMonoOrDefault
+                                  ? (colors.isDark ? Colors.white : kInk)
+                                  : editingEl.color,
+                            );
                             context
                                 .read<CanvasBloc>()
                                 .add(CanvasEvent.updateElement(updated));

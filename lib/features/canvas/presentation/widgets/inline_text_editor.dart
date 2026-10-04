@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 
 class InlineTextEditor extends StatefulWidget {
   const InlineTextEditor({
@@ -183,33 +184,45 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
 
     final Color textColor;
     if (widget.isTableCell) {
-      textColor = isDark ? const Color(0xFFF1F3F5) : const Color(0xFF212529);
+      textColor = isDark ? Colors.white : const Color(0xFF212529);
     } else if (widget.isStickyNote) {
       textColor = const Color(0xFF212529);
     } else if (widget.isCodeBlock) {
       textColor = isDark ? const Color(0xFFCDD6F4) : const Color(0xFF24292F);
     } else {
-      textColor = widget.color == Colors.transparent
-          ? (isDark ? const Color(0xFFF1F3F5) : const Color(0xFF212529))
-          : widget.color;
+      // Normal text or connector label:
+      final raw = widget.color;
+      final isMonoOrInk = raw == Colors.transparent ||
+          raw == kInk ||
+          raw == Colors.black ||
+          raw == Colors.white ||
+          raw.toARGB32() == 0xFF1F2430 ||
+          raw.toARGB32() == 0xFF000000 ||
+          raw.toARGB32() == 0xFFFFFFFF ||
+          (isDark && raw.computeLuminance() < 0.25) ||
+          (!isDark && raw.computeLuminance() > 0.75);
+
+      if (isMonoOrInk) {
+        textColor = isDark ? Colors.white : const Color(0xFF212529);
+      } else {
+        textColor = raw;
+      }
     }
 
     final Color editorBg;
     if (widget.isCodeBlock) {
       editorBg = isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF8F9FA);
     } else if (widget.isStickyNote) {
-      editorBg = isDark ? const Color(0xFF332D1A) : const Color(0xFFFFF9C4);
+      editorBg = const Color(0xFFFFF9C4);
     } else if (widget.isTableCell) {
       editorBg = isDark ? const Color(0xFF1E222B) : Colors.white;
     } else {
       // Normal text or connector label:
-      // Guarantee high contrast! If text is white or very light (luminance > 0.65),
-      // the editor background MUST be dark so the text is fully visible.
-      // If text is dark (luminance <= 0.65), the editor background is light.
-      if (textColor.computeLuminance() > 0.65) {
+      // White text on dark box in dark mode, Black text on white box in light mode
+      if (textColor.computeLuminance() > 0.5) {
         editorBg = const Color(0xFF1E222B);
       } else {
-        editorBg = isDark ? const Color(0xFF2C3038) : Colors.white;
+        editorBg = Colors.white;
       }
     }
 

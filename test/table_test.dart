@@ -356,7 +356,7 @@ void main() {
     testWidgets('InlineTextEditor provides high contrast when typing with white color', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData.light(),
+          theme: ThemeData.dark(),
           home: Scaffold(
             body: Stack(
               children: [
@@ -377,7 +377,7 @@ void main() {
       );
 
       final textField = tester.widget<TextField>(find.byType(TextField));
-      expect(textField.style?.color, equals(Colors.white));
+      expect(textField.style?.color?.toARGB32(), equals(Colors.white.toARGB32()));
 
       // Find the container background wrapping the TextField
       final container = tester.widget<Container>(
@@ -389,6 +389,62 @@ void main() {
       final decoration = container.decoration as BoxDecoration;
       // Editor background must be dark so white text is clearly visible!
       expect(decoration.color!.computeLuminance(), lessThan(0.5));
+    });
+
+    testWidgets('InlineTextEditor renders text white in dark mode by default', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(
+            body: Stack(
+              children: [
+                InlineTextEditor(
+                  initialText: 'Dark Mode Text',
+                  fontSize: 18.0,
+                  color: kInk, // default ink
+                  screenPosition: const Offset(100, 100),
+                  isStickyNote: false,
+                  isTableCell: false,
+                  onSubmitted: (_) {},
+                  onCanceled: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final darkTextField = tester.widget<TextField>(find.byType(TextField));
+      // In dark mode, text must be white!
+      expect(darkTextField.style?.color?.toARGB32(), equals(Colors.white.toARGB32()));
+    });
+
+    testWidgets('InlineTextEditor renders text black in light mode by default', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.light(),
+          home: Scaffold(
+            body: Stack(
+              children: [
+                InlineTextEditor(
+                  initialText: 'Light Mode Text',
+                  fontSize: 18.0,
+                  color: kInk, // default ink
+                  screenPosition: const Offset(100, 100),
+                  isStickyNote: false,
+                  isTableCell: false,
+                  onSubmitted: (_) {},
+                  onCanceled: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final lightTextField = tester.widget<TextField>(find.byType(TextField));
+      // In light mode, text must be black!
+      expect(lightTextField.style?.color?.toARGB32(), equals(const Color(0xFF212529).toARGB32()));
     });
   });
 }
