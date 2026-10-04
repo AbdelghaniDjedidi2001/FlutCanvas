@@ -93,5 +93,86 @@ void main() {
 
       expect(toolCubit.state.currentTool, equals(Tool.triangle));
     });
+
+    testWidgets('typing letters while isEditingText is true does NOT trigger tool shortcuts', (tester) async {
+      final canvasBloc = CanvasBloc();
+      final toolCubit = ToolCubit();
+      toolCubit.setTool(Tool.select);
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: canvasBloc),
+            BlocProvider.value(value: toolCubit),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: CanvasShortcutsHandler(
+                isEditingText: true,
+                child: SizedBox(key: Key('canvas_body')),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(toolCubit.state.currentTool, equals(Tool.select));
+
+      // Press 'R'
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump();
+      expect(toolCubit.state.currentTool, equals(Tool.select));
+
+      // Press 'P'
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+      await tester.pump();
+      expect(toolCubit.state.currentTool, equals(Tool.select));
+    });
+
+    testWidgets('typing letters while a child TextField has focus does NOT trigger tool shortcuts', (tester) async {
+      final canvasBloc = CanvasBloc();
+      final toolCubit = ToolCubit();
+      toolCubit.setTool(Tool.select);
+
+      final controller = TextEditingController();
+      final textFieldFocusNode = FocusNode();
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: canvasBloc),
+            BlocProvider.value(value: toolCubit),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: CanvasShortcutsHandler(
+                child: TextField(
+                  key: const Key('inner_text_field'),
+                  controller: controller,
+                  focusNode: textFieldFocusNode,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Focus the text field
+      textFieldFocusNode.requestFocus();
+      await tester.pump();
+      expect(textFieldFocusNode.hasPrimaryFocus, isTrue);
+
+      // Press 'R'
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyR);
+      await tester.pump();
+      // Tool must remain select, NOT rectangle!
+      expect(toolCubit.state.currentTool, equals(Tool.select));
+
+      // Press 'P'
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+      await tester.pump();
+      // Tool must remain select, NOT pen!
+      expect(toolCubit.state.currentTool, equals(Tool.select));
+    });
   });
 }

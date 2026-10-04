@@ -477,6 +477,8 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
       child: Scaffold(
         backgroundColor: colors.background,
         body: CanvasShortcutsHandler(
+          focusNode: _focus,
+          isEditingText: _editingElementId != null,
           isPresentationMode: _isPresentationMode,
           onCopy: _copySelected,
           onPaste: _paste,
@@ -491,6 +493,28 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
           onToggleTheme: () =>
               widget.onToggleTheme(Theme.of(context).brightness),
           onEscape: () {
+            if (_editingElementId != null) {
+              setState(() {
+                final editingEl = canvasState.elements
+                    .where((e) => e.id == _editingElementId)
+                    .firstOrNull;
+                if (editingEl != null &&
+                    editingEl.type != ShapeType.line &&
+                    editingEl.type != ShapeType.arrow &&
+                    _editingTableCell == null &&
+                    editingEl.text.trim().isEmpty) {
+                  context.read<CanvasBloc>().add(
+                        CanvasEvent.deleteElements({editingEl.id}),
+                      );
+                }
+                _pendingNewElement = null;
+                _editingElementId = null;
+                _editingTableCell = null;
+                _editingScreenPos = null;
+              });
+              _focus.requestFocus();
+              return;
+            }
             if (_isPresentationMode) {
               setState(() => _isPresentationMode = false);
             } else {
@@ -515,6 +539,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       viewport: _viewport,
                       interaction: _interaction,
                       toolRegistry: _toolRegistry,
+                      focusNode: _focus,
                       onOpenTextEditor: (world, screen, {required isSticky}) =>
                           _openTextEditor(world, screen, isSticky: isSticky),
                       onInsertImage: _handleInsertImage,
@@ -810,6 +835,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                             _editingTableCell = null;
                             _editingScreenPos = null;
                           });
+                          _focus.requestFocus();
                         },
                         onCanceled: () {
                           if (!isConnector &&
@@ -825,6 +851,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                             _editingTableCell = null;
                             _editingScreenPos = null;
                           });
+                          _focus.requestFocus();
                         },
                       );
                     }),

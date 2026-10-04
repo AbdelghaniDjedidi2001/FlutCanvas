@@ -23,6 +23,7 @@ class CanvasGestureDispatcher extends StatefulWidget {
   final CanvasViewportController viewport;
   final CanvasInteractionController interaction;
   final ToolRegistry toolRegistry;
+  final FocusNode? focusNode;
   final void Function(Offset world, Offset screen, {required bool isSticky})?
       onOpenTextEditor;
   final VoidCallback? onInsertImage;
@@ -33,6 +34,7 @@ class CanvasGestureDispatcher extends StatefulWidget {
     required this.viewport,
     required this.interaction,
     required this.toolRegistry,
+    this.focusNode,
     this.onOpenTextEditor,
     this.onInsertImage,
     required this.child,
@@ -204,6 +206,7 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
   }
 
   void _onPointerDown(PointerDownEvent event) {
+    widget.focusNode?.requestFocus();
     _lastScreenPos = event.position;
 
     // Middle mouse button, Hand tool, or Spacebar held -> Pan canvas

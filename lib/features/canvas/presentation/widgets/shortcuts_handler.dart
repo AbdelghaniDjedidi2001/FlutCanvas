@@ -9,6 +9,8 @@ import '../bloc/canvas_event.dart';
 
 class CanvasShortcutsHandler extends StatelessWidget {
   final Widget child;
+  final FocusNode? focusNode;
+  final bool isEditingText;
   final VoidCallback? onCopy;
   final VoidCallback? onPaste;
   final VoidCallback? onDuplicate;
@@ -26,6 +28,8 @@ class CanvasShortcutsHandler extends StatelessWidget {
   const CanvasShortcutsHandler({
     super.key,
     required this.child,
+    this.focusNode,
+    this.isEditingText = false,
     this.onCopy,
     this.onPaste,
     this.onDuplicate,
@@ -44,9 +48,31 @@ class CanvasShortcutsHandler extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Focus(
+      focusNode: focusNode,
       autofocus: true,
       onKeyEvent: (node, event) {
         if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+        // 1. If currently editing text (inline text editor, sticky note, code block, table cell, etc.)
+        // let the text input handle all typing and navigation instead of triggering canvas tool shortcuts.
+        if (isEditingText) {
+          if (event.logicalKey == LogicalKeyboardKey.escape) {
+            onEscape?.call();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        }
+
+        // 2. If an inner widget (e.g. TextField in LayersSidebar, search bar, comment card popover, or dialog)
+        // has focus, ignore canvas shortcuts so all characters type normally into the input.
+        if (!node.hasPrimaryFocus) {
+          return KeyEventResult.ignored;
+        }
+
+        final primaryFocus = FocusManager.instance.primaryFocus;
+        if (primaryFocus != null && primaryFocus != node) {
+          return KeyEventResult.ignored;
+        }
 
         final isControlOrCmd = HardwareKeyboard.instance.isMetaPressed ||
             HardwareKeyboard.instance.isControlPressed;
