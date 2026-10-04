@@ -797,7 +797,19 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                                 : toolState.fontSize),
                         color: isConnector
                             ? editingEl.color
-                            : toolState.strokeColor,
+                            : (isTableCell
+                                ? (colors.isDark
+                                    ? const Color(0xFFF1F3F5)
+                                    : const Color(0xFF212529))
+                                : (_isEditingSticky
+                                    ? const Color(0xFF212529)
+                                    : (_isEditingCode
+                                        ? (colors.isDark
+                                            ? const Color(0xFFCDD6F4)
+                                            : const Color(0xFF24292F))
+                                        : (editingEl.color != Colors.transparent
+                                            ? editingEl.color
+                                            : toolState.strokeColor)))),
                         screenPosition: _editingScreenPos!,
                         isStickyNote: _isEditingSticky,
                         isCodeBlock: _isEditingCode,

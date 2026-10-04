@@ -181,6 +181,42 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final Color textColor;
+    if (widget.isTableCell) {
+      textColor = isDark ? const Color(0xFFF1F3F5) : const Color(0xFF212529);
+    } else if (widget.isStickyNote) {
+      textColor = const Color(0xFF212529);
+    } else if (widget.isCodeBlock) {
+      textColor = isDark ? const Color(0xFFCDD6F4) : const Color(0xFF24292F);
+    } else {
+      textColor = widget.color == Colors.transparent
+          ? (isDark ? const Color(0xFFF1F3F5) : const Color(0xFF212529))
+          : widget.color;
+    }
+
+    final Color editorBg;
+    if (widget.isCodeBlock) {
+      editorBg = isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF8F9FA);
+    } else if (widget.isStickyNote) {
+      editorBg = isDark ? const Color(0xFF332D1A) : const Color(0xFFFFF9C4);
+    } else if (widget.isTableCell) {
+      editorBg = isDark ? const Color(0xFF1E222B) : Colors.white;
+    } else {
+      // Normal text or connector label:
+      // Guarantee high contrast! If text is white or very light (luminance > 0.65),
+      // the editor background MUST be dark so the text is fully visible.
+      // If text is dark (luminance <= 0.65), the editor background is light.
+      if (textColor.computeLuminance() > 0.65) {
+        editorBg = const Color(0xFF1E222B);
+      } else {
+        editorBg = isDark ? const Color(0xFF2C3038) : Colors.white;
+      }
+    }
+
+    final isEditorBgDark = editorBg.computeLuminance() < 0.5;
+    final cursorColor = isEditorBgDark ? Colors.white : scheme.primary;
+    final hintColor = textColor.withValues(alpha: 0.45);
+
     final containerWidth = widget.customWidth ??
         (widget.isCodeBlock
             ? 380.0
@@ -189,25 +225,21 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
     final textStyle = widget.isTableCell
         ? GoogleFonts.inter(
             fontSize: widget.fontSize,
-            color: widget.color,
+            color: textColor,
             fontWeight: FontWeight.w600,
           )
         : (widget.isCodeBlock
             ? GoogleFonts.jetBrainsMono(
                 fontSize: widget.fontSize * 0.8,
-                color: isDark ? const Color(0xFFCDD6F4) : const Color(0xFF24292F),
+                color: textColor,
                 fontWeight: FontWeight.w500,
                 height: 1.4,
               )
             : GoogleFonts.caveat(
                 fontSize: widget.fontSize,
-                color: widget.color,
+                color: textColor,
                 fontWeight: FontWeight.w600,
               ));
-
-    final editorBg = widget.isCodeBlock
-        ? (isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF8F9FA))
-        : (isDark ? const Color(0xFF212529) : Colors.white);
 
     return Positioned(
       left: widget.screenPosition.dx,
@@ -233,7 +265,9 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                   ),
                 ],
                 border: Border.all(
-                  color: scheme.primary,
+                  color: isEditorBgDark
+                      ? const Color(0xFF5C7CFA)
+                      : scheme.primary,
                   width: 2.0,
                 ),
               ),
@@ -242,6 +276,7 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
+                  cursorColor: cursorColor,
                   maxLines: widget.isCodeBlock
                       ? 16
                       : (widget.isStickyNote ? 8 : (widget.isTableCell ? 2 : null)),
@@ -255,6 +290,7 @@ class _InlineTextEditorState extends State<InlineTextEditor> {
                     hintText: widget.isCodeBlock
                         ? '// Enter code here...'
                         : (widget.isTableCell ? 'Cell value...' : 'Type text here...'),
+                    hintStyle: textStyle.copyWith(color: hintColor),
                   ),
                   onTapOutside: (_) => _finish(),
                 ),

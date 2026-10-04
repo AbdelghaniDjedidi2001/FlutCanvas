@@ -352,5 +352,43 @@ void main() {
 
       expect(submittedText, 'Cell Alpha');
     });
+
+    testWidgets('InlineTextEditor provides high contrast when typing with white color', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.light(),
+          home: Scaffold(
+            body: Stack(
+              children: [
+                InlineTextEditor(
+                  initialText: 'White Text',
+                  fontSize: 18.0,
+                  color: Colors.white,
+                  screenPosition: const Offset(100, 100),
+                  isStickyNote: false,
+                  isTableCell: false,
+                  onSubmitted: (_) {},
+                  onCanceled: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.style?.color, equals(Colors.white));
+
+      // Find the container background wrapping the TextField
+      final container = tester.widget<Container>(
+        find.ancestor(
+          of: find.byType(TextField),
+          matching: find.byType(Container),
+        ).first,
+      );
+      final decoration = container.decoration as BoxDecoration;
+      // Editor background must be dark so white text is clearly visible!
+      expect(decoration.color!.computeLuminance(), lessThan(0.5));
+    });
   });
 }
