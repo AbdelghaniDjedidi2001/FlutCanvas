@@ -20,6 +20,7 @@ import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.da
 import 'package:flutcanvas/features/comments/presentation/bloc/comments_state.dart';
 import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
 import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
+import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
 import 'package:flutcanvas/core/services/clipboard/clipboard_paste_service.dart';
 import 'package:flutcanvas/features/clipboard/data/services/clipboard_service.dart';
 import 'package:flutcanvas/core/services/media/image_service.dart';
@@ -35,6 +36,7 @@ import 'package:flutcanvas/features/export/presentation/widgets/export_dialog.da
 import 'package:flutcanvas/features/layers/presentation/widgets/layers_sidebar.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/mermaid_dialog.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/minimap_widget.dart';
+import 'package:flutcanvas/features/canvas/presentation/widgets/shortcuts_handler.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/shortcuts_help_dialog.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/template_picker_dialog.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/theme_toggle.dart';
@@ -60,6 +62,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
 
   // Inline Text & Table Editing
   int _idCounter = 0;
+  BoardElement? _pendingNewElement;
   String? _editingElementId;
   (int, int)? _editingTableCell;
   Offset? _editingScreenPos;
@@ -89,6 +92,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
     context.read<CanvasBloc>().add(CanvasEvent.addElement(newElement));
 
     setState(() {
+      _pendingNewElement = newElement;
       _editingElementId = newId;
       _editingTableCell = null;
       _editingScreenPos = screen;
@@ -124,6 +128,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
         position: center - const Offset(160, 110),
       );
       context.read<CanvasBloc>().add(CanvasEvent.addElement(imgEl));
+      context.read<CanvasBloc>().add(CanvasEvent.selectElements({imgEl.id}));
       _showToast('Pasted image from clipboard');
     });
   }
@@ -179,6 +184,20 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
         return;
       }
 
+      if (hit.type == ShapeType.line ||
+          hit.type == ShapeType.arrow ||
+          hit.type == ShapeType.doubleArrow) {
+        final route = ConnectorRoutingService.computeRoute(hit);
+        setState(() {
+          _editingElementId = hit!.id;
+          _editingTableCell = null;
+          _editingScreenPos = _viewport.toScreen(route.midpoint);
+          _isEditingSticky = false;
+          _isEditingCode = false;
+        });
+        return;
+      }
+
       if (hit.type == ShapeType.text ||
           hit.type == ShapeType.stickyNote ||
           hit.type == ShapeType.codeBlock) {
@@ -221,6 +240,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
     if (nextRow >= rows) {
       context.read<CanvasBloc>().add(CanvasEvent.updateElement(updatedEl));
       setState(() {
+        _pendingNewElement = null;
         _editingElementId = null;
         _editingTableCell = null;
         _editingScreenPos = null;
@@ -234,6 +254,67 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
       _editingTableCell = (nextRow, nextCol);
       _editingScreenPos = _viewport.toScreen(nextCellRect.topLeft);
     });
+  }
+
+  // ── Clipboard & Duplicate ───────────────────────────────────
+  void _duplicateSelected() {
+    final elements = context.read<CanvasBloc>().state.elements;
+    final selectedIds = context.read<CanvasBloc>().state.selectedIds;
+    final selected = elements.where((e) => selectedIds.contains(e.id)).toList();
+    if (selected.isEmpty) return;
+
+    final duplicated = selected.map((el) {
+      final newId = 'el_${DateTime.now().millisecondsSinceEpoch}_${_idCounter++}';
+      return el.translated(const Offset(24, 24)).copyWith(id: newId);
+    }).toList();
+
+    context.read<CanvasBloc>().add(CanvasEvent.addElements(duplicated));
+    context.read<CanvasBloc>().add(
+          CanvasEvent.selectElements(duplicated.map((e) => e.id).toSet()),
+        );
+    _showToast('Duplicated ${duplicated.length} element(s)');
+  }
+
+  void _copySelected() {
+    final elements = context.read<CanvasBloc>().state.elements;
+    final selectedIds = context.read<CanvasBloc>().state.selectedIds;
+    final selected = elements.where((e) => selectedIds.contains(e.id)).toList();
+    if (selected.isEmpty) return;
+    ClipboardService.copy(selected);
+    _showToast('Copied ${selected.length} element(s)');
+  }
+
+  Future<void> _paste() async {
+    final center = _viewport.toWorld(
+      Offset(_viewSize.width / 2, _viewSize.height / 2),
+    );
+    final pasteResult = await ClipboardService.pasteFromSystem(
+      targetCanvasPosition: center,
+      defaultColor: context.read<ToolCubit>().state.strokeColor,
+    );
+    if (!mounted) return;
+
+    if (pasteResult != null && pasteResult.elements.isNotEmpty) {
+      context.read<CanvasBloc>().add(CanvasEvent.addElements(pasteResult.elements));
+      context.read<CanvasBloc>().add(
+            CanvasEvent.selectElements(
+                pasteResult.elements.map((e) => e.id).toSet()),
+          );
+      _showToast('Pasted ${pasteResult.sourceDescription}');
+      return;
+    }
+
+    if (ClipboardService.hasInternalData) {
+      final duplicated = ClipboardService.duplicate();
+      if (duplicated.isNotEmpty) {
+        context.read<CanvasBloc>().add(CanvasEvent.addElements(duplicated));
+        context.read<CanvasBloc>().add(
+              CanvasEvent.selectElements(
+                  duplicated.map((e) => e.id).toSet()),
+            );
+        _showToast('Pasted ${duplicated.length} element(s)');
+      }
+    }
   }
 
   // ── Presentation Mode ──────────────────────────────────────
@@ -345,8 +426,15 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
     final canvasState = context.watch<CanvasBloc>().state;
     final commentsState = context.watch<CommentsCubit>().state;
 
-    final frames =
-        canvasState.elements.where((e) => e.type == ShapeType.frame).toList();
+    final frames = canvasState.elements
+        .where((e) => e.type == ShapeType.frame)
+        .toList()
+      ..sort((a, b) {
+        if (a.frameIndex != null && b.frameIndex != null) {
+          return a.frameIndex!.compareTo(b.frameIndex!);
+        }
+        return a.start.dy.compareTo(b.start.dy);
+      });
 
     return MultiBlocListener(
       listeners: [
@@ -388,9 +476,33 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
       ],
       child: Scaffold(
         backgroundColor: colors.background,
-        body: Focus(
-          focusNode: _focus,
-          autofocus: true,
+        body: CanvasShortcutsHandler(
+          isPresentationMode: _isPresentationMode,
+          onCopy: _copySelected,
+          onPaste: _paste,
+          onDuplicate: _duplicateSelected,
+          onDelete: () => context
+              .read<CanvasBloc>()
+              .add(const CanvasEvent.deleteSelected()),
+          onStartPresentation: () => _startPresentation(frames),
+          onOpenTemplates: _showTemplatesDialog,
+          onOpenExport: () => _showExportDialog(canvasState.elements),
+          onOpenHelp: _showShortcutsHelpDialog,
+          onToggleTheme: () =>
+              widget.onToggleTheme(Theme.of(context).brightness),
+          onEscape: () {
+            if (_isPresentationMode) {
+              setState(() => _isPresentationMode = false);
+            } else {
+              context
+                  .read<CanvasBloc>()
+                  .add(const CanvasEvent.clearSelection());
+            }
+          },
+          onNextSlide: () =>
+              _navigateToSlide(_currentSlideIndex + 1, frames),
+          onPreviousSlide: () =>
+              _navigateToSlide(_currentSlideIndex - 1, frames),
           child: LayoutBuilder(
             builder: (context, constraints) {
               _viewSize = constraints.biggest;
@@ -405,6 +517,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       toolRegistry: _toolRegistry,
                       onOpenTextEditor: (world, screen, {required isSticky}) =>
                           _openTextEditor(world, screen, isSticky: isSticky),
+                      onInsertImage: _handleInsertImage,
                       child: GestureDetector(
                         onDoubleTapDown: (details) =>
                             _onDoubleTap(details.localPosition),
@@ -469,6 +582,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                                   onToggleLayers: () => context
                                       .read<ToolCubit>()
                                       .toggleLayersSidebar(),
+                                  onInsertImage: _handleInsertImage,
                                 ),
                               ),
                             ),
@@ -486,6 +600,26 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       left: 12,
                       child: ExcludeFocus(
                         child: PropertiesPanel(
+                          onEditConnectorLabel: () {
+                            final connector = canvasState.selectedElements
+                                .where((e) =>
+                                    e.type == ShapeType.line ||
+                                    e.type == ShapeType.arrow ||
+                                    e.type == ShapeType.doubleArrow)
+                                .firstOrNull;
+                            if (connector != null) {
+                              final route =
+                                  ConnectorRoutingService.computeRoute(connector);
+                              setState(() {
+                                _editingElementId = connector.id;
+                                _editingTableCell = null;
+                                _editingScreenPos =
+                                    _viewport.toScreen(route.midpoint);
+                                _isEditingSticky = false;
+                                _isEditingCode = false;
+                              });
+                            }
+                          },
                           onClose: () => context
                               .read<ToolCubit>()
                               .setPropertiesOpen(false),
@@ -499,6 +633,20 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       top: 64,
                       right: 12,
                       child: LayersSidebar(
+                        onSelectComment: (commentId) {
+                          context
+                              .read<CommentsCubit>()
+                              .setActiveCommentId(commentId);
+                          final comment = commentsState.comments
+                              .where((c) => c.id == commentId)
+                              .firstOrNull;
+                          if (comment != null) {
+                            _viewport.panToCenter(
+                              comment.worldPosition,
+                              _viewSize,
+                            );
+                          }
+                        },
                         onClose: () =>
                             context.read<ToolCubit>().setLayersOpen(false),
                       ),
@@ -510,7 +658,18 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       left: 16,
                       bottom: 16,
                       child: ExcludeFocus(
-                        child: ZoomControls(controller: _viewport),
+                        child: ZoomControls(
+                          controller: _viewport,
+                          isGridSnap: toolState.gridSnap,
+                          onToggleGridSnap: () =>
+                              context.read<ToolCubit>().toggleGridSnap(),
+                          isSmartGuides: toolState.smartGuides,
+                          onToggleSmartGuides: () =>
+                              context.read<ToolCubit>().toggleSmartGuides(),
+                          isShapeSnapping: toolState.autoShapeRecognition,
+                          onToggleShapeSnapping: () =>
+                              context.read<ToolCubit>().toggleAutoShapeRecognition(),
+                        ),
                       ),
                     ),
 
@@ -526,14 +685,17 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                           children: [
                             if (canvasState.elements.isNotEmpty &&
                                 _viewSize.width > 540) ...[
-                              MinimapWidget(
-                                elements: canvasState.elements,
-                                pan: _viewport.pan,
-                                zoom: _viewport.zoom,
-                                viewSize: _viewSize,
-                                colors: colors,
-                                onJumpTo: (newPan) =>
-                                    _viewport.setPan(newPan),
+                              ListenableBuilder(
+                                listenable: _viewport,
+                                builder: (context, _) => MinimapWidget(
+                                  elements: canvasState.elements,
+                                  pan: _viewport.pan,
+                                  zoom: _viewport.zoom,
+                                  viewSize: _viewSize,
+                                  colors: colors,
+                                  onJumpTo: (newPan) =>
+                                      _viewport.setPan(newPan),
+                                ),
                               ),
                               const SizedBox(width: 8),
                             ],
@@ -563,10 +725,17 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                   // 7. Floating In-Canvas Text & Table Editor Overlay
                   if (_editingElementId != null && _editingScreenPos != null)
                     Builder(builder: (context) {
-                      final editingEl = canvasState.elements.firstWhere(
-                        (e) => e.id == _editingElementId,
-                        orElse: () => canvasState.elements.first,
-                      );
+                      final editingEl = canvasState.elements
+                              .where((e) => e.id == _editingElementId)
+                              .firstOrNull ??
+                          (_pendingNewElement?.id == _editingElementId
+                              ? _pendingNewElement
+                              : null);
+
+                      if (editingEl == null) {
+                        return const SizedBox.shrink();
+                      }
+
                       final isConnector = editingEl.type == ShapeType.line ||
                           editingEl.type == ShapeType.arrow ||
                           editingEl.type == ShapeType.doubleArrow;
@@ -636,6 +805,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                           }
 
                           setState(() {
+                            _pendingNewElement = null;
                             _editingElementId = null;
                             _editingTableCell = null;
                             _editingScreenPos = null;
@@ -650,6 +820,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                                 );
                           }
                           setState(() {
+                            _pendingNewElement = null;
                             _editingElementId = null;
                             _editingTableCell = null;
                             _editingScreenPos = null;

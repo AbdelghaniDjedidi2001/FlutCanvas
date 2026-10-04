@@ -516,6 +516,19 @@ class PropertiesPanel extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 6),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    minimumSize: const Size.fromHeight(26),
+                  ),
+                  onPressed: onEditConnectorLabel,
+                  icon: const Icon(Icons.label_outline_rounded, size: 13),
+                  label: const Text('Add / Edit Line Label',
+                      style: TextStyle(fontSize: 11)),
+                ),
                 const SizedBox(height: 9),
               ],
 

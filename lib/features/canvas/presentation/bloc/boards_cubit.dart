@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -14,6 +15,7 @@ import 'boards_state.dart';
 class BoardsCubit extends Cubit<BoardsState> {
   final LoadWorkspaceUseCase _loadWorkspace;
   final SaveWorkspaceUseCase _saveWorkspace;
+  Timer? _debounceTimer;
 
   BoardsCubit(
     this._loadWorkspace,
@@ -49,11 +51,28 @@ class BoardsCubit extends Cubit<BoardsState> {
     );
   }
 
-  void saveWorkspace() {
-    _saveWorkspace(
-      boards: state.boards,
-      activeBoardIndex: state.activeBoardIndex,
-    );
+  void saveWorkspace({bool debounce = false}) {
+    if (!debounce) {
+      _debounceTimer?.cancel();
+      _saveWorkspace(
+        boards: state.boards,
+        activeBoardIndex: state.activeBoardIndex,
+      );
+      return;
+    }
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+      _saveWorkspace(
+        boards: state.boards,
+        activeBoardIndex: state.activeBoardIndex,
+      );
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _debounceTimer?.cancel();
+    return super.close();
   }
 
   void switchBoard(int index) {
@@ -139,6 +158,6 @@ class BoardsCubit extends Cubit<BoardsState> {
     final updated = List<BoardDocument>.from(state.boards);
     updated[i] = updatedBoard;
     emit(state.copyWith(boards: updated));
-    saveWorkspace();
+    saveWorkspace(debounce: true);
   }
 }

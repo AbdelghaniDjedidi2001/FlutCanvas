@@ -32,6 +32,7 @@ class MainToolbar extends StatelessWidget {
   final bool? isPropertiesOpen;
   final VoidCallback? onToggleLayers;
   final bool? isLayersOpen;
+  final VoidCallback? onInsertImage;
 
   const MainToolbar({
     super.key,
@@ -54,6 +55,7 @@ class MainToolbar extends StatelessWidget {
     this.onToggleLayers,
     this.isLayersOpen,
     this.openCommentsCount,
+    this.onInsertImage,
   });
 
   @override
@@ -294,6 +296,10 @@ class MainToolbar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 1.5),
         child: InkWell(
           onTap: () {
+            if (t == Tool.image && onInsertImage != null) {
+              onInsertImage!();
+              return;
+            }
             if (onSelectTool != null) {
               onSelectTool!(t);
             } else {
