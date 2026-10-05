@@ -72,16 +72,20 @@ class ElementRenderer {
     // 2. Draw Stroke
     final strokePaint = Paint()
       ..color = strokeColor
-      ..strokeWidth = el.type == ShapeType.highlighter
-          ? math.max(el.strokeWidth * 3.5, 18.0)
-          : el.strokeWidth
+      ..strokeWidth = el.strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     if (el.type == ShapeType.highlighter) {
-      strokePaint.color = el.color.withValues(alpha: 0.35 * el.opacity);
-      strokePaint.strokeCap = StrokeCap.square;
+      final baseColor = colors.displayHighlighter(el.color);
+      final alpha = (colors.isDark ? 0.60 : 0.50) * el.opacity;
+      strokePaint.color = baseColor.withValues(alpha: alpha.clamp(0.1, 1.0));
+      strokePaint.strokeWidth = el.strokeWidth >= 16.0
+          ? el.strokeWidth
+          : (el.strokeWidth * 6.0).clamp(18.0, 36.0);
+      strokePaint.strokeCap = StrokeCap.round;
+      strokePaint.strokeJoin = StrokeJoin.round;
     }
 
     if (el.drawStyle == DrawStyle.sketch &&

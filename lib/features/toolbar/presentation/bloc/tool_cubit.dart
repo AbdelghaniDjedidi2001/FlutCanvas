@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
@@ -11,7 +12,29 @@ import 'tool_state.dart';
 class ToolCubit extends Cubit<ToolState> {
   ToolCubit() : super(const ToolState());
 
-  void setTool(Tool tool) => emit(state.copyWith(currentTool: tool));
+  void setTool(Tool tool) {
+    if (tool == Tool.highlighter) {
+      final isMono = BoardColors.isMonochromeOrInk(state.strokeColor);
+      emit(state.copyWith(
+        currentTool: tool,
+        strokeColor: isMono ? BoardColors.highlighterDefault : state.strokeColor,
+        strokeWidth: state.strokeWidth < 12.0 ? 24.0 : state.strokeWidth,
+      ));
+      return;
+    }
+    if (state.currentTool == Tool.highlighter && tool != Tool.highlighter) {
+      if (state.strokeColor == BoardColors.highlighterDefault ||
+          state.strokeColor == const Color(0xFFFFE066)) {
+        emit(state.copyWith(
+          currentTool: tool,
+          strokeColor: kInk,
+          strokeWidth: state.strokeWidth >= 16.0 ? 2.5 : state.strokeWidth,
+        ));
+        return;
+      }
+    }
+    emit(state.copyWith(currentTool: tool));
+  }
 
   void setStrokeColor(Color color) => emit(state.copyWith(strokeColor: color));
 

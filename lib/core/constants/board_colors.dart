@@ -63,6 +63,54 @@ class BoardColors {
     return stored;
   }
 
+  static bool isMonochromeOrInk(Color c) {
+    if (c == Colors.transparent) return true;
+    if (c == kInk || c == Colors.black || c == Colors.white) return true;
+    final val = c.toARGB32();
+    if (val == 0xFF1F2430 ||
+        val == 0xFF000000 ||
+        val == 0xFF121212 ||
+        val == 0xFF1E1E1E ||
+        val == 0xFFFFFFFF ||
+        val == 0xFFFBFBFD ||
+        val == 0xFFE6E8EE) {
+      return true;
+    }
+    final lum = c.computeLuminance();
+    return lum < 0.05 || lum > 0.95;
+  }
+
+  Color displayHighlighter(Color stored) {
+    if (stored == Colors.transparent) return Colors.transparent;
+
+    if (isMonochromeOrInk(stored)) {
+      // In dark mode: radiant glowing neon yellow
+      // In light mode: rich, warm sunny highlighter yellow
+      return isDark ? const Color(0xFFFFE066) : const Color(0xFFFFD43B);
+    }
+
+    if (isDark) {
+      // If color has low luminance on dark background, brighten to vibrant neon
+      if (stored.computeLuminance() < 0.25) {
+        return const Color(0xFFFFE066);
+      }
+      return stored;
+    }
+
+    return stored;
+  }
+
+  static const Color highlighterDefault = Color(0xFFFFD43B);
+
+  static const List<Color> highlighterPalette = [
+    Color(0xFFFFD43B), // Neon Yellow (Classic)
+    Color(0xFF69DB7C), // Neon Green
+    Color(0xFF4DABF7), // Neon Cyan/Blue
+    Color(0xFFFF8787), // Neon Pink
+    Color(0xFFFFA94D), // Neon Orange
+    Color(0xFFB197FC), // Neon Purple
+  ];
+
   static const List<Color> strokePalette = [
     kInk,
     Color(0xFFE03131),

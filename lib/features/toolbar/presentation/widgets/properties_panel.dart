@@ -13,6 +13,7 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 
 class PropertiesPanel extends StatelessWidget {
   const PropertiesPanel({
@@ -150,6 +151,14 @@ class PropertiesPanel extends StatelessWidget {
     final hasTbl = _hasTable(activeSelectedElements);
     final tblEl = _firstTable(activeSelectedElements);
     final hasGrouped = _hasGroupedElements(activeSelectedElements);
+
+    final isHighlighterTarget = (activeSelectedElements.isNotEmpty &&
+            activeSelectedElements.every((e) => e.type == ShapeType.highlighter)) ||
+        (activeSelectedElements.isEmpty &&
+            toolState.currentTool == Tool.highlighter);
+    final strokeColorPalette = isHighlighterTarget
+        ? BoardColors.highlighterPalette
+        : BoardColors.strokePalette;
 
     void applyColor(Color c) {
       if (onColorChanged != null) {
@@ -371,16 +380,18 @@ class PropertiesPanel extends StatelessWidget {
               const SizedBox(height: 9),
 
               // 2. Stroke Color
-              const Text('Stroke Color',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+              Text(isHighlighterTarget ? 'Highlighter Color' : 'Stroke Color',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               Wrap(
                 spacing: 5,
                 runSpacing: 5,
                 children: [
-                  for (final c in BoardColors.strokePalette)
+                  for (final c in strokeColorPalette)
                     _colorBubble(
-                      color: colors.display(c),
+                      color: isHighlighterTarget
+                          ? colors.displayHighlighter(c)
+                          : colors.display(c),
                       isSelected: activeColor == c,
                       onTap: () => applyColor(c),
                       selectionColor: scheme.primary,

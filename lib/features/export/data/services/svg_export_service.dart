@@ -248,13 +248,20 @@ class SvgExportService {
   ) {
     if (el.points.isEmpty) return;
     final isHighlighter = el.type == ShapeType.highlighter;
-    final strokeWidth = isHighlighter ? math.max(el.strokeWidth * 3.5, 18.0) : el.strokeWidth;
-    final opacity = isHighlighter ? 0.35 * el.opacity : el.opacity;
+    final strokeWidth = isHighlighter
+        ? (el.strokeWidth >= 16.0 ? el.strokeWidth : (el.strokeWidth * 6.0).clamp(18.0, 36.0))
+        : el.strokeWidth;
+    final effectiveColor = isHighlighter
+        ? _colorToHex(colors.displayHighlighter(el.color))
+        : strokeColor;
+    final opacity = isHighlighter
+        ? ((colors.isDark ? 0.60 : 0.50) * el.opacity).clamp(0.1, 1.0)
+        : el.opacity;
 
     if (el.points.length == 1) {
       final p = el.points.first;
       buffer.writeln(
-          '    <circle cx="${p.dx}" cy="${p.dy}" r="${strokeWidth / 2}" fill="$strokeColor" opacity="$opacity"/>');
+          '    <circle cx="${p.dx}" cy="${p.dy}" r="${strokeWidth / 2}" fill="$effectiveColor" opacity="$opacity"/>');
       return;
     }
 
@@ -265,7 +272,7 @@ class SvgExportService {
     }
 
     buffer.writeln(
-        '    <path d="$d" fill="none" stroke="$strokeColor" stroke-width="$strokeWidth" stroke-linecap="round" stroke-linejoin="round" opacity="$opacity"/>');
+        '    <path d="$d" fill="none" stroke="$effectiveColor" stroke-width="$strokeWidth" stroke-linecap="round" stroke-linejoin="round" opacity="$opacity"/>');
   }
 
   static void _renderTextSvg(

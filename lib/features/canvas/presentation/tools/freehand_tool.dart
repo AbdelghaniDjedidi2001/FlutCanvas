@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/data/services/shape_recognition_service.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
@@ -35,18 +36,25 @@ class FreehandTool implements CanvasTool {
     _points.add(worldPos);
 
     final id = context.generateElementId();
+    final strokeColor = isHighlighter
+        ? (BoardColors.isMonochromeOrInk(context.strokeColor)
+            ? BoardColors.highlighterDefault
+            : context.strokeColor)
+        : context.strokeColor;
+    final strokeWidth = isHighlighter
+        ? (context.strokeWidth < 12.0 ? 24.0 : context.strokeWidth)
+        : context.strokeWidth;
+
     _currentDraft = BoardElement(
       id: id,
       type: isHighlighter ? ShapeType.highlighter : ShapeType.pen,
       start: worldPos,
       end: worldPos,
       points: List.unmodifiable(_points),
-      color: isHighlighter
-          ? context.strokeColor.withValues(alpha: 0.35)
-          : context.strokeColor,
-      strokeWidth: isHighlighter ? 24.0 : context.strokeWidth,
+      color: strokeColor,
+      strokeWidth: strokeWidth,
       strokeStyle: context.strokeStyle,
-      opacity: isHighlighter ? 0.4 : context.opacity,
+      opacity: context.opacity,
     );
     context.setDraft(_currentDraft);
   }
