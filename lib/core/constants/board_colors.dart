@@ -83,16 +83,31 @@ class BoardColors {
   Color displayHighlighter(Color stored) {
     if (stored == Colors.transparent) return Colors.transparent;
 
-    // When selecting white, it's white in both dark and white mode
+    // Explicit pure black is black in both modes
+    if (stored == Colors.black || stored.toARGB32() == 0xFF000000) {
+      return const Color(0xFF1F2430);
+    }
+
+    // Explicit pure white is white in both modes
     if (stored == Colors.white || stored.toARGB32() == 0xFFFFFFFF) {
       return Colors.white;
     }
 
-    // When selecting black, it's black in both dark and white mode
-    if (stored == Colors.black ||
-        stored == kInk ||
-        stored.toARGB32() == 0xFF000000 ||
-        stored.toARGB32() == 0xFF1F2430) {
+    // In Dark Mode:
+    // kInk (the board ink swatch) and ink represent WHITE in dark mode!
+    if (isDark) {
+      if (stored == kInk ||
+          stored.toARGB32() == 0xFF1F2430 ||
+          stored == ink ||
+          stored.toARGB32() == 0xFFE6E8EE) {
+        return Colors.white;
+      }
+      return stored;
+    }
+
+    // In Light Mode (White mode):
+    // kInk represents black ink in light mode
+    if (stored == kInk || stored.toARGB32() == 0xFF1F2430) {
       return const Color(0xFF1F2430);
     }
 
@@ -108,8 +123,8 @@ class BoardColors {
     Color(0xFFFF8787), // Neon Pink
     Color(0xFFFFA94D), // Neon Orange
     Color(0xFFB197FC), // Neon Purple
-    Colors.white,      // Highlighter White
-    kInk,              // Highlighter Black
+    Colors.white,      // Pure White Highlighter
+    Colors.black,      // Pure Black Highlighter
   ];
 
   static const List<Color> strokePalette = [

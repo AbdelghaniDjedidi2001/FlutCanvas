@@ -67,30 +67,30 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Highlighter BoardColors Display & Vibrance Tests', () {
-    test('when selecting white, it is white in both dark and white modes', () {
+    test('when selecting white or ink in dark mode, it is pure white', () {
       const darkColors = BoardColors.dark;
       const lightColors = BoardColors.light;
 
-      final darkResult = darkColors.displayHighlighter(Colors.white);
-      final lightResult = lightColors.displayHighlighter(Colors.white);
+      final darkWhite = darkColors.displayHighlighter(Colors.white);
+      final darkInk = darkColors.displayHighlighter(kInk);
+      final lightWhite = lightColors.displayHighlighter(Colors.white);
 
-      expect(darkResult.toARGB32(), equals(Colors.white.toARGB32()));
-      expect(lightResult.toARGB32(), equals(Colors.white.toARGB32()));
+      expect(darkWhite.toARGB32(), equals(Colors.white.toARGB32()));
+      expect(darkInk.toARGB32(), equals(Colors.white.toARGB32()));
+      expect(lightWhite.toARGB32(), equals(Colors.white.toARGB32()));
     });
 
-    test('when selecting black, it is black in both dark and white modes', () {
+    test('when selecting black or ink in light mode, it is black', () {
       const darkColors = BoardColors.dark;
       const lightColors = BoardColors.light;
 
-      final darkResult = darkColors.displayHighlighter(kInk);
-      final lightResult = lightColors.displayHighlighter(kInk);
       final darkBlack = darkColors.displayHighlighter(Colors.black);
       final lightBlack = lightColors.displayHighlighter(Colors.black);
+      final lightInk = lightColors.displayHighlighter(kInk);
 
-      expect(darkResult.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
-      expect(lightResult.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
       expect(darkBlack.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
       expect(lightBlack.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
+      expect(lightInk.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
     });
 
     test('preserves vibrant highlighter palette colors across modes', () {

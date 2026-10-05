@@ -83,6 +83,10 @@ class MainToolbar extends StatelessWidget {
 
     final scheme = Theme.of(context).colorScheme;
     final colors = BoardColors.of(context);
+    final isHighlighterActive = activeTool == Tool.highlighter;
+    final swatches = isHighlighterActive
+        ? BoardColors.highlighterPalette
+        : BoardColors.strokePalette.take(5);
 
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -140,8 +144,9 @@ class MainToolbar extends StatelessWidget {
               _divider(scheme),
 
               // 6. Quick Palette Swatches
-              for (final c in BoardColors.strokePalette.take(5))
-                _swatch(context, c, activeColor, colors, scheme),
+              for (final c in swatches)
+                _swatch(context, c, activeColor, colors, scheme,
+                    isHighlighter: isHighlighterActive),
               _divider(scheme),
 
               // 7. Templates & Slides
@@ -340,8 +345,14 @@ class MainToolbar extends StatelessWidget {
       );
 
   Widget _swatch(BuildContext context, Color c, Color currentColor,
-      BoardColors colors, ColorScheme scheme) {
+      BoardColors colors, ColorScheme scheme,
+      {bool isHighlighter = false}) {
     final selected = currentColor == c;
+    final displayColor =
+        isHighlighter ? colors.displayHighlighter(c) : colors.display(c);
+    final isWhiteish = displayColor == Colors.white ||
+        displayColor.computeLuminance() > 0.85;
+
     return GestureDetector(
       onTap: () {
         if (onSelectColor != null) {
@@ -357,11 +368,14 @@ class MainToolbar extends StatelessWidget {
           height: 18,
           margin: const EdgeInsets.symmetric(horizontal: 2.5),
           decoration: BoxDecoration(
-            color: colors.display(c),
+            color: displayColor,
             shape: BoxShape.circle,
             border: Border.all(
-              color:
-                  selected ? colors.selection : scheme.surfaceContainerHighest,
+              color: selected
+                  ? colors.selection
+                  : (isWhiteish
+                      ? Colors.grey.shade400
+                      : scheme.surfaceContainerHighest),
               width: selected ? 2.5 : 1.0,
             ),
             boxShadow: const [
