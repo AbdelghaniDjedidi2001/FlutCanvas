@@ -14,10 +14,10 @@ class ToolCubit extends Cubit<ToolState> {
 
   void setTool(Tool tool) {
     if (tool == Tool.highlighter) {
-      final isMono = BoardColors.isMonochromeOrInk(state.strokeColor);
+      final isDefaultPen = state.strokeColor == kInk && state.strokeWidth <= 2.5;
       emit(state.copyWith(
         currentTool: tool,
-        strokeColor: isMono ? BoardColors.highlighterDefault : state.strokeColor,
+        strokeColor: isDefaultPen ? BoardColors.highlighterDefault : state.strokeColor,
         strokeWidth: state.strokeWidth < 12.0 ? 24.0 : state.strokeWidth,
       ));
       return;

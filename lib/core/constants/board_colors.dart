@@ -83,18 +83,17 @@ class BoardColors {
   Color displayHighlighter(Color stored) {
     if (stored == Colors.transparent) return Colors.transparent;
 
-    if (isMonochromeOrInk(stored)) {
-      // In dark mode: radiant glowing neon yellow
-      // In light mode: rich, warm sunny highlighter yellow
-      return isDark ? const Color(0xFFFFE066) : const Color(0xFFFFD43B);
+    // When selecting white, it's white in both dark and white mode
+    if (stored == Colors.white || stored.toARGB32() == 0xFFFFFFFF) {
+      return Colors.white;
     }
 
-    if (isDark) {
-      // If color has low luminance on dark background, brighten to vibrant neon
-      if (stored.computeLuminance() < 0.25) {
-        return const Color(0xFFFFE066);
-      }
-      return stored;
+    // When selecting black, it's black in both dark and white mode
+    if (stored == Colors.black ||
+        stored == kInk ||
+        stored.toARGB32() == 0xFF000000 ||
+        stored.toARGB32() == 0xFF1F2430) {
+      return const Color(0xFF1F2430);
     }
 
     return stored;
@@ -109,6 +108,8 @@ class BoardColors {
     Color(0xFFFF8787), // Neon Pink
     Color(0xFFFFA94D), // Neon Orange
     Color(0xFFB197FC), // Neon Purple
+    Colors.white,      // Highlighter White
+    kInk,              // Highlighter Black
   ];
 
   static const List<Color> strokePalette = [

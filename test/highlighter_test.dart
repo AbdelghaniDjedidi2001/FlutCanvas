@@ -67,26 +67,30 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Highlighter BoardColors Display & Vibrance Tests', () {
-    test('converts monochrome/ink to glowing yellow in dark mode', () {
+    test('when selecting white, it is white in both dark and white modes', () {
       const darkColors = BoardColors.dark;
-      final result1 = darkColors.displayHighlighter(kInk);
-      final result2 = darkColors.displayHighlighter(Colors.black);
-      final result3 = darkColors.displayHighlighter(Colors.white);
+      const lightColors = BoardColors.light;
 
-      expect(result1.toARGB32(), equals(const Color(0xFFFFE066).toARGB32()));
-      expect(result2.toARGB32(), equals(const Color(0xFFFFE066).toARGB32()));
-      expect(result3.toARGB32(), equals(const Color(0xFFFFE066).toARGB32()));
+      final darkResult = darkColors.displayHighlighter(Colors.white);
+      final lightResult = lightColors.displayHighlighter(Colors.white);
+
+      expect(darkResult.toARGB32(), equals(Colors.white.toARGB32()));
+      expect(lightResult.toARGB32(), equals(Colors.white.toARGB32()));
     });
 
-    test('converts monochrome/ink to sunny radiant yellow in light mode', () {
+    test('when selecting black, it is black in both dark and white modes', () {
+      const darkColors = BoardColors.dark;
       const lightColors = BoardColors.light;
-      final result1 = lightColors.displayHighlighter(kInk);
-      final result2 = lightColors.displayHighlighter(Colors.black);
-      final result3 = lightColors.displayHighlighter(Colors.white);
 
-      expect(result1.toARGB32(), equals(const Color(0xFFFFD43B).toARGB32()));
-      expect(result2.toARGB32(), equals(const Color(0xFFFFD43B).toARGB32()));
-      expect(result3.toARGB32(), equals(const Color(0xFFFFD43B).toARGB32()));
+      final darkResult = darkColors.displayHighlighter(kInk);
+      final lightResult = lightColors.displayHighlighter(kInk);
+      final darkBlack = darkColors.displayHighlighter(Colors.black);
+      final lightBlack = lightColors.displayHighlighter(Colors.black);
+
+      expect(darkResult.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
+      expect(lightResult.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
+      expect(darkBlack.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
+      expect(lightBlack.toARGB32(), equals(const Color(0xFF1F2430).toARGB32()));
     });
 
     test('preserves vibrant highlighter palette colors across modes', () {
@@ -103,17 +107,32 @@ void main() {
   });
 
   group('FreehandTool Highlighter Creation Tests', () {
-    test('creates ShapeType.highlighter with radiant default color and chisel width', () {
+    test('when selecting white, FreehandTool creates white highlighter without turning yellow', () {
       final tool = FreehandTool(toolType: Tool.highlighter, isHighlighter: true);
       final ctx = _MockCanvasToolContext();
-      ctx.testStrokeColor = kInk; // pen ink default
+      ctx.testStrokeColor = Colors.white;
 
       tool.onPointerDown(const Offset(50, 50), ctx);
 
       expect(ctx.draft, isNotNull);
       expect(ctx.draft!.type, equals(ShapeType.highlighter));
-      // Should not be murky black ink; should be radiant yellow
-      expect(ctx.draft!.color.toARGB32(), equals(const Color(0xFFFFD43B).toARGB32()));
+      // Must be pure white, NOT yellow!
+      expect(ctx.draft!.color.toARGB32(), equals(Colors.white.toARGB32()));
+      expect(ctx.draft!.strokeWidth, equals(24.0));
+      expect(ctx.draft!.opacity, equals(1.0));
+    });
+
+    test('when selecting black, FreehandTool creates black highlighter without turning yellow', () {
+      final tool = FreehandTool(toolType: Tool.highlighter, isHighlighter: true);
+      final ctx = _MockCanvasToolContext();
+      ctx.testStrokeColor = kInk;
+
+      tool.onPointerDown(const Offset(50, 50), ctx);
+
+      expect(ctx.draft, isNotNull);
+      expect(ctx.draft!.type, equals(ShapeType.highlighter));
+      // Must be black ink, NOT yellow!
+      expect(ctx.draft!.color.toARGB32(), equals(kInk.toARGB32()));
       expect(ctx.draft!.strokeWidth, equals(24.0));
       expect(ctx.draft!.opacity, equals(1.0));
     });
