@@ -40,7 +40,11 @@ class _GridCustomPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.translate(pan.dx, pan.dy);
+    canvas.scale(zoom);
     GridPainter.draw(canvas, size, pan, zoom, colors);
+    canvas.restore();
   }
 
   @override

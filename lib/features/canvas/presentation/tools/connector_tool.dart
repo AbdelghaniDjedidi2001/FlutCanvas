@@ -48,6 +48,15 @@ class ConnectorTool implements CanvasTool {
     return null;
   }
 
+  Offset _snap(Offset pos, bool snapEnabled) {
+    if (!snapEnabled) return pos;
+    const snap = 24.0;
+    return Offset(
+      (pos.dx / snap).roundToDouble() * snap,
+      (pos.dy / snap).roundToDouble() * snap,
+    );
+  }
+
   @override
   void onPointerDown(Offset worldPos, CanvasToolContext context) {
     var startPos = worldPos;
@@ -62,6 +71,7 @@ class ConnectorTool implements CanvasTool {
       context.setConnectionAnchor(element: match.$1, point: match.$3);
     } else {
       context.setConnectionAnchor(element: null, point: null);
+      startPos = _snap(worldPos, context.gridSnap);
     }
 
     _startPoint = startPos;
@@ -100,6 +110,7 @@ class ConnectorTool implements CanvasTool {
       context.setConnectionAnchor(element: match.$1, point: match.$3);
     } else {
       context.setConnectionAnchor(element: null, point: null);
+      endPos = _snap(worldPos, context.gridSnap);
     }
     _endBinding = endBinding;
 
@@ -123,6 +134,8 @@ class ConnectorTool implements CanvasTool {
         elementId: match.$1.id,
         anchor: match.$2,
       );
+    } else {
+      endPos = _snap(worldPos, context.gridSnap);
     }
 
     final dist = (_currentDraft!.start - endPos).distance;

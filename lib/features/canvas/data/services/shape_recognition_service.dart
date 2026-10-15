@@ -24,31 +24,34 @@ class ShapeRecognitionService {
   /// Analyzes a set of freehand points and recognizes geometric shapes:
   /// Circle, Ellipse, Rectangle, Rounded Rectangle, Triangle, Diamond, Star, Line, Arrow.
   static RecognizedShapeResult? recognizeShape(List<Offset> rawPoints) {
-    if (rawPoints.length < 5) return null;
+    if (rawPoints.length < 2) return null;
 
     // 1. Clean & resample points with uniform arc length
     final points = _preprocessPoints(rawPoints);
-    if (points.length < 8) return null;
+    if (points.length < 2) return null;
 
     final bounds = _computeBounds(points);
     final width = bounds.width;
     final height = bounds.height;
     final diagonal = math.sqrt(width * width + height * height);
 
-    // Minimum size threshold (avoid snapping tiny accidental dots)
-    if (width < 18 || height < 18 || diagonal < 26) return null;
-
     final totalLength = _computeTotalLength(points);
     if (totalLength <= 0) return null;
 
+    // Minimum size threshold (avoid snapping tiny accidental dots)
+    if (diagonal < 18 && totalLength < 18) return null;
+
     final startEndDistance = (points.first - points.last).distance;
-    final isClosed = (startEndDistance / diagonal < 0.32) || (startEndDistance / totalLength < 0.22);
+    final isClosed = (startEndDistance / diagonal < 0.40) || (startEndDistance / totalLength < 0.28);
 
     // ── 1. Open Stroke Classifiers (Straight Line & Arrow) ────────────────
     if (!isClosed) {
       final lineResult = _classifyLineOrArrow(points, bounds, totalLength, startEndDistance);
       if (lineResult != null) return lineResult;
     }
+
+    // Closed shapes require a minimum 2D bounding area
+    if (width < 14 || height < 14) return null;
 
     // ── 2. Closed Stroke Classifiers (Circle, Rect, Triangle, Diamond, Star) ──
     final area = _computePolygonArea(points);
@@ -59,19 +62,19 @@ class ShapeRecognitionService {
     final ellipseResult = _classifyCircleOrEllipse(points, bounds, areaRatio);
     if (ellipseResult != null) return ellipseResult;
 
-    // B. Polygon simplification (RDP algorithm)
-    final simplified = _douglasPeucker(points, math.max(diagonal * 0.045, 6.0));
+    // B. Closed-loop polygon simplification
+    final simplified = _simplifyClosedPolygon(points, math.max(diagonal * 0.045, 6.0));
     final vertexCount = simplified.length <= 1 ? 0 : simplified.length - 1; // last point closes on first
 
     // C. Diamond (4 cardinal vertices near edge centers)
     final diamondResult = _classifyDiamond(simplified, bounds, areaRatio, vertexCount);
     if (diamondResult != null) return diamondResult;
 
-    // D. Triangle (3 prominent vertices)
+    // D. Triangle (3 vertices)
     final triangleResult = _classifyTriangle(simplified, bounds, areaRatio, vertexCount);
     if (triangleResult != null) return triangleResult;
 
-    // E. Rectangle / Rounded Rectangle (4 corners near 90 degrees)
+    // E. Rectangle / Rounded Rectangle (box-like boundary fill)
     final rectResult = _classifyRectangle(points, simplified, bounds, areaRatio, vertexCount);
     if (rectResult != null) return rectResult;
 
@@ -140,12 +143,24 @@ class ShapeRecognitionService {
     }
 
     // Check if overall stroke is approximately straight
-    if (straightnessRatio <= 1.20) {
+    if (straightnessRatio <= 1.35) {
+      Offset start = points.first;
+      Offset end = points.last;
+
+      // Snap near horizontal/vertical lines to exact axis
+      final dx = (end.dx - start.dx).abs();
+      final dy = (end.dy - start.dy).abs();
+      if (dy < 14.0 || dy / (dx + 0.001) < 0.12) {
+        end = Offset(end.dx, start.dy);
+      } else if (dx < 14.0 || dx / (dy + 0.001) < 0.12) {
+        end = Offset(start.dx, end.dy);
+      }
+
       return RecognizedShapeResult(
         shapeType: ShapeType.line,
-        start: points.first,
-        end: points.last,
-        confidence: math.min(1.0, 1.25 / straightnessRatio),
+        start: start,
+        end: end,
+        confidence: math.min(1.0, 1.35 / straightnessRatio),
         label: 'Line',
       );
     }
@@ -164,7 +179,7 @@ class ShapeRecognitionService {
     if (halfW <= 0 || halfH <= 0) return null;
 
     // Ideal ellipse area ratio is pi / 4 ~ 0.785
-    if (areaRatio < 0.55 || areaRatio > 0.95) return null;
+    if (areaRatio < 0.58 || areaRatio > 0.94) return null;
 
     // Compute ellipse fitting error
     double totalError = 0.0;
@@ -176,7 +191,7 @@ class ShapeRecognitionService {
     }
     final avgError = totalError / points.length;
 
-    if (avgError < 0.22) {
+    if (avgError < 0.28) {
       final aspectRatio = bounds.width / bounds.height;
       final isPerfectCircle = aspectRatio >= 0.82 && aspectRatio <= 1.22;
 
@@ -204,8 +219,8 @@ class ShapeRecognitionService {
     double areaRatio,
     int vertexCount,
   ) {
-    // Triangles have 3 prominent vertices and an area ratio ~ 0.28 - 0.68
-    if (vertexCount == 3 && areaRatio >= 0.28 && areaRatio <= 0.68) {
+    // Triangles have 3 prominent vertices and area ratio ~ 0.25 - 0.72
+    if (vertexCount == 3 && areaRatio >= 0.25 && areaRatio <= 0.72) {
       // Find apex vertex (highest, lowest, leftmost, or rightmost)
       Offset apex = simplified.first;
       for (final p in simplified) {
@@ -214,11 +229,14 @@ class ShapeRecognitionService {
 
       // Check if apex is near horizontal center
       final apexXRatio = (apex.dx - bounds.left) / bounds.width;
-      final isUpright = apexXRatio >= 0.25 && apexXRatio <= 0.75 && (apex.dy - bounds.top).abs() < bounds.height * 0.3;
+      final isUpright = apexXRatio >= 0.20 &&
+          apexXRatio <= 0.80 &&
+          (apex.dy - bounds.top).abs() < bounds.height * 0.35;
 
       return RecognizedShapeResult(
         shapeType: ShapeType.triangle,
-        start: isUpright ? Offset(bounds.center.dx, bounds.top) : bounds.topLeft,
+        start:
+            isUpright ? Offset(bounds.center.dx, bounds.top) : bounds.topLeft,
         end: bounds.bottomRight,
         confidence: 0.85,
         label: 'Triangle',
@@ -233,8 +251,10 @@ class ShapeRecognitionService {
     double areaRatio,
     int vertexCount,
   ) {
-    // Diamond has 4 vertices with area ratio around 0.38 - 0.65
-    if ((vertexCount == 4 || vertexCount == 5) && areaRatio >= 0.38 && areaRatio <= 0.65) {
+    // Diamond has 4 to 6 vertices with area ratio around 0.35 - 0.68
+    if ((vertexCount >= 4 && vertexCount <= 6) &&
+        areaRatio >= 0.35 &&
+        areaRatio <= 0.68) {
       final center = bounds.center;
       var topMatch = false;
       var bottomMatch = false;
@@ -242,21 +262,25 @@ class ShapeRecognitionService {
       var rightMatch = false;
 
       for (final p in simplified) {
-        if ((p.dy - bounds.top).abs() < bounds.height * 0.25 && (p.dx - center.dx).abs() < bounds.width * 0.3) {
+        if ((p.dy - bounds.top).abs() < bounds.height * 0.30 &&
+            (p.dx - center.dx).abs() < bounds.width * 0.35) {
           topMatch = true;
         }
-        if ((p.dy - bounds.bottom).abs() < bounds.height * 0.25 && (p.dx - center.dx).abs() < bounds.width * 0.3) {
+        if ((p.dy - bounds.bottom).abs() < bounds.height * 0.30 &&
+            (p.dx - center.dx).abs() < bounds.width * 0.35) {
           bottomMatch = true;
         }
-        if ((p.dx - bounds.left).abs() < bounds.width * 0.25 && (p.dy - center.dy).abs() < bounds.height * 0.3) {
+        if ((p.dx - bounds.left).abs() < bounds.width * 0.30 &&
+            (p.dy - center.dy).abs() < bounds.height * 0.35) {
           leftMatch = true;
         }
-        if ((p.dx - bounds.right).abs() < bounds.width * 0.25 && (p.dy - center.dy).abs() < bounds.height * 0.3) {
+        if ((p.dx - bounds.right).abs() < bounds.width * 0.30 &&
+            (p.dy - center.dy).abs() < bounds.height * 0.35) {
           rightMatch = true;
         }
       }
 
-      if (topMatch && bottomMatch && (leftMatch || rightMatch)) {
+      if ((topMatch && bottomMatch) || (leftMatch && rightMatch)) {
         return RecognizedShapeResult(
           shapeType: ShapeType.diamond,
           start: bounds.topLeft,
@@ -276,20 +300,40 @@ class ShapeRecognitionService {
     double areaRatio,
     int vertexCount,
   ) {
-    // Rectangles have area ratio >= 0.72
-    if (areaRatio >= 0.70 && areaRatio <= 1.05) {
-      if (vertexCount >= 3 && vertexCount <= 7) {
-        // Check corner curvature to differentiate Rectangle vs Rounded Rectangle
-        final isRounded = _detectRoundedCorners(points, bounds);
+    // 1. Average distance of stroke points to bounding box edges
+    double totalEdgeDist = 0.0;
+    for (final p in points) {
+      final dLeft = (p.dx - bounds.left).abs();
+      final dRight = (p.dx - bounds.right).abs();
+      final dTop = (p.dy - bounds.top).abs();
+      final dBottom = (p.dy - bounds.bottom).abs();
+      totalEdgeDist +=
+          math.min(math.min(dLeft, dRight), math.min(dTop, dBottom));
+    }
+    final avgEdgeDist = totalEdgeDist / points.length;
+    final edgeDistRatio = avgEdgeDist / math.max(bounds.width, bounds.height);
 
-        return RecognizedShapeResult(
-          shapeType: isRounded ? ShapeType.roundedRectangle : ShapeType.rectangle,
-          start: bounds.topLeft,
-          end: bounds.bottomRight,
-          confidence: math.min(1.0, areaRatio),
-          label: isRounded ? 'Rounded Box' : 'Rectangle',
-        );
-      }
+    // Stroke points hug bounding box edges, or vertex count matches quadrilateral
+    final isBoxLike = (edgeDistRatio < 0.26 &&
+            areaRatio >= 0.44 &&
+            areaRatio <= 1.20) ||
+        (areaRatio >= 0.48 &&
+            areaRatio <= 1.15 &&
+            vertexCount >= 3 &&
+            vertexCount <= 8);
+
+    if (isBoxLike) {
+      // Check corner curvature to differentiate Rectangle vs Rounded Rectangle
+      final isRounded = _detectRoundedCorners(points, bounds);
+
+      return RecognizedShapeResult(
+        shapeType:
+            isRounded ? ShapeType.roundedRectangle : ShapeType.rectangle,
+        start: bounds.topLeft,
+        end: bounds.bottomRight,
+        confidence: math.min(1.0, math.max(0.68, areaRatio)),
+        label: isRounded ? 'Rounded Box' : 'Rectangle',
+      );
     }
     return null;
   }
@@ -339,7 +383,7 @@ class ShapeRecognitionService {
       }
     }
 
-    if (deduplicated.length < 4) return deduplicated;
+    if (deduplicated.length < 2) return deduplicated;
 
     // Arc-length equidistant resampling to 64 points
     const targetCount = 64;
@@ -409,6 +453,31 @@ class ShapeRecognitionService {
       area -= points[j].dx * points[i].dy;
     }
     return (area / 2.0).abs();
+  }
+
+  /// Simplifies a closed curve by finding the furthest point from start,
+  /// splitting the loop into two open polylines, simplifying each with RDP, and recombining.
+  static List<Offset> _simplifyClosedPolygon(List<Offset> points, double epsilon) {
+    if (points.length < 5) return points;
+
+    var maxDist = 0.0;
+    var farIndex = 0;
+    for (var i = 1; i < points.length; i++) {
+      final d = (points[i] - points.first).distance;
+      if (d > maxDist) {
+        maxDist = d;
+        farIndex = i;
+      }
+    }
+
+    if (farIndex <= 2 || farIndex >= points.length - 3) {
+      return _douglasPeucker(points, epsilon);
+    }
+
+    final half1 = _douglasPeucker(points.sublist(0, farIndex + 1), epsilon);
+    final half2 = _douglasPeucker(points.sublist(farIndex), epsilon);
+
+    return [...half1.sublist(0, half1.length - 1), ...half2];
   }
 
   /// Ramer-Douglas-Peucker line simplification

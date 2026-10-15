@@ -163,6 +163,30 @@ void main() {
       expect(result!.shapeType, ShapeType.line);
     });
 
+    test('recognizes perfectly horizontal straight line as ShapeType.line', () {
+      final linePoints = <Offset>[];
+      for (int i = 0; i <= 30; i++) {
+        final t = i / 30;
+        linePoints.add(Offset(20 + t * 200, 50));
+      }
+      final result = ShapeRecognitionService.recognizeShape(linePoints);
+
+      expect(result, isNotNull);
+      expect(result!.shapeType, ShapeType.line);
+    });
+
+    test('recognizes perfectly vertical straight line as ShapeType.line', () {
+      final linePoints = <Offset>[];
+      for (int i = 0; i <= 30; i++) {
+        final t = i / 30;
+        linePoints.add(Offset(50, 20 + t * 200));
+      }
+      final result = ShapeRecognitionService.recognizeShape(linePoints);
+
+      expect(result, isNotNull);
+      expect(result!.shapeType, ShapeType.line);
+    });
+
     test('recognizes arrow stroke with arrowhead as ShapeType.arrow', () {
       final arrowPoints = <Offset>[];
       // Main shaft

@@ -8,6 +8,7 @@ import 'package:flutcanvas/features/clipboard/data/services/clipboard_service.da
 import 'package:flutcanvas/core/services/text/markdown_text_service.dart';
 import 'package:flutcanvas/features/export/data/services/svg_export_service.dart';
 import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties_panel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -308,6 +309,64 @@ void main() {
       expect(svg, contains('&quot;FlutCanvas&quot;'));
       expect(svg, contains('<tspan'));
       expect(svg, contains('print'));
+    });
+  });
+
+  group('PropertiesPanel CodeBlock Snippet Controls Tests', () {
+    testWidgets('renders Code Snippet controls and emits language, line numbers, and copy code events', (tester) async {
+      String? updatedLang;
+      bool? toggledLineNumbers;
+      bool copyCodeCalled = false;
+
+      final codeElement = BoardElement(
+        id: 'code_prop_1',
+        type: ShapeType.codeBlock,
+        start: const Offset(100, 100),
+        end: const Offset(400, 300),
+        color: Colors.transparent,
+        text: 'void main() => print("Test");',
+        codeLanguage: 'dart',
+        showLineNumbers: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: PropertiesPanel(
+                selectedElements: [codeElement],
+                currentCodeLanguage: 'dart',
+                currentShowLineNumbers: true,
+                onCodeLanguageChanged: (lang) => updatedLang = lang,
+                onToggleLineNumbers: (show) => toggledLineNumbers = show,
+                onCopyCode: () => copyCodeCalled = true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Code Snippet'), findsOneWidget);
+      expect(find.text('Language:'), findsOneWidget);
+      expect(find.text('Line Numbers: ON'), findsOneWidget);
+      expect(find.text('Copy Code'), findsOneWidget);
+
+      // Tap Line Numbers toggle
+      await tester.tap(find.text('Line Numbers: ON'));
+      await tester.pumpAndSettle();
+      expect(toggledLineNumbers, isFalse);
+
+      // Tap Copy Code
+      await tester.tap(find.text('Copy Code'));
+      await tester.pumpAndSettle();
+      expect(copyCodeCalled, isTrue);
+
+      // Change Language via Dropdown
+      await tester.tap(find.text('dart'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('python').last);
+      await tester.pumpAndSettle();
+      expect(updatedLang, equals('python'));
     });
   });
 }

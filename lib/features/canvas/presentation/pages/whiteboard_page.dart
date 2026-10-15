@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutcanvas/core/constants/board_colors.dart';
@@ -214,7 +216,11 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
         setState(() {
           _editingElementId = hit!.id;
           _editingTableCell = null;
-          _editingScreenPos = _viewport.toScreen(hit.bounds.topLeft);
+          _editingScreenPos = _viewport.toScreen(
+            hit.type == ShapeType.codeBlock
+                ? hit.bounds.topLeft + const Offset(0, 32)
+                : hit.bounds.topLeft,
+          );
           _isEditingSticky = hit.type == ShapeType.stickyNote;
           _isEditingCode = hit.type == ShapeType.codeBlock;
         });
@@ -635,6 +641,43 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       left: 12,
                       child: ExcludeFocus(
                         child: PropertiesPanel(
+                          currentCodeLanguage: toolState.codeLanguage,
+                          onCodeLanguageChanged: (newLang) {
+                            context.read<ToolCubit>().setCodeLanguage(newLang);
+                            final codeElements = canvasState.selectedElements
+                                .where((e) => e.type == ShapeType.codeBlock)
+                                .toList();
+                            if (codeElements.isNotEmpty) {
+                              final updated = codeElements
+                                  .map((e) => e.copyWith(codeLanguage: newLang))
+                                  .toList();
+                              context
+                                  .read<CanvasBloc>()
+                                  .add(CanvasEvent.updateElements(updated));
+                            }
+                          },
+                          onToggleLineNumbers: (show) {
+                            final codeElements = canvasState.selectedElements
+                                .where((e) => e.type == ShapeType.codeBlock)
+                                .toList();
+                            if (codeElements.isNotEmpty) {
+                              final updated = codeElements
+                                  .map((e) => e.copyWith(showLineNumbers: show))
+                                  .toList();
+                              context
+                                  .read<CanvasBloc>()
+                                  .add(CanvasEvent.updateElements(updated));
+                            }
+                          },
+                          onCopyCode: () {
+                            final codeEl = canvasState.selectedElements
+                                .where((e) => e.type == ShapeType.codeBlock)
+                                .firstOrNull;
+                            if (codeEl != null) {
+                              Clipboard.setData(ClipboardData(text: codeEl.text));
+                              _showToast('Code copied to clipboard');
+                            }
+                          },
                           onEditConnectorLabel: () {
                             final connector = canvasState.selectedElements
                                 .where((e) =>
@@ -832,7 +875,13 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                         isStickyNote: _isEditingSticky,
                         isCodeBlock: _isEditingCode,
                         isTableCell: isTableCell,
-                        customWidth: cellWidth,
+                        customWidth: isTableCell
+                            ? cellWidth
+                            : (_isEditingCode
+                                ? math.max(
+                                    340.0,
+                                    editingEl.bounds.width * _viewport.zoom)
+                                : null),
                         onNavigateCell: _navigateTableCell,
                         onSubmitted: (newText) {
                           if (isTableCell) {

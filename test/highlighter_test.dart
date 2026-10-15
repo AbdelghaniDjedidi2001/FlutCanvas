@@ -60,6 +60,9 @@ class _MockCanvasToolContext implements CanvasToolContext {
   bool get autoShapeRecognition => false;
 
   @override
+  bool get gridSnap => false;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

@@ -22,15 +22,25 @@ class ShapeTool implements CanvasTool {
   @override
   MouseCursor get cursor => SystemMouseCursors.precise;
 
+  Offset _snap(Offset pos, bool snapEnabled) {
+    if (!snapEnabled) return pos;
+    const snap = 24.0;
+    return Offset(
+      (pos.dx / snap).roundToDouble() * snap,
+      (pos.dy / snap).roundToDouble() * snap,
+    );
+  }
+
   @override
   void onPointerDown(Offset worldPos, CanvasToolContext context) {
-    _startPoint = worldPos;
+    final snappedPos = _snap(worldPos, context.gridSnap);
+    _startPoint = snappedPos;
     final id = context.generateElementId();
     _currentDraft = BoardElement(
       id: id,
       type: shapeType,
-      start: worldPos,
-      end: worldPos,
+      start: snappedPos,
+      end: snappedPos,
       color: context.strokeColor,
       fillColor: context.fillColor,
       strokeWidth: context.strokeWidth,
@@ -46,20 +56,22 @@ class ShapeTool implements CanvasTool {
   @override
   void onPointerMove(Offset worldPos, CanvasToolContext context) {
     if (_startPoint == null || _currentDraft == null) return;
-    _currentDraft = _currentDraft!.copyWith(end: worldPos);
+    final snappedPos = _snap(worldPos, context.gridSnap);
+    _currentDraft = _currentDraft!.copyWith(end: snappedPos);
     context.setDraft(_currentDraft);
   }
 
   @override
   void onPointerUp(Offset worldPos, CanvasToolContext context) {
     if (_startPoint == null || _currentDraft == null) return;
+    final snappedPos = _snap(worldPos, context.gridSnap);
 
-    final dx = (worldPos.dx - _startPoint!.dx).abs();
-    final dy = (worldPos.dy - _startPoint!.dy).abs();
+    final dx = (snappedPos.dx - _startPoint!.dx).abs();
+    final dy = (snappedPos.dy - _startPoint!.dy).abs();
     final minDimension = math.max(dx, dy);
 
     if (minDimension >= 5.0) {
-      context.commitElement(_currentDraft!.copyWith(end: worldPos));
+      context.commitElement(_currentDraft!.copyWith(end: snappedPos));
     }
 
     _startPoint = null;

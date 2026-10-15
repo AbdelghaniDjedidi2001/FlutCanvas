@@ -120,6 +120,9 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
       widget.interaction.setConnectionAnchor(element: element, point: point);
 
   @override
+  bool get gridSnap => context.read<ToolCubit>().state.gridSnap;
+
+  @override
   bool get smartGuides => context.read<ToolCubit>().state.smartGuides;
 
   @override
@@ -190,19 +193,15 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
   }
 
   Offset _toWorld(Offset screenPos) {
-    var world = widget.viewport.toWorld(screenPos);
-    final tool = context.read<ToolCubit>().state.currentTool;
-    final isFreehand = tool == Tool.pen ||
-        tool == Tool.highlighter ||
-        tool == Tool.laser;
-    if (context.read<ToolCubit>().state.gridSnap && !isFreehand) {
-      const snap = 24.0;
-      world = Offset(
-        (world.dx / snap).roundToDouble() * snap,
-        (world.dy / snap).roundToDouble() * snap,
-      );
-    }
-    return world;
+    return widget.viewport.toWorld(screenPos);
+  }
+
+  Offset _snapToGrid(Offset pos) {
+    const snap = 24.0;
+    return Offset(
+      (pos.dx / snap).roundToDouble() * snap,
+      (pos.dy / snap).roundToDouble() * snap,
+    );
   }
 
   void _onPointerDown(PointerDownEvent event) {
@@ -221,10 +220,11 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
 
     final activeToolType = context.read<ToolCubit>().state.currentTool;
     final world = _toWorld(event.localPosition);
+    final placeWorld = gridSnap ? _snapToGrid(world) : world;
 
     if (activeToolType == Tool.text || activeToolType == Tool.stickyNote) {
       widget.onOpenTextEditor?.call(
-        world,
+        placeWorld,
         event.localPosition,
         isSticky: activeToolType == Tool.stickyNote,
       );
@@ -237,8 +237,8 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
       final newElement = BoardElement(
         id: newId,
         type: ShapeType.codeBlock,
-        start: world,
-        end: world + const Offset(340, 200),
+        start: placeWorld,
+        end: placeWorld + const Offset(340, 200),
         color: Colors.transparent,
         fillColor: Colors.transparent,
         fontSize: 16.0,
@@ -257,8 +257,8 @@ class _CanvasGestureDispatcherState extends State<CanvasGestureDispatcher>
       final newElement = BoardElement(
         id: newId,
         type: ShapeType.table,
-        start: world,
-        end: world + const Offset(360, 180),
+        start: placeWorld,
+        end: placeWorld + const Offset(360, 180),
         color: strokeColor,
         fillColor: fillColor,
         strokeWidth: 1.5,

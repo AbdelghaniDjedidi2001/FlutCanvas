@@ -56,6 +56,9 @@ class MockToolContext implements CanvasToolContext {
   ConnectorStyle connectorStyle = ConnectorStyle.straight;
 
   @override
+  bool gridSnap = false;
+
+  @override
   bool smartGuides = true;
 
   @override
@@ -126,7 +129,12 @@ class MockToolContext implements CanvasToolContext {
   String generateElementId() => 'mock_el_${committedElements.length + 1}';
 
   @override
-  BoardElement? hitTestTopmost(Offset worldPos) => null;
+  BoardElement? hitTestTopmost(Offset worldPos) {
+    for (final el in elements.reversed) {
+      if (el.hitTest(worldPos, 6.0)) return el;
+    }
+    return null;
+  }
 }
 
 void main() {
@@ -273,6 +281,175 @@ void main() {
 
       tool.onPointerUp(const Offset(150, 100), context);
       expect(context.committedElements.first.type, equals(ShapeType.ellipse));
+      expect(context.committedElements.first.bounds.width, closeTo(100.0, 1.0));
+      expect(context.committedElements.first.bounds.height, closeTo(100.0, 1.0));
+    });
+
+    test('FreehandTool snaps rectangle on pointer up and aligns to 24.0 grid when gridSnap is true', () {
+      final tool = FreehandTool(toolType: Tool.pen);
+      final context = MockToolContext()
+        ..autoShapeRecognition = true
+        ..gridSnap = true;
+
+      // Draw a rectangle from (50, 50) to (150, 150)
+      tool.onPointerDown(const Offset(50, 50), context);
+      for (double x = 50; x <= 150; x += 10) {
+        tool.onPointerMove(Offset(x, 50), context);
+      }
+      for (double y = 50; y <= 150; y += 10) {
+        tool.onPointerMove(Offset(150, y), context);
+      }
+      for (double x = 150; x >= 50; x -= 10) {
+        tool.onPointerMove(Offset(x, 150), context);
+      }
+      for (double y = 150; y >= 50; y -= 10) {
+        tool.onPointerMove(Offset(50, y), context);
+      }
+      tool.onPointerUp(const Offset(50, 50), context);
+
+      expect(context.committedElements.length, equals(1));
+      final shape = context.committedElements.first;
+      expect(shape.type, equals(ShapeType.rectangle));
+      // 50 snapped to 24 is 48.0, 150 snapped to 24 is 144.0
+      expect(shape.start.dx, equals(48.0));
+      expect(shape.start.dy, equals(48.0));
+      expect(shape.end.dx, equals(144.0));
+      expect(shape.end.dy, equals(144.0));
+    });
+
+    test('SelectTool snaps element top-left to 24.0 grid multiples when moving with gridSnap = true', () {
+      final tool = SelectTool();
+      // Element starts at non-grid coordinates (50, 50)
+      final element = const BoardElement(
+        id: 'box_grid',
+        type: ShapeType.rectangle,
+        start: Offset(50, 50),
+        end: Offset(150, 150),
+      );
+      final context = MockToolContext()
+        ..elements = [element]
+        ..selectedIds = {'box_grid'}
+        ..gridSnap = true;
+
+      // Click at (60, 60) and drag by (25, 25)
+      tool.onPointerDown(const Offset(60, 60), context);
+      tool.onPointerMove(const Offset(85, 85), context);
+      tool.onPointerUp(const Offset(85, 85), context);
+
+      // (50 + 25, 50 + 25) = (75, 75). Nearest 24.0 multiple is 72.0!
+      final moved = context.elements.firstWhere((e) => e.id == 'box_grid');
+      expect(moved.bounds.left, equals(72.0));
+      expect(moved.bounds.top, equals(72.0));
+    });
+
+    test('SelectTool snaps element top-left to 24.0 grid multiples on FIRST CLICK drag when initially unselected', () {
+      final tool = SelectTool();
+      final element = const BoardElement(
+        id: 'unselected_box',
+        type: ShapeType.rectangle,
+        start: Offset(50, 50),
+        end: Offset(150, 150),
+      );
+      // Notice: selectedIds starts EMPTY!
+      final context = MockToolContext()
+        ..elements = [element]
+        ..selectedIds = {}
+        ..gridSnap = true;
+
+      // Click at (60, 60) and drag by (25, 25)
+      tool.onPointerDown(const Offset(60, 60), context);
+      tool.onPointerMove(const Offset(85, 85), context);
+      tool.onPointerUp(const Offset(85, 85), context);
+
+      final moved = context.elements.firstWhere((e) => e.id == 'unselected_box');
+      // Element must have moved on the first click and snapped to 72.0!
+      expect(moved.bounds.left, equals(72.0));
+      expect(moved.bounds.top, equals(72.0));
+      expect(context.selectedIds, contains('unselected_box'));
+    });
+
+    test('SelectTool snaps resize handles to 24.0 grid multiples when resizing with gridSnap = true', () {
+      final tool = SelectTool();
+      final element = const BoardElement(
+        id: 'resizable_box',
+        type: ShapeType.rectangle,
+        start: Offset(48, 48),
+        end: Offset(144, 144),
+      );
+      final context = MockToolContext()
+        ..elements = [element]
+        ..selectedIds = {'resizable_box'}
+        ..gridSnap = true;
+
+      // Bottom-right handle is at (144, 144)
+      tool.onPointerDown(const Offset(144, 144), context);
+      // Drag down-right by 30px to (174, 174)
+      tool.onPointerMove(const Offset(174, 174), context);
+      tool.onPointerUp(const Offset(174, 174), context);
+
+      final resized = context.elements.firstWhere((e) => e.id == 'resizable_box');
+      // 174 snapped to 24 is 168.0!
+      expect(resized.bounds.right, equals(168.0));
+      expect(resized.bounds.bottom, equals(168.0));
+    });
+
+    test('ShapeTool creates rectangle with coordinates aligned to 24.0 grid when gridSnap = true', () {
+      final tool = ShapeTool(toolType: Tool.rectangle, shapeType: ShapeType.rectangle);
+      final context = MockToolContext()..gridSnap = true;
+
+      // Draw from (50, 50) to (150, 150)
+      tool.onPointerDown(const Offset(50, 50), context);
+      tool.onPointerMove(const Offset(150, 150), context);
+      tool.onPointerUp(const Offset(150, 150), context);
+
+      expect(context.committedElements.length, equals(1));
+      final shape = context.committedElements.first;
+      // 50 snapped is 48.0, 150 snapped is 144.0
+      expect(shape.start, equals(const Offset(48.0, 48.0)));
+      expect(shape.end, equals(const Offset(144.0, 144.0)));
+    });
+
+    test('FreehandTool snaps every stroke point to 24.0 grid multiples when gridSnap is true', () {
+      final tool = FreehandTool(toolType: Tool.pen);
+      final context = MockToolContext()
+        ..gridSnap = true
+        ..autoShapeRecognition = false; // test pure freehand snapping
+
+      // Start at (26, 25) -> snapped to (24, 24)
+      tool.onPointerDown(const Offset(26, 25), context);
+      expect(context.draft?.start, equals(const Offset(24.0, 24.0)));
+
+      // Move across grid cells
+      tool.onPointerMove(const Offset(50, 25), context); // -> (48, 24)
+      tool.onPointerMove(const Offset(75, 49), context); // -> (72, 48)
+      tool.onPointerUp(const Offset(75, 49), context);
+
+      expect(context.committedElements.length, equals(1));
+      final stroke = context.committedElements.first;
+      expect(stroke.type, equals(ShapeType.pen));
+      for (final p in stroke.points) {
+        expect(p.dx % 24.0, equals(0.0), reason: 'Point $p dx should be multiple of 24');
+        expect(p.dy % 24.0, equals(0.0), reason: 'Point $p dy should be multiple of 24');
+      }
+    });
+
+    test('FreehandTool recognizes fast straight line stroke on pointer up', () {
+      final tool = FreehandTool(toolType: Tool.pen);
+      final context = MockToolContext()
+        ..gridSnap = false
+        ..autoShapeRecognition = true;
+
+      // Draw a straight horizontal line
+      tool.onPointerDown(const Offset(10, 50), context);
+      tool.onPointerMove(const Offset(60, 50), context);
+      tool.onPointerMove(const Offset(120, 50), context);
+      tool.onPointerUp(const Offset(180, 50), context);
+
+      expect(context.committedElements.length, equals(1));
+      final element = context.committedElements.first;
+      expect(element.type, equals(ShapeType.line));
+      expect(element.start, equals(const Offset(10, 50)));
+      expect(element.end.dy, equals(50.0));
     });
   });
 }

@@ -16,7 +16,6 @@ class FreehandTool implements CanvasTool {
   BoardElement? _currentDraft;
   Timer? _shapeSnapTimer;
   bool _didSnapCurrentStroke = false;
-  Offset? _lastPointerMovePos;
 
   FreehandTool({
     required this.toolType,
@@ -26,13 +25,25 @@ class FreehandTool implements CanvasTool {
   @override
   MouseCursor get cursor => SystemMouseCursors.precise;
 
+  // Helper: snap a world-space point to the nearest 24px grid intersection.
+  static Offset _snapToGrid(Offset pos) {
+    const snap = 24.0;
+    return Offset(
+      (pos.dx / snap).roundToDouble() * snap,
+      (pos.dy / snap).roundToDouble() * snap,
+    );
+  }
+
   @override
   void onPointerDown(Offset worldPos, CanvasToolContext context) {
     _shapeSnapTimer?.cancel();
     _didSnapCurrentStroke = false;
-    _lastPointerMovePos = worldPos;
     _points.clear();
-    _points.add(worldPos);
+
+    // Snap the very first point to the 24px grid when grid-snap is active.
+    final startPos =
+        (!isHighlighter && context.gridSnap) ? _snapToGrid(worldPos) : worldPos;
+    _points.add(startPos);
 
     final id = context.generateElementId();
     final strokeWidth = isHighlighter
@@ -42,8 +53,8 @@ class FreehandTool implements CanvasTool {
     _currentDraft = BoardElement(
       id: id,
       type: isHighlighter ? ShapeType.highlighter : ShapeType.pen,
-      start: worldPos,
-      end: worldPos,
+      start: startPos,
+      end: startPos,
       points: List.unmodifiable(_points),
       color: context.strokeColor,
       strokeWidth: strokeWidth,
@@ -55,14 +66,20 @@ class FreehandTool implements CanvasTool {
 
   void _trySnapCurrentStroke(CanvasToolContext context) {
     if (_currentDraft == null || _didSnapCurrentStroke || isHighlighter) return;
-    if (_points.length < 5) return;
+    if (_points.length < 3) return;
 
     final recognized = ShapeRecognitionService.recognizeShape(_points);
-    if (recognized != null && recognized.confidence >= 0.55) {
+    if (recognized != null && recognized.confidence >= 0.50) {
+      var start = recognized.start;
+      var end = recognized.end;
+      if (context.gridSnap) {
+        start = _snapToGrid(start);
+        end = _snapToGrid(end);
+      }
       _currentDraft = _currentDraft!.copyWith(
         type: recognized.shapeType,
-        start: recognized.start,
-        end: recognized.end,
+        start: start,
+        end: end,
         points: const [],
       );
       _didSnapCurrentStroke = true;
@@ -75,38 +92,45 @@ class FreehandTool implements CanvasTool {
     if (_currentDraft == null) return;
 
     if (_didSnapCurrentStroke) {
-      _currentDraft = _currentDraft!.copyWith(end: worldPos);
-      context.setDraft(_currentDraft);
+      // After mid-stroke snap: only update the endpoint for line/arrow types.
+      if (_currentDraft!.type == ShapeType.line ||
+          _currentDraft!.type == ShapeType.arrow ||
+          _currentDraft!.type == ShapeType.doubleArrow) {
+        final endPos = context.gridSnap ? _snapToGrid(worldPos) : worldPos;
+        _currentDraft = _currentDraft!.copyWith(end: endPos);
+        context.setDraft(_currentDraft);
+      }
       return;
     }
 
     if (_points.isEmpty) return;
 
-    final last = _points.last;
-    final distSq = (worldPos.dx - last.dx) * (worldPos.dx - last.dx) +
-        (worldPos.dy - last.dy) * (worldPos.dy - last.dy);
+    // Apply grid snap to every stroke point when enabled (non-highlighter only).
+    final effectivePos =
+        (!isHighlighter && context.gridSnap) ? _snapToGrid(worldPos) : worldPos;
 
-    // Filter points that are too close (smooth stroke)
+    final last = _points.last;
+    final distSq = (effectivePos.dx - last.dx) * (effectivePos.dx - last.dx) +
+        (effectivePos.dy - last.dy) * (effectivePos.dy - last.dy);
+
+    // Only add a new point if it's sufficiently far from the previous one.
+    // (Prevents duplicate snapped grid positions from inflating _points.)
     if (distSq >= 4.0) {
-      _points.add(worldPos);
+      _points.add(effectivePos);
       _currentDraft = _currentDraft!.copyWith(
-        end: worldPos,
+        end: effectivePos,
         points: List.unmodifiable(_points),
       );
       context.setDraft(_currentDraft);
 
-      // Auto Shape Recognition pause timer (380ms)
+      // Auto Shape Recognition: cancel + restart the timer on every new point.
+      // This ensures it fires exactly 320 ms after the LAST stroke point,
+      // i.e., when the user pauses or finishes drawing.
       if (!isHighlighter &&
           context.autoShapeRecognition &&
-          _points.length >= 6) {
-        final moveDist = (_lastPointerMovePos != null)
-            ? (worldPos - _lastPointerMovePos!).distance
-            : 0.0;
-        if (moveDist > 6.0) {
-          _lastPointerMovePos = worldPos;
-        }
+          _points.length >= 3) {
         _shapeSnapTimer?.cancel();
-        _shapeSnapTimer = Timer(const Duration(milliseconds: 380), () {
+        _shapeSnapTimer = Timer(const Duration(milliseconds: 320), () {
           _trySnapCurrentStroke(context);
         });
       }
@@ -118,25 +142,41 @@ class FreehandTool implements CanvasTool {
     _shapeSnapTimer?.cancel();
     if (_currentDraft != null) {
       if (_didSnapCurrentStroke) {
-        context.commitElement(_currentDraft!.copyWith(end: worldPos));
+        // Mid-stroke snap already applied — commit the snapped element.
+        final endPos = context.gridSnap ? _snapToGrid(worldPos) : worldPos;
+        final elementToCommit = (_currentDraft!.type == ShapeType.line ||
+                _currentDraft!.type == ShapeType.arrow ||
+                _currentDraft!.type == ShapeType.doubleArrow)
+            ? _currentDraft!.copyWith(end: endPos)
+            : _currentDraft!;
+        context.commitElement(elementToCommit);
       } else if (_points.length >= 2) {
-        _points.add(worldPos);
+        // Snap the final pointer-up position if grid snap is active.
+        final finalPos =
+            (!isHighlighter && context.gridSnap) ? _snapToGrid(worldPos) : worldPos;
+        _points.add(finalPos);
 
         var finalElement = _currentDraft!.copyWith(
-          end: worldPos,
+          end: finalPos,
           points: List.unmodifiable(_points),
         );
 
-        // Auto Shape Recognition fallback on pointer up
+        // Auto Shape Recognition fallback: attempt recognition on the full stroke.
         if (!isHighlighter &&
             context.autoShapeRecognition &&
-            _points.length >= 5) {
+            _points.length >= 2) {
           final recognized = ShapeRecognitionService.recognizeShape(_points);
-          if (recognized != null && recognized.confidence >= 0.55) {
+          if (recognized != null && recognized.confidence >= 0.50) {
+            var start = recognized.start;
+            var end = recognized.end;
+            if (context.gridSnap) {
+              start = _snapToGrid(start);
+              end = _snapToGrid(end);
+            }
             finalElement = finalElement.copyWith(
               type: recognized.shapeType,
-              start: recognized.start,
-              end: recognized.end,
+              start: start,
+              end: end,
               points: const [],
             );
           }

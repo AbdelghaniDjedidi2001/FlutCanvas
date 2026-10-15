@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutcanvas/features/canvas/data/services/alignment_service.dart';
@@ -118,6 +119,12 @@ class PropertiesPanel extends StatelessWidget {
 
   BoardElement? _firstTable(List<BoardElement> list) =>
       list.where((e) => e.type == ShapeType.table).firstOrNull;
+
+  bool _hasCodeBlock(List<BoardElement> list) =>
+      list.any((e) => e.type == ShapeType.codeBlock);
+
+  BoardElement? _firstCodeBlock(List<BoardElement> list) =>
+      list.where((e) => e.type == ShapeType.codeBlock).firstOrNull;
 
   bool _hasGroupedElements(List<BoardElement> list) =>
       list.any((e) => e.groupId != null);
@@ -691,6 +698,182 @@ class PropertiesPanel extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 9),
+              ],
+
+              // 7b. Code Snippet Section
+              if (_hasCodeBlock(activeSelectedElements) ||
+                  toolState.currentTool == Tool.codeBlock) ...[
+                Builder(builder: (context) {
+                  final codeEl = _firstCodeBlock(activeSelectedElements);
+                  final activeLang = currentCodeLanguage ??
+                      codeEl?.codeLanguage ??
+                      toolState.codeLanguage;
+                  final activeShowLines = currentShowLineNumbers ??
+                      codeEl?.showLineNumbers ??
+                      true;
+
+                  const supportedLanguages = [
+                    'dart',
+                    'javascript',
+                    'typescript',
+                    'python',
+                    'html',
+                    'css',
+                    'json',
+                    'sql',
+                    'bash',
+                    'markdown',
+                    'cpp',
+                    'rust',
+                    'go',
+                  ];
+
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Code Snippet',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Text('Language:',
+                                style: TextStyle(fontSize: 10)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                height: 26,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 6),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: scheme.outlineVariant
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: supportedLanguages
+                                            .contains(activeLang.toLowerCase())
+                                        ? activeLang.toLowerCase()
+                                        : 'dart',
+                                    isDense: true,
+                                    isExpanded: true,
+                                    iconSize: 16,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: scheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    items: supportedLanguages
+                                        .map((lang) => DropdownMenuItem(
+                                              value: lang,
+                                              child: Text(lang),
+                                            ))
+                                        .toList(),
+                                    onChanged: (newLang) {
+                                      if (newLang == null) return;
+                                      if (onCodeLanguageChanged != null) {
+                                        onCodeLanguageChanged!(newLang);
+                                      } else {
+                                        toolCubit?.setCodeLanguage(newLang);
+                                        if (codeEl != null &&
+                                            canvasBloc != null) {
+                                          final updated = codeEl.copyWith(
+                                              codeLanguage: newLang);
+                                          canvasBloc.add(
+                                              CanvasEvent.updateElement(
+                                                  updated));
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            onPressed: () {
+                              final newVal = !activeShowLines;
+                              if (onToggleLineNumbers != null) {
+                                onToggleLineNumbers!(newVal);
+                              } else if (codeEl != null && canvasBloc != null) {
+                                final updated =
+                                    codeEl.copyWith(showLineNumbers: newVal);
+                                canvasBloc
+                                    .add(CanvasEvent.updateElement(updated));
+                              }
+                            },
+                            icon: Icon(
+                              activeShowLines
+                                  ? Icons.check_box
+                                  : Icons.check_box_outline_blank,
+                              size: 13,
+                            ),
+                            label: Text(
+                              activeShowLines
+                                  ? 'Line Numbers: ON'
+                                  : 'Line Numbers: OFF',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        if (codeEl != null) ...[
+                          const SizedBox(height: 4),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: onCopyCode ??
+                                  () {
+                                    Clipboard.setData(
+                                        ClipboardData(text: codeEl.text));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('Code copied to clipboard'),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
+                                  },
+                              icon: const Icon(Icons.copy_rounded, size: 13),
+                              label: const Text('Copy Code',
+                                  style: TextStyle(fontSize: 10)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }),
                 const SizedBox(height: 9),
               ],
 

@@ -23,6 +23,7 @@ abstract interface class CanvasToolContext {
   ConnectorStyle get connectorStyle;
 
   // Options & Modifiers
+  bool get gridSnap;
   bool get smartGuides;
   bool get autoShapeRecognition;
   bool get isShiftDown;

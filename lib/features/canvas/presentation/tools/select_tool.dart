@@ -20,6 +20,7 @@ class SelectTool implements CanvasTool {
   HandleType? _activeHandle;
   Rect? _initialSelectedBounds;
   List<BoardElement>? _initialElements;
+  Set<String>? _activeDragIds;
   double _startRotationAngle = 0.0;
   Offset? _startPoint;
 
@@ -40,9 +41,9 @@ class SelectTool implements CanvasTool {
     return SystemMouseCursors.basic;
   }
 
-  Rect? _getSelectedBounds(CanvasToolContext context) {
+  Rect? _getBoundsForIds(CanvasToolContext context, Set<String> ids) {
     final selected = context.elements
-        .where((e) => context.selectedIds.contains(e.id))
+        .where((e) => ids.contains(e.id))
         .toList();
     if (selected.isEmpty) return null;
     Rect combined = selected.first.bounds;
@@ -50,6 +51,10 @@ class SelectTool implements CanvasTool {
       combined = combined.expandToInclude(selected[i].bounds);
     }
     return combined;
+  }
+
+  Rect? _getSelectedBounds(CanvasToolContext context) {
+    return _getBoundsForIds(context, context.selectedIds);
   }
 
   @override
@@ -64,6 +69,7 @@ class SelectTool implements CanvasTool {
         _activeHandle = handle;
         _initialSelectedBounds = selectedBounds;
         _initialElements = List.of(context.elements);
+        _activeDragIds = Set<String>.from(context.selectedIds);
 
         if (handle == HandleType.rotation) {
           final center = selectedBounds.center;
@@ -90,6 +96,7 @@ class SelectTool implements CanvasTool {
         targetIds.add(hit.id);
       }
 
+      final Set<String> effectiveSelection;
       if (context.isShiftDown) {
         final currentSelection = Set<String>.from(context.selectedIds);
         if (currentSelection.containsAll(targetIds)) {
@@ -98,13 +105,18 @@ class SelectTool implements CanvasTool {
           currentSelection.addAll(targetIds);
         }
         context.selectElements(currentSelection);
+        effectiveSelection = currentSelection;
       } else {
         if (!context.selectedIds.contains(hit.id)) {
           context.selectElements(targetIds);
+          effectiveSelection = targetIds;
+        } else {
+          effectiveSelection = Set<String>.from(context.selectedIds);
         }
       }
 
-      _initialSelectedBounds = _getSelectedBounds(context);
+      _activeDragIds = effectiveSelection;
+      _initialSelectedBounds = _getBoundsForIds(context, effectiveSelection);
       _initialElements = List.of(context.elements);
       _subMode = _SelectSubMode.moving;
     } else {
@@ -112,6 +124,7 @@ class SelectTool implements CanvasTool {
       if (!context.isShiftDown) {
         context.clearSelection();
       }
+      _activeDragIds = null;
       _subMode = _SelectSubMode.marquee;
       context.setMarquee(Rect.fromPoints(worldPos, worldPos));
     }
@@ -136,13 +149,75 @@ class SelectTool implements CanvasTool {
       final initialBounds = _initialSelectedBounds;
       final handle = _activeHandle;
       final initialEls = _initialElements;
+      final targetIds = _activeDragIds ?? context.selectedIds;
       if (initialBounds != null && handle != null && initialEls != null) {
         final totalDelta = worldPos - _startPoint!;
-        final newBounds =
+        var newBounds =
             TransformHandle.resizeRect(initialBounds, handle, totalDelta);
 
+        if (context.gridSnap) {
+          const snap = 24.0;
+          double left = newBounds.left;
+          double top = newBounds.top;
+          double right = newBounds.right;
+          double bottom = newBounds.bottom;
+
+          switch (handle) {
+            case HandleType.topLeft:
+              left = (left / snap).roundToDouble() * snap;
+              top = (top / snap).roundToDouble() * snap;
+              break;
+            case HandleType.topCenter:
+              top = (top / snap).roundToDouble() * snap;
+              break;
+            case HandleType.topRight:
+              right = (right / snap).roundToDouble() * snap;
+              top = (top / snap).roundToDouble() * snap;
+              break;
+            case HandleType.centerLeft:
+              left = (left / snap).roundToDouble() * snap;
+              break;
+            case HandleType.centerRight:
+              right = (right / snap).roundToDouble() * snap;
+              break;
+            case HandleType.bottomLeft:
+              left = (left / snap).roundToDouble() * snap;
+              bottom = (bottom / snap).roundToDouble() * snap;
+              break;
+            case HandleType.bottomCenter:
+              bottom = (bottom / snap).roundToDouble() * snap;
+              break;
+            case HandleType.bottomRight:
+              right = (right / snap).roundToDouble() * snap;
+              bottom = (bottom / snap).roundToDouble() * snap;
+              break;
+            case HandleType.rotation:
+              break;
+          }
+
+          if (right < left + snap) {
+            if (handle == HandleType.topLeft ||
+                handle == HandleType.centerLeft ||
+                handle == HandleType.bottomLeft) {
+              left = right - snap;
+            } else {
+              right = left + snap;
+            }
+          }
+          if (bottom < top + snap) {
+            if (handle == HandleType.topLeft ||
+                handle == HandleType.topCenter ||
+                handle == HandleType.topRight) {
+              top = bottom - snap;
+            } else {
+              bottom = top + snap;
+            }
+          }
+          newBounds = Rect.fromLTRB(left, top, right, bottom);
+        }
+
         for (final el in initialEls) {
-          if (context.selectedIds.contains(el.id) && !el.isLocked) {
+          if (targetIds.contains(el.id) && !el.isLocked) {
             context.updateElement(el.scaled(initialBounds, newBounds));
           }
         }
@@ -150,6 +225,7 @@ class SelectTool implements CanvasTool {
     } else if (_subMode == _SelectSubMode.rotating) {
       final initialBounds = _initialSelectedBounds;
       final initialEls = _initialElements;
+      final targetIds = _activeDragIds ?? context.selectedIds;
       if (initialBounds != null && initialEls != null) {
         final center = initialBounds.center;
         final currentAngle =
@@ -162,7 +238,7 @@ class SelectTool implements CanvasTool {
         }
 
         for (final el in initialEls) {
-          if (context.selectedIds.contains(el.id) && !el.isLocked) {
+          if (targetIds.contains(el.id) && !el.isLocked) {
             context.updateElement(el.rotated(deltaAngle));
           }
         }
@@ -170,12 +246,21 @@ class SelectTool implements CanvasTool {
     } else if (_subMode == _SelectSubMode.moving) {
       final initialBounds = _initialSelectedBounds;
       final initialEls = _initialElements;
+      final targetIds = _activeDragIds ?? context.selectedIds;
       if (initialBounds != null && initialEls != null) {
         var totalDelta = worldPos - _startPoint!;
 
-        if (context.smartGuides) {
+        if (context.gridSnap) {
+          const snap = 24.0;
+          final targetTopLeft = initialBounds.topLeft + totalDelta;
+          final snappedTopLeft = Offset(
+            (targetTopLeft.dx / snap).roundToDouble() * snap,
+            (targetTopLeft.dy / snap).roundToDouble() * snap,
+          );
+          totalDelta = snappedTopLeft - initialBounds.topLeft;
+        } else if (context.smartGuides) {
           final otherElements = context.elements
-              .where((e) => !context.selectedIds.contains(e.id))
+              .where((e) => !targetIds.contains(e.id))
               .toList();
           final snapResult = SnapService.calculateSnap(
             initialBounds: initialBounds,
@@ -188,7 +273,7 @@ class SelectTool implements CanvasTool {
         }
 
         for (final el in initialEls) {
-          if (context.selectedIds.contains(el.id) && !el.isLocked) {
+          if (targetIds.contains(el.id) && !el.isLocked) {
             context.updateElement(el.translated(totalDelta));
           }
         }
@@ -207,6 +292,7 @@ class SelectTool implements CanvasTool {
     _activeHandle = null;
     _initialSelectedBounds = null;
     _initialElements = null;
+    _activeDragIds = null;
     _startPoint = null;
   }
 
@@ -221,6 +307,7 @@ class SelectTool implements CanvasTool {
     _activeHandle = null;
     _initialSelectedBounds = null;
     _initialElements = null;
+    _activeDragIds = null;
     _startPoint = null;
   }
 
