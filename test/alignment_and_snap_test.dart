@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/snap_guide.dart';
+import 'package:flutcanvas/features/canvas/domain/models/transform_handle.dart';
 import 'package:flutcanvas/features/canvas/data/services/alignment_service.dart';
 
 void main() {
@@ -164,6 +165,112 @@ void main() {
       );
 
       expect(snapResult.snappedDisplacement.dx, 100.0);
+      expect(snapResult.guides.isEmpty, true);
+    });
+
+    test('does not snap to invisible elements', () {
+      final hiddenStationary = stationary.copyWith(isVisible: false);
+      final moving = const Rect.fromLTWH(130, 300, 40, 40);
+      final snapResult = SnapService.calculateSnap(
+        initialBounds: moving,
+        rawDisplacement: const Offset(2.0, 0.0),
+        otherElements: [hiddenStationary],
+        zoom: 1.0,
+        snapThresholdPx: 8.0,
+      );
+
+      expect(snapResult.snappedDisplacement.dx, 2.0);
+      expect(snapResult.guides.isEmpty, true);
+    });
+
+    test('extends vertical guide across multiple aligned elements', () {
+      final stationary2 = BoardElement(
+        id: 'target2',
+        type: ShapeType.rectangle,
+        start: const Offset(100, 500),
+        end: const Offset(200, 600),
+        color: Colors.black,
+      );
+
+      final moving = const Rect.fromLTWH(130, 300, 40, 40); // center is 150
+      final snapResult = SnapService.calculateSnap(
+        initialBounds: moving,
+        rawDisplacement: const Offset(1.0, 0.0), // center becomes 151
+        otherElements: [stationary, stationary2],
+        zoom: 1.0,
+        snapThresholdPx: 8.0,
+      );
+
+      expect(snapResult.snappedDisplacement.dx, 0.0);
+      expect(snapResult.guides.isNotEmpty, true);
+      final guide = snapResult.guides.firstWhere((g) => g.type == SnapGuideType.vertical);
+      expect(guide.position, 150.0);
+      // Guide should span from stationary.top (100) down to stationary2.bottom (600)
+      expect(guide.minCross, lessThanOrEqualTo(100.0));
+      expect(guide.maxCross, greaterThanOrEqualTo(600.0));
+    });
+
+    test('calculateResizeSnap snaps right handle to reference edge', () {
+      // Stationary right edge is at x=200
+      final currentBounds = const Rect.fromLTWH(50, 100, 148, 100); // right = 198 (2px away from 200)
+      final snapResult = SnapService.calculateResizeSnap(
+        newBounds: currentBounds,
+        handle: HandleType.centerRight,
+        otherElements: [stationary],
+        zoom: 1.0,
+        snapThresholdPx: 8.0,
+      );
+
+      expect(snapResult.snappedBounds.right, 200.0);
+      expect(snapResult.guides.isNotEmpty, true);
+      expect(snapResult.guides.first.type, SnapGuideType.vertical);
+      expect(snapResult.guides.first.position, 200.0);
+    });
+
+    test('calculateResizeSnap snaps bottom handle to reference bottom', () {
+      // Stationary bottom edge is at y=200
+      final currentBounds = const Rect.fromLTWH(50, 50, 100, 149); // bottom = 199 (1px away from 200)
+      final snapResult = SnapService.calculateResizeSnap(
+        newBounds: currentBounds,
+        handle: HandleType.bottomCenter,
+        otherElements: [stationary],
+        zoom: 1.0,
+        snapThresholdPx: 8.0,
+      );
+
+      expect(snapResult.snappedBounds.bottom, 200.0);
+      expect(snapResult.guides.isNotEmpty, true);
+      expect(snapResult.guides.first.type, SnapGuideType.horizontal);
+      expect(snapResult.guides.first.position, 200.0);
+    });
+
+    test('calculateResizeSnap snaps corner handle on both X and Y', () {
+      // Stationary is [100, 100, 200, 200]. Bottom-right target is ~ (200, 200)
+      final currentBounds = const Rect.fromLTWH(50, 50, 149, 149); // right=199, bottom=199
+      final snapResult = SnapService.calculateResizeSnap(
+        newBounds: currentBounds,
+        handle: HandleType.bottomRight,
+        otherElements: [stationary],
+        zoom: 1.0,
+        snapThresholdPx: 8.0,
+      );
+
+      expect(snapResult.snappedBounds.right, 200.0);
+      expect(snapResult.snappedBounds.bottom, 200.0);
+      expect(snapResult.guides.length, 2);
+    });
+
+    test('calculateResizeSnap ignores rotation handle', () {
+      final currentBounds = const Rect.fromLTWH(50, 50, 149, 149);
+      final snapResult = SnapService.calculateResizeSnap(
+        newBounds: currentBounds,
+        handle: HandleType.rotation,
+        otherElements: [stationary],
+        zoom: 1.0,
+        snapThresholdPx: 8.0,
+      );
+
+      expect(snapResult.snappedBounds, currentBounds);
       expect(snapResult.guides.isEmpty, true);
     });
   });

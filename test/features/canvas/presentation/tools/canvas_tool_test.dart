@@ -393,6 +393,74 @@ void main() {
       expect(resized.bounds.bottom, equals(168.0));
     });
 
+    test('SelectTool displays smart guides and snaps position when moving with smartGuides = true', () {
+      final tool = SelectTool();
+      final stationary = const BoardElement(
+        id: 'box1',
+        type: ShapeType.rectangle,
+        start: Offset(100, 100),
+        end: Offset(200, 200),
+      );
+      final moving = const BoardElement(
+        id: 'box2',
+        type: ShapeType.rectangle,
+        start: Offset(100, 300),
+        end: Offset(200, 400),
+      );
+      final context = MockToolContext()
+        ..elements = [stationary, moving]
+        ..selectedIds = {'box2'}
+        ..gridSnap = false
+        ..smartGuides = true;
+
+      // Start drag at (150, 350)
+      tool.onPointerDown(const Offset(150, 350), context);
+      // Move slightly to the right by 2px (to 152, 350) - should snap back to 100 (diff=2 < 10)
+      tool.onPointerMove(const Offset(152, 350), context);
+
+      expect(context.snapGuides.isNotEmpty, true);
+      final moved = context.elements.firstWhere((e) => e.id == 'box2');
+      expect(moved.bounds.left, equals(100.0));
+
+      // Pointer up clears snap guides
+      tool.onPointerUp(const Offset(152, 350), context);
+      expect(context.snapGuides.isEmpty, true);
+    });
+
+    test('SelectTool displays smart guides and snaps handle when resizing with smartGuides = true', () {
+      final tool = SelectTool();
+      final stationary = const BoardElement(
+        id: 'box1',
+        type: ShapeType.rectangle,
+        start: Offset(200, 100),
+        end: Offset(300, 200),
+      );
+      final resizable = const BoardElement(
+        id: 'box2',
+        type: ShapeType.rectangle,
+        start: Offset(50, 100),
+        end: Offset(150, 200), // right is at 150
+      );
+      final context = MockToolContext()
+        ..elements = [stationary, resizable]
+        ..selectedIds = {'box2'}
+        ..gridSnap = false
+        ..smartGuides = true;
+
+      // Center-right handle is at (150, 150)
+      tool.onPointerDown(const Offset(150, 150), context);
+      // Drag right handle towards 200 (drag by 48px to 198) - within 10px of 200
+      tool.onPointerMove(const Offset(198, 150), context);
+
+      expect(context.snapGuides.isNotEmpty, true);
+      final resized = context.elements.firstWhere((e) => e.id == 'box2');
+      expect(resized.bounds.right, equals(200.0));
+
+      // Pointer up clears snap guides
+      tool.onPointerUp(const Offset(198, 150), context);
+      expect(context.snapGuides.isEmpty, true);
+    });
+
     test('ShapeTool creates rectangle with coordinates aligned to 24.0 grid when gridSnap = true', () {
       final tool = ShapeTool(toolType: Tool.rectangle, shapeType: ShapeType.rectangle);
       final context = MockToolContext()..gridSnap = true;

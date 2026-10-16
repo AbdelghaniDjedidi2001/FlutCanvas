@@ -214,6 +214,18 @@ class SelectTool implements CanvasTool {
             }
           }
           newBounds = Rect.fromLTRB(left, top, right, bottom);
+        } else if (context.smartGuides) {
+          final otherElements = context.elements
+              .where((e) => !targetIds.contains(e.id) && e.isVisible)
+              .toList();
+          final snapResult = SnapService.calculateResizeSnap(
+            newBounds: newBounds,
+            handle: handle,
+            otherElements: otherElements,
+            zoom: context.zoom,
+          );
+          newBounds = snapResult.snappedBounds;
+          context.setSnapGuides(snapResult.guides);
         }
 
         for (final el in initialEls) {
@@ -260,7 +272,7 @@ class SelectTool implements CanvasTool {
           totalDelta = snappedTopLeft - initialBounds.topLeft;
         } else if (context.smartGuides) {
           final otherElements = context.elements
-              .where((e) => !targetIds.contains(e.id))
+              .where((e) => !targetIds.contains(e.id) && e.isVisible)
               .toList();
           final snapResult = SnapService.calculateSnap(
             initialBounds: initialBounds,
@@ -285,7 +297,8 @@ class SelectTool implements CanvasTool {
   void onPointerUp(Offset worldPos, CanvasToolContext context) {
     if (_subMode == _SelectSubMode.marquee) {
       context.setMarquee(null);
-    } else if (_subMode == _SelectSubMode.moving) {
+    } else if (_subMode == _SelectSubMode.moving ||
+        _subMode == _SelectSubMode.resizing) {
       context.setSnapGuides(const []);
     }
     _subMode = _SelectSubMode.none;
@@ -300,7 +313,8 @@ class SelectTool implements CanvasTool {
   void onPointerCancel(CanvasToolContext context) {
     if (_subMode == _SelectSubMode.marquee) {
       context.setMarquee(null);
-    } else if (_subMode == _SelectSubMode.moving) {
+    } else if (_subMode == _SelectSubMode.moving ||
+        _subMode == _SelectSubMode.resizing) {
       context.setSnapGuides(const []);
     }
     _subMode = _SelectSubMode.none;
