@@ -7,6 +7,20 @@ import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 
+class _MermaidStyle {
+  final Color? fillColor;
+  final Color? strokeColor;
+  final double? strokeWidth;
+  final Color? textColor;
+
+  const _MermaidStyle({
+    this.fillColor,
+    this.strokeColor,
+    this.strokeWidth,
+    this.textColor,
+  });
+}
+
 class _MermaidNode {
   final String id;
   String text;
@@ -14,12 +28,19 @@ class _MermaidNode {
   int rank = 0;
   int orderInRank = 0;
   String? subgraphId;
+  String? className;
+  _MermaidStyle? directStyle;
+  double width = 160.0;
+  double height = 64.0;
+  Offset position = Offset.zero;
 
   _MermaidNode({
     required this.id,
     required this.text,
     this.shapeType = ShapeType.rectangle,
     this.subgraphId,
+    this.className,
+    this.directStyle,
   });
 }
 
@@ -29,6 +50,7 @@ class _MermaidEdge {
   final String? label;
   final ConnectorStyle connectorStyle;
   final StrokeStyle strokeStyle;
+  final double strokeWidth;
   final bool hasStartArrow;
   final bool hasEndArrow;
 
@@ -38,6 +60,7 @@ class _MermaidEdge {
     this.label,
     this.connectorStyle = ConnectorStyle.orthogonal,
     this.strokeStyle = StrokeStyle.solid,
+    this.strokeWidth = 2.0,
     this.hasStartArrow = false,
     this.hasEndArrow = true,
   });
@@ -63,6 +86,7 @@ class MermaidParserService {
         firstLine.startsWith('classdiagram') ||
         firstLine.startsWith('erdiagram') ||
         firstLine.startsWith('subgraph') ||
+        firstLine.startsWith('classdef') ||
         (trimmed.contains('-->') || trimmed.contains('---') || trimmed.contains('==>'));
   }
 
@@ -72,32 +96,83 @@ class MermaidParserService {
     Offset origin = const Offset(100, 100),
     Color defaultColor = const Color(0xFF1971C2),
   }) {
-    final lines = script.split('\n');
+    final rawLines = script.split('\n');
     String direction = 'TD'; // default Top-Down
     final nodes = <String, _MermaidNode>{};
     final edges = <_MermaidEdge>[];
     final subgraphs = <String, _MermaidSubgraph>{};
+    final classStyles = <String, _MermaidStyle>{};
     String? currentSubgraphId;
 
-    for (var rawLine in lines) {
-      var line = rawLine.trim();
-      // Remove comments
-      if (line.startsWith('%%')) continue;
+    for (var rawLine in rawLines) {
+      // 1. Remove comments
+      var line = rawLine;
+      if (line.contains('%%')) {
+        line = line.split('%%').first;
+      }
+      line = line.trim();
       if (line.isEmpty) continue;
 
-      // Header: graph TD / flowchart LR
+      // 2. Header: graph TD / graph TB / flowchart LR
       final headerMatch = RegExp(r'^(?:graph|flowchart)\s+([A-Za-z]+)', caseSensitive: false)
           .firstMatch(line);
       if (headerMatch != null) {
         direction = headerMatch.group(1)!.toUpperCase();
+        if (direction == 'TB') direction = 'TD';
         continue;
       }
 
-      // Subgraph start: subgraph Title or subgraph id [Title]
-      final subgraphStartMatch = RegExp(r'^subgraph\s+(?:([A-Za-z0-9_\-]+)\s*(?:\[(.*?)\])?|(.*?))$', caseSensitive: false)
-          .firstMatch(line);
+      // 3. classDef definition: classDef green fill:#9f6,stroke:#333,stroke-width:2px;
+      final classDefMatch = RegExp(
+        r'^classDef\s+([A-Za-z0-9_\-]+)\s+(.+?);?$',
+        caseSensitive: false,
+      ).firstMatch(line);
+      if (classDefMatch != null) {
+        final className = classDefMatch.group(1)!.trim();
+        final stylesStr = classDefMatch.group(2)!.trim();
+        classStyles[className] = _parseStyleString(stylesStr);
+        continue;
+      }
+
+      // 4. class assignment: class sq,e green;
+      final classAssignMatch = RegExp(
+        r'^class\s+([A-Za-z0-9_\-,\s]+?)\s+([A-Za-z0-9_\-]+);?$',
+        caseSensitive: false,
+      ).firstMatch(line);
+      if (classAssignMatch != null) {
+        final nodeIdsStr = classAssignMatch.group(1)!.trim();
+        final className = classAssignMatch.group(2)!.trim();
+        final ids = nodeIdsStr.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty);
+        for (final id in ids) {
+          final node = _getOrCreateNode(id, nodes, currentSubgraphId, subgraphs);
+          node.className = className;
+        }
+        continue;
+      }
+
+      // 5. style directive: style sq fill:#9f6,stroke:#333;
+      final styleMatch = RegExp(
+        r'^style\s+([A-Za-z0-9_\-]+)\s+(.+?);?$',
+        caseSensitive: false,
+      ).firstMatch(line);
+      if (styleMatch != null) {
+        final nodeId = styleMatch.group(1)!.trim();
+        final stylesStr = styleMatch.group(2)!.trim();
+        final node = _getOrCreateNode(nodeId, nodes, currentSubgraphId, subgraphs);
+        node.directStyle = _parseStyleString(stylesStr);
+        continue;
+      }
+
+      // 6. Subgraph start: subgraph Title or subgraph id [Title]
+      final subgraphStartMatch = RegExp(
+        r'^subgraph\s+(?:([A-Za-z0-9_\-]+)\s*(?:\[(.*?)\])?|(.*?))$',
+        caseSensitive: false,
+      ).firstMatch(line);
       if (subgraphStartMatch != null && !line.startsWith('end')) {
-        final idOrTitle = (subgraphStartMatch.group(1) ?? subgraphStartMatch.group(3) ?? 'subgraph_${subgraphs.length + 1}').trim();
+        final idOrTitle = (subgraphStartMatch.group(1) ??
+                subgraphStartMatch.group(3) ??
+                'subgraph_${subgraphs.length + 1}')
+            .trim();
         final title = subgraphStartMatch.group(2) ?? idOrTitle;
         final subId = 'sub_${subgraphs.length + 1}';
         subgraphs[subId] = _MermaidSubgraph(id: subId, title: title);
@@ -105,12 +180,19 @@ class MermaidParserService {
         continue;
       }
 
-      if (line.toLowerCase() == 'end') {
+      // 7. Subgraph end
+      if (line.toLowerCase() == 'end' || line.toLowerCase() == 'end;') {
         currentSubgraphId = null;
         continue;
       }
 
-      // Parse edge or node definitions on this line
+      // 8. Strip trailing semicolon if present
+      if (line.endsWith(';')) {
+        line = line.substring(0, line.length - 1).trim();
+      }
+      if (line.isEmpty) continue;
+
+      // 9. Parse edge(s) or single node on this line
       _parseLine(
         line: line,
         nodes: nodes,
@@ -122,7 +204,14 @@ class MermaidParserService {
 
     if (nodes.isEmpty) return [];
 
-    // Layout graph using Hierarchical Layered Digraph Algorithm
+    // Apply class styles to nodes
+    for (final node in nodes.values) {
+      if (node.className != null && classStyles.containsKey(node.className)) {
+        node.directStyle = classStyles[node.className];
+      }
+    }
+
+    // Layout graph using Hierarchical Layered Digraph Algorithm with Component Separation
     return _layoutElements(
       nodes: nodes.values.toList(),
       edges: edges,
@@ -133,6 +222,98 @@ class MermaidParserService {
     );
   }
 
+  static _MermaidStyle _parseStyleString(String raw) {
+    Color? fill;
+    Color? stroke;
+    double? strokeWidth;
+    Color? text;
+
+    // Split by commas or semicolons
+    final parts = raw.split(RegExp(r'[,;]'));
+    for (var part in parts) {
+      part = part.trim();
+      if (part.isEmpty) continue;
+      final kv = part.split(':');
+      if (kv.length < 2) continue;
+      final key = kv[0].trim().toLowerCase();
+      final val = kv.sublist(1).join(':').trim();
+
+      if (key == 'fill') {
+        fill = _parseCssColor(val);
+      } else if (key == 'stroke') {
+        stroke = _parseCssColor(val);
+      } else if (key == 'stroke-width') {
+        final numStr = val.replaceAll(RegExp(r'[^\d.]'), '');
+        final d = double.tryParse(numStr);
+        if (d != null) strokeWidth = d;
+      } else if (key == 'color') {
+        text = _parseCssColor(val);
+      }
+    }
+
+    return _MermaidStyle(
+      fillColor: fill,
+      strokeColor: stroke,
+      strokeWidth: strokeWidth,
+      textColor: text,
+    );
+  }
+
+  static Color? _parseCssColor(String raw) {
+    var str = raw.trim().toLowerCase();
+    if (str.isEmpty) return null;
+
+    if (str.startsWith('#')) {
+      var hex = str.substring(1);
+      if (hex.length == 3) {
+        hex = '${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}';
+      } else if (hex.length == 4) {
+        hex = '${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}';
+      }
+      if (hex.length == 6) {
+        final val = int.tryParse(hex, radix: 16);
+        if (val != null) return Color(0xFF000000 | val);
+      } else if (hex.length == 8) {
+        final val = int.tryParse(hex, radix: 16);
+        if (val != null) return Color(val);
+      }
+      return null;
+    }
+
+    const namedColors = <String, Color>{
+      'red': Color(0xFFE03131),
+      'pink': Color(0xFFE64980),
+      'grape': Color(0xFFBE4BDB),
+      'violet': Color(0xFF7950F2),
+      'indigo': Color(0xFF4C6EF5),
+      'blue': Color(0xFF1971C2),
+      'cyan': Color(0xFF1098AD),
+      'teal': Color(0xFF0CA678),
+      'green': Color(0xFF2F9E44),
+      'lime': Color(0xFF74B816),
+      'yellow': Color(0xFFF59F00),
+      'orange': Color(0xFFF76707),
+      'black': Color(0xFF000000),
+      'white': Color(0xFFFFFFFF),
+      'gray': Color(0xFF868E96),
+      'grey': Color(0xFF868E96),
+      'transparent': Color(0x00000000),
+    };
+    if (namedColors.containsKey(str)) {
+      return namedColors[str];
+    }
+
+    final rgbMatch = RegExp(r'rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)').firstMatch(str);
+    if (rgbMatch != null) {
+      final r = int.tryParse(rgbMatch.group(1)!) ?? 0;
+      final g = int.tryParse(rgbMatch.group(2)!) ?? 0;
+      final b = int.tryParse(rgbMatch.group(3)!) ?? 0;
+      return Color.fromARGB(255, r, g, b);
+    }
+
+    return null;
+  }
+
   static void _parseLine({
     required String line,
     required Map<String, _MermaidNode> nodes,
@@ -140,42 +321,70 @@ class MermaidParserService {
     required String? currentSubgraphId,
     required Map<String, _MermaidSubgraph> subgraphs,
   }) {
-    // Edge regex patterns:
-    // A --> B
-    // A -->|Text| B
-    // A -- Text --> B
-    // A -.-> B
-    // A ==> B
-    // A --- B
-    final edgeRegex = RegExp(
-      r'([A-Za-z0-9_\-]+(?:\s*\[.*?\]|\s*\(.*?\)|s*\{.*?\}|\s*\[\(.*?\)\]|\s*\(\(.*?\)\))?)\s*'
-      r'(-->|---|==>|-\.->|<-->|<==>|--\s*.*?\s*-->|-\.\s*.*?\s*\.->|==\s*.*?\s*==>|-->\|.*?\||==>\|.*?\||-\.->\|.*?\|)\s*'
-      r'([A-Za-z0-9_\-]+(?:\s*\[.*?\]|\s*\(.*?\)|s*\{.*?\}|\s*\[\(.*?\)\]|\s*\(\(.*?\)\))?)',
+    // Arrow regex to match any connector in between nodes:
+    // Solid: -->, --->, -- text -->, -->|text|
+    // Thick: ==>, ===>, == text ==>, ==>|text|
+    // Dashed: -.->, -. text .->, -.->|text|
+    // Plain line: ---, -- text ---, ---|text|, ===, -.-
+    // Bidirectional: <--> , <==>
+    final arrowRegex = RegExp(
+      r'(<==>|<-->|'
+      r'==\s*.*?==>|--\s*.*?-->|-\.\s*.*?\.-?>|'
+      r'==\s*.*?===|--\s*.*?---|-\.\s*.*?\.-|'
+      r'==>\|.*?\||-->\|.*?\||-\.->\|.*?\||'
+      r'==>|-->|-\.->|===|---|'
+      r'-\.-|<--|<==)',
     );
 
-    final matches = edgeRegex.allMatches(line);
+    final matches = arrowRegex.allMatches(line).toList();
     if (matches.isNotEmpty) {
-      for (final match in matches) {
-        final fromRaw = match.group(1)!.trim();
-        final arrowRaw = match.group(2)!.trim();
-        final toRaw = match.group(3)!.trim();
+      // Line contains one or more edge connectors (e.g. A --> B or A --> B --> C)
+      var lastEnd = 0;
+      _MermaidNode? previousNode;
 
-        final fromNode = _getOrCreateNode(fromRaw, nodes, currentSubgraphId, subgraphs);
-        final toNode = _getOrCreateNode(toRaw, nodes, currentSubgraphId, subgraphs);
+      for (var i = 0; i < matches.length; i++) {
+        final match = matches[i];
+        final nodePartBefore = line.substring(lastEnd, match.start).trim();
+        final arrowRaw = match.group(0)!.trim();
+        lastEnd = match.end;
 
-        // Parse arrow type, style, and label
+        final fromNode = previousNode ??
+            _getOrCreateNode(nodePartBefore, nodes, currentSubgraphId, subgraphs);
+
+        String nodePartAfter;
+        if (i + 1 < matches.length) {
+          nodePartAfter = line.substring(lastEnd, matches[i + 1].start).trim();
+        } else {
+          nodePartAfter = line.substring(lastEnd).trim();
+        }
+
+        final toNode = _getOrCreateNode(nodePartAfter, nodes, currentSubgraphId, subgraphs);
+        previousNode = toNode;
+
+        // Parse arrow properties
         String? label;
         var connectorStyle = ConnectorStyle.orthogonal;
         var strokeStyle = StrokeStyle.solid;
+        var strokeWidth = 2.0;
         var hasStartArrow = false;
         var hasEndArrow = true;
 
         if (arrowRaw.contains('|')) {
           final parts = arrowRaw.split('|');
           if (parts.length >= 2) label = parts[1].trim();
-        } else if (arrowRaw.startsWith('-- ') || arrowRaw.startsWith('-. ') || arrowRaw.startsWith('== ')) {
-          final textMatch = RegExp(r'(?:--|-\.|==)\s*(.*?)\s*(?:-->|\.->|==>)').firstMatch(arrowRaw);
-          if (textMatch != null) label = textMatch.group(1);
+        } else if (arrowRaw.startsWith('-- ') ||
+            arrowRaw.startsWith('-. ') ||
+            arrowRaw.startsWith('== ') ||
+            arrowRaw.startsWith('--') ||
+            arrowRaw.startsWith('==')) {
+          final textMatch = RegExp(r'(?:--|-\.|==)\s*(.*?)\s*(?:-->|\.->|==>|---|===|\.-)').firstMatch(arrowRaw);
+          if (textMatch != null && textMatch.group(1)!.trim().isNotEmpty) {
+            label = textMatch.group(1)!.trim();
+          }
+        }
+
+        if (label != null) {
+          label = label.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n').trim();
         }
 
         if (arrowRaw.contains('-.->') || arrowRaw.contains('-.') || arrowRaw.contains('.-')) {
@@ -183,7 +392,8 @@ class MermaidParserService {
           connectorStyle = ConnectorStyle.curved;
         } else if (arrowRaw.contains('==>') || arrowRaw.contains('==')) {
           connectorStyle = ConnectorStyle.orthogonal;
-        } else if (arrowRaw.contains('---')) {
+          strokeWidth = 3.5;
+        } else if (arrowRaw.contains('---') || arrowRaw.contains('===') || arrowRaw == '-.-') {
           hasEndArrow = false;
           connectorStyle = ConnectorStyle.straight;
         }
@@ -199,6 +409,7 @@ class MermaidParserService {
           label: label,
           connectorStyle: connectorStyle,
           strokeStyle: strokeStyle,
+          strokeWidth: strokeWidth,
           hasStartArrow: hasStartArrow,
           hasEndArrow: hasEndArrow,
         ));
@@ -215,70 +426,93 @@ class MermaidParserService {
     String? currentSubgraphId,
     Map<String, _MermaidSubgraph> subgraphs,
   ) {
-    // Test node shapes:
-    // Stadium / Pill: A([Text])
-    // Subroutine: A[[Text]]
-    // Database: A[(Text)]
-    // Circle: A((Text))
-    // Diamond: A{Text}
-    // Rounded: A(Text)
-    // Rectangle: A[Text]
-    // Raw: A
+    var str = raw.trim();
+    if (str.endsWith(';')) str = str.substring(0, str.length - 1).trim();
 
-    final pattern = RegExp(
-      r'^([A-Za-z0-9_\-]+)\s*(?:'
-      r'\[\((.*?)\)\]|' // Database [(Text)]
-      r'\[\[(.*?)\]\]|' // Subroutine [[Text]]
-      r'\(\[(.*?)\]\)|' // Stadium ([Text])
-      r'\(\((.*?)\)\)|' // Circle ((Text))
-      r'\{(.*?)\}|'     // Diamond {Text}
-      r'\((.*?)\)|'     // Rounded (Text)
-      r'\[(.*?)\]'      // Rectangle [Text]
-      r')?$',
-    );
+    // Check for :::className suffix
+    String? inlineClass;
+    final classSuffixMatch = RegExp(r':::([A-Za-z0-9_\-]+)$').firstMatch(str);
+    if (classSuffixMatch != null) {
+      inlineClass = classSuffixMatch.group(1);
+      str = str.substring(0, classSuffixMatch.start).trim();
+    }
 
-    final match = pattern.firstMatch(raw.trim());
-    if (match != null) {
-      final id = match.group(1)!;
-      final dbText = match.group(2);
-      final subText = match.group(3);
-      final stadiumText = match.group(4);
-      final circleText = match.group(5);
-      final diamondText = match.group(6);
-      final roundText = match.group(7);
-      final rectText = match.group(8);
+    // Pattern to capture:
+    // 1. Node ID
+    // 2. Shape enclosure
+    // Shapes supported:
+    // Asymmetric:   id>Text]
+    // Circle:       id((Text)) or id(((Text)))
+    // Database:     id[(Text)]
+    // Subroutine:   id[[Text]]
+    // Stadium:      id([Text])
+    // Diamond:      id{Text} or id{{Text}}
+    // Rounded:      id(Text)
+    // Rectangle:    id[Text]
+    // Raw:          id
+
+    final idMatch = RegExp(r'^([^\s\[\(\{\>\<\;]+)(.*)$', dotAll: true).firstMatch(str);
+    if (idMatch != null) {
+      final id = idMatch.group(1)!.trim();
+      var rest = idMatch.group(2)!.trim();
 
       var text = id;
       var shape = ShapeType.rectangle;
+      var hasExplicitShape = false;
 
-      if (dbText != null) {
-        text = dbText;
-        shape = ShapeType.roundedRectangle;
-      } else if (subText != null) {
-        text = subText;
-        shape = ShapeType.rectangle;
-      } else if (stadiumText != null) {
-        text = stadiumText;
-        shape = ShapeType.roundedRectangle;
-      } else if (circleText != null) {
-        text = circleText;
-        shape = ShapeType.ellipse;
-      } else if (diamondText != null) {
-        text = diamondText;
-        shape = ShapeType.diamond;
-      } else if (roundText != null) {
-        text = roundText;
-        shape = ShapeType.roundedRectangle;
-      } else if (rectText != null) {
-        text = rectText;
-        shape = ShapeType.rectangle;
+      if (rest.isNotEmpty) {
+        if (rest.startsWith('>') && rest.endsWith(']')) {
+          text = rest.substring(1, rest.length - 1).trim();
+          shape = ShapeType.asymmetric;
+          hasExplicitShape = true;
+        } else if ((rest.startsWith('(((') && rest.endsWith(')))')) ||
+            (rest.startsWith('((') && rest.endsWith('))'))) {
+          final prefixLen = rest.startsWith('(((') ? 3 : 2;
+          text = rest.substring(prefixLen, rest.length - prefixLen).trim();
+          shape = ShapeType.ellipse;
+          hasExplicitShape = true;
+        } else if (rest.startsWith('[(') && rest.endsWith(')]')) {
+          text = rest.substring(2, rest.length - 2).trim();
+          shape = ShapeType.roundedRectangle;
+          hasExplicitShape = true;
+        } else if (rest.startsWith('[[') && rest.endsWith(']]')) {
+          text = rest.substring(2, rest.length - 2).trim();
+          shape = ShapeType.rectangle;
+          hasExplicitShape = true;
+        } else if (rest.startsWith('([') && rest.endsWith('])')) {
+          text = rest.substring(2, rest.length - 2).trim();
+          shape = ShapeType.roundedRectangle;
+          hasExplicitShape = true;
+        } else if ((rest.startsWith('{{') && rest.endsWith('}}')) ||
+            (rest.startsWith('{') && rest.endsWith('}'))) {
+          final prefixLen = rest.startsWith('{{') ? 2 : 1;
+          text = rest.substring(prefixLen, rest.length - prefixLen).trim();
+          shape = ShapeType.diamond;
+          hasExplicitShape = true;
+        } else if (rest.startsWith('(') && rest.endsWith(')')) {
+          text = rest.substring(1, rest.length - 1).trim();
+          shape = ShapeType.roundedRectangle;
+          hasExplicitShape = true;
+        } else if (rest.startsWith('[') && rest.endsWith(']')) {
+          text = rest.substring(1, rest.length - 1).trim();
+          shape = ShapeType.rectangle;
+          hasExplicitShape = true;
+        }
       }
+
+      // Convert <br>, <br/>, <br /> to \n
+      text = text.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n').trim();
 
       if (nodes.containsKey(id)) {
         final existing = nodes[id]!;
-        if (text != id && existing.text == id) existing.text = text;
-        if (shape != ShapeType.rectangle && existing.shapeType == ShapeType.rectangle) {
+        if (text != id && (existing.text == id || existing.text.isEmpty)) {
+          existing.text = text;
+        }
+        if (hasExplicitShape) {
           existing.shapeType = shape;
+        }
+        if (inlineClass != null) {
+          existing.className = inlineClass;
         }
         if (currentSubgraphId != null && existing.subgraphId == null) {
           existing.subgraphId = currentSubgraphId;
@@ -292,6 +526,7 @@ class MermaidParserService {
         text: text,
         shapeType: shape,
         subgraphId: currentSubgraphId,
+        className: inlineClass,
       );
       nodes[id] = node;
       if (currentSubgraphId != null) {
@@ -300,9 +535,8 @@ class MermaidParserService {
       return node;
     }
 
-    // Fallback simple node ID
-    final id = raw.trim();
-    return nodes.putIfAbsent(id, () => _MermaidNode(id: id, text: id));
+    final fallbackId = str;
+    return nodes.putIfAbsent(fallbackId, () => _MermaidNode(id: fallbackId, text: fallbackId));
   }
 
   /// Assigns ranks (topological layers) and positions all elements cleanly
@@ -317,99 +551,161 @@ class MermaidParserService {
     final isHorizontal = direction == 'LR' || direction == 'RL';
     final isReversed = direction == 'BT' || direction == 'RL';
 
-    // 1. Calculate in-degrees and build adjacency map
-    final nodeMap = {for (final n in nodes) n.id: n};
-    final outgoing = <String, List<String>>{};
-    final incoming = <String, List<String>>{};
+    // 1. Calculate dynamic width and height for each node based on text and shape
+    for (final node in nodes) {
+      final lines = node.text.split('\n');
+      var maxLineLen = 0;
+      for (final l in lines) {
+        if (l.length > maxLineLen) maxLineLen = l.length;
+      }
+
+      final baseWidth = math.max(140.0, maxLineLen * 9.5 + 44.0);
+      final baseHeight = math.max(62.0, lines.length * 22.0 + 34.0);
+
+      if (node.shapeType == ShapeType.ellipse) {
+        final diam = math.max(baseWidth, baseHeight);
+        node.width = diam.clamp(100.0, 150.0);
+        node.height = node.width; // circle
+      } else if (node.shapeType == ShapeType.diamond) {
+        node.width = (baseWidth * 1.25).clamp(160.0, 240.0);
+        node.height = (baseHeight * 1.25).clamp(80.0, 130.0);
+      } else if (node.shapeType == ShapeType.asymmetric) {
+        node.width = (baseWidth + 30.0).clamp(160.0, 280.0);
+        node.height = baseHeight.clamp(62.0, 100.0);
+      } else {
+        node.width = baseWidth.clamp(140.0, 260.0);
+        node.height = baseHeight.clamp(62.0, 96.0);
+      }
+    }
+
+    // 2. Partition into Weakly Connected Components (including Subgraph grouping)
+    // Using Disjoint Set (Union-Find)
+    final parent = <String, String>{};
+    String find(String x) {
+      if (!parent.containsKey(x)) parent[x] = x;
+      if (parent[x] != x) parent[x] = find(parent[x]!);
+      return parent[x]!;
+    }
+
+    void union(String x, String y) {
+      final rootX = find(x);
+      final rootY = find(y);
+      if (rootX != rootY) parent[rootX] = rootY;
+    }
 
     for (final n in nodes) {
-      outgoing[n.id] = [];
-      incoming[n.id] = [];
+      find(n.id);
     }
 
     for (final e in edges) {
-      if (nodeMap.containsKey(e.fromId) && nodeMap.containsKey(e.toId)) {
-        outgoing[e.fromId]!.add(e.toId);
-        incoming[e.toId]!.add(e.fromId);
+      union(e.fromId, e.toId);
+    }
+
+    for (final sub in subgraphs) {
+      if (sub.nodeIds.length > 1) {
+        for (var i = 1; i < sub.nodeIds.length; i++) {
+          union(sub.nodeIds[0], sub.nodeIds[i]);
+        }
       }
     }
 
-    // 2. Assign ranks using longest path layering
-    final visited = <String>{};
-    void assignRank(String nodeId, int currentRank) {
-      final node = nodeMap[nodeId]!;
-      node.rank = math.max(node.rank, currentRank);
-      for (final nextId in outgoing[nodeId]!) {
-        assignRank(nextId, currentRank + 1);
+    final componentMap = <String, List<_MermaidNode>>{};
+    for (final n in nodes) {
+      final root = find(n.id);
+      componentMap.putIfAbsent(root, () => []).add(n);
+    }
+
+    // Sort components by first appearance of their nodes
+    final nodeOrder = {for (var i = 0; i < nodes.length; i++) nodes[i].id: i};
+    final components = componentMap.values.toList()
+      ..sort((a, b) {
+        final minA = a.map((n) => nodeOrder[n.id] ?? 99999).reduce(math.min);
+        final minB = b.map((n) => nodeOrder[n.id] ?? 99999).reduce(math.min);
+        return minA.compareTo(minB);
+      });
+
+    // 3. Layout each component independently
+    var cursorX = origin.dx;
+    var cursorY = origin.dy;
+    const componentSpacing = 80.0;
+
+    for (final compNodes in components) {
+      _layoutSingleComponent(
+        compNodes: compNodes,
+        allEdges: edges,
+        isHorizontal: isHorizontal,
+        isReversed: isReversed,
+      );
+
+      // Shift component to current cursor position
+      var minX = double.infinity;
+      var maxX = -double.infinity;
+      var minY = double.infinity;
+      var maxY = -double.infinity;
+
+      for (final n in compNodes) {
+        final left = n.position.dx - n.width / 2;
+        final right = n.position.dx + n.width / 2;
+        final top = n.position.dy - n.height / 2;
+        final bottom = n.position.dy + n.height / 2;
+
+        if (left < minX) minX = left;
+        if (right > maxX) maxX = right;
+        if (top < minY) minY = top;
+        if (bottom > maxY) maxY = bottom;
+      }
+
+      // If component has a subgraph, include its padding in bounds
+      final compHasSubgraph = compNodes.any((n) => n.subgraphId != null);
+      if (compHasSubgraph) {
+        minX -= 28.0;
+        maxX += 28.0;
+        minY -= 36.0;
+        maxY += 28.0;
+      }
+
+      final shiftX = cursorX - minX;
+      final shiftY = isHorizontal ? (cursorY - minY) : (origin.dy - minY);
+
+      for (final n in compNodes) {
+        n.position += Offset(shiftX, shiftY);
+      }
+
+      if (isHorizontal) {
+        cursorY += (maxY - minY) + componentSpacing;
+      } else {
+        cursorX += (maxX - minX) + componentSpacing;
       }
     }
 
-    // Start with root nodes (in-degree 0)
-    final roots = nodes.where((n) => incoming[n.id]!.isEmpty).toList();
-    if (roots.isEmpty && nodes.isNotEmpty) {
-      roots.add(nodes.first);
-    }
-
-    for (final root in roots) {
-      assignRank(root.id, 0);
-    }
-
-    // Ensure disconnected nodes have rank 0
-    for (final node in nodes) {
-      if (!visited.contains(node.id) && incoming[node.id]!.isEmpty) {
-        assignRank(node.id, 0);
-      }
-    }
-
-    // 3. Group nodes by rank
-    final rankGroups = <int, List<_MermaidNode>>{};
-    for (final node in nodes) {
-      rankGroups.putIfAbsent(node.rank, () => []).add(node);
-    }
-
-    final maxRank = rankGroups.keys.isEmpty ? 0 : rankGroups.keys.reduce(math.max);
-
-    // 4. Position nodes
-    const nodeWidth = 160.0;
-    const nodeHeight = 64.0;
-    const rankSpacing = 110.0;
-    const nodeSpacing = 48.0;
-
+    // 4. Generate BoardElements for Nodes
     final elementMap = <String, BoardElement>{};
     final elements = <BoardElement>[];
 
-    for (final entry in rankGroups.entries) {
-      final rankIndex = isReversed ? (maxRank - entry.key) : entry.key;
-      final group = entry.value;
-      final totalBreadth = group.length * nodeWidth + (group.length - 1) * nodeSpacing;
+    for (final node in nodes) {
+      final start = node.position - Offset(node.width / 2, node.height / 2);
+      final end = node.position + Offset(node.width / 2, node.height / 2);
 
-      for (var i = 0; i < group.length; i++) {
-        final node = group[i];
-        final breadthPos = i * (nodeWidth + nodeSpacing) - totalBreadth / 2 + nodeWidth / 2;
-        final depthPos = rankIndex * (nodeHeight + rankSpacing);
+      final style = node.directStyle;
+      final strokeColor = style?.strokeColor ?? defaultColor;
+      final fillColor = style?.fillColor ?? defaultColor.withValues(alpha: 0.08);
+      final strokeWidth = style?.strokeWidth ?? 2.0;
 
-        final center = isHorizontal
-            ? Offset(origin.dx + depthPos + 100, origin.dy + breadthPos + 200)
-            : Offset(origin.dx + breadthPos + 300, origin.dy + depthPos + 50);
+      final el = BoardElement(
+        id: 'mermaid_${node.id}',
+        type: node.shapeType,
+        start: start,
+        end: end,
+        color: strokeColor,
+        strokeWidth: strokeWidth,
+        fillColor: fillColor,
+        fillStyle: FillStyle.solid,
+        text: node.text,
+        fontSize: 13.5,
+      );
 
-        final start = center - const Offset(nodeWidth / 2, nodeHeight / 2);
-        final end = center + const Offset(nodeWidth / 2, nodeHeight / 2);
-
-        final el = BoardElement(
-          id: 'mermaid_${node.id}',
-          type: node.shapeType,
-          start: start,
-          end: end,
-          color: defaultColor,
-          fillColor: defaultColor.withValues(alpha: 0.08),
-          fillStyle: FillStyle.solid,
-          text: node.text,
-          fontSize: 14.0,
-        );
-
-        elementMap[node.id] = el;
-        elements.add(el);
-      }
+      elementMap[node.id] = el;
+      elements.add(el);
     }
 
     // 5. Generate Connectors with ConnectionBindings
@@ -424,11 +720,35 @@ class MermaidParserService {
       AnchorPoint endAnchor;
 
       if (isHorizontal) {
-        startAnchor = isReversed ? AnchorPoint.left : AnchorPoint.right;
-        endAnchor = isReversed ? AnchorPoint.right : AnchorPoint.left;
+        if (fromEl.bounds.center.dx < toEl.bounds.center.dx) {
+          startAnchor = AnchorPoint.right;
+          endAnchor = AnchorPoint.left;
+        } else if (fromEl.bounds.center.dx > toEl.bounds.center.dx) {
+          startAnchor = AnchorPoint.left;
+          endAnchor = AnchorPoint.right;
+        } else {
+          startAnchor = fromEl.bounds.center.dy < toEl.bounds.center.dy
+              ? AnchorPoint.bottom
+              : AnchorPoint.top;
+          endAnchor = fromEl.bounds.center.dy < toEl.bounds.center.dy
+              ? AnchorPoint.top
+              : AnchorPoint.bottom;
+        }
       } else {
-        startAnchor = isReversed ? AnchorPoint.top : AnchorPoint.bottom;
-        endAnchor = isReversed ? AnchorPoint.bottom : AnchorPoint.top;
+        if (fromEl.bounds.center.dy < toEl.bounds.center.dy - 10) {
+          startAnchor = AnchorPoint.bottom;
+          endAnchor = AnchorPoint.top;
+        } else if (fromEl.bounds.center.dy > toEl.bounds.center.dy + 10) {
+          startAnchor = AnchorPoint.top;
+          endAnchor = AnchorPoint.bottom;
+        } else {
+          startAnchor = fromEl.bounds.center.dx < toEl.bounds.center.dx
+              ? AnchorPoint.right
+              : AnchorPoint.left;
+          endAnchor = fromEl.bounds.center.dx < toEl.bounds.center.dx
+              ? AnchorPoint.left
+              : AnchorPoint.right;
+        }
       }
 
       final startPos = ConnectionBinding.getAnchorPosition(fromEl, startAnchor);
@@ -444,7 +764,7 @@ class MermaidParserService {
         start: startPos,
         end: endPos,
         color: defaultColor,
-        strokeWidth: 2.0,
+        strokeWidth: edge.strokeWidth,
         strokeStyle: edge.strokeStyle,
         connectorStyle: edge.connectorStyle,
         label: edge.label,
@@ -467,7 +787,13 @@ class MermaidParserService {
         for (var j = 1; j < subElements.length; j++) {
           bounds = bounds.expandToInclude(subElements[j].bounds);
         }
-        bounds = bounds.inflate(28.0);
+        // Add padding around child nodes: extra top for frame title bar
+        bounds = Rect.fromLTRB(
+          bounds.left - 24.0,
+          bounds.top - 34.0,
+          bounds.right + 24.0,
+          bounds.bottom + 24.0,
+        );
 
         final frameEl = BoardElement(
           id: 'mermaid_sub_${sub.id}',
@@ -486,5 +812,103 @@ class MermaidParserService {
     }
 
     return elements;
+  }
+
+  static void _layoutSingleComponent({
+    required List<_MermaidNode> compNodes,
+    required List<_MermaidEdge> allEdges,
+    required bool isHorizontal,
+    required bool isReversed,
+  }) {
+    final compIds = compNodes.map((n) => n.id).toSet();
+    final nodeMap = {for (final n in compNodes) n.id: n};
+
+    final outgoing = <String, List<String>>{};
+    final incoming = <String, List<String>>{};
+    for (final n in compNodes) {
+      outgoing[n.id] = [];
+      incoming[n.id] = [];
+    }
+
+    for (final e in allEdges) {
+      if (compIds.contains(e.fromId) && compIds.contains(e.toId)) {
+        outgoing[e.fromId]!.add(e.toId);
+        incoming[e.toId]!.add(e.fromId);
+      }
+    }
+
+    // Longest path rank assignment
+    for (final n in compNodes) {
+      n.rank = 0;
+    }
+
+    final visited = <String>{};
+    void assignRank(String nodeId, int curRank) {
+      if (visited.contains(nodeId)) {
+        nodeMap[nodeId]!.rank = math.max(nodeMap[nodeId]!.rank, curRank);
+        return;
+      }
+      visited.add(nodeId);
+      nodeMap[nodeId]!.rank = math.max(nodeMap[nodeId]!.rank, curRank);
+      for (final nextId in outgoing[nodeId]!) {
+        assignRank(nextId, curRank + 1);
+      }
+      visited.remove(nodeId);
+    }
+
+    final roots = compNodes.where((n) => incoming[n.id]!.isEmpty).toList();
+    if (roots.isEmpty && compNodes.isNotEmpty) {
+      roots.add(compNodes.first);
+    }
+
+    for (final root in roots) {
+      assignRank(root.id, 0);
+    }
+
+    // Group nodes by rank
+    final rankGroups = <int, List<_MermaidNode>>{};
+    for (final node in compNodes) {
+      rankGroups.putIfAbsent(node.rank, () => []).add(node);
+    }
+
+    final sortedRanks = rankGroups.keys.toList()..sort();
+    const rankSpacing = 90.0;
+    const nodeSpacing = 36.0;
+
+    // Position ranks
+    var depthPos = 0.0;
+
+    for (final r in sortedRanks) {
+      final group = rankGroups[r]!;
+
+      // Calculate max depth in this rank
+      var maxDepthInRank = 0.0;
+      var totalBreadth = 0.0;
+
+      for (var i = 0; i < group.length; i++) {
+        final node = group[i];
+        final breadth = isHorizontal ? node.height : node.width;
+        final depth = isHorizontal ? node.width : node.height;
+        if (depth > maxDepthInRank) maxDepthInRank = depth;
+        totalBreadth += breadth;
+        if (i > 0) totalBreadth += nodeSpacing;
+      }
+
+      var currentBreadth = -totalBreadth / 2;
+
+      for (final node in group) {
+        final breadth = isHorizontal ? node.height : node.width;
+        final nodeBreadthCenter = currentBreadth + breadth / 2;
+        final nodeDepthCenter = depthPos + maxDepthInRank / 2;
+
+        node.position = isHorizontal
+            ? Offset(nodeDepthCenter, nodeBreadthCenter)
+            : Offset(nodeBreadthCenter, nodeDepthCenter);
+
+        currentBreadth += breadth + nodeSpacing;
+      }
+
+      depthPos += maxDepthInRank + rankSpacing;
+    }
   }
 }

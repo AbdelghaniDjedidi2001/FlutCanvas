@@ -223,6 +223,7 @@ abstract class BoardElement with _$BoardElement {
       ShapeType.diamond => 'Diamond',
       ShapeType.triangle => 'Triangle',
       ShapeType.star => 'Star',
+      ShapeType.asymmetric => 'Asymmetric Box',
       ShapeType.line => 'Line',
       ShapeType.arrow => 'Arrow',
       ShapeType.doubleArrow => 'Double Arrow',
@@ -330,6 +331,7 @@ abstract class BoardElement with _$BoardElement {
     switch (type) {
       case ShapeType.rectangle:
       case ShapeType.roundedRectangle:
+      case ShapeType.asymmetric:
       case ShapeType.stickyNote:
       case ShapeType.codeBlock:
       case ShapeType.table:

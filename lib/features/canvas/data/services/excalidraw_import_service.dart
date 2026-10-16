@@ -91,7 +91,8 @@ class ExcalidrawImportService {
       ShapeType.ellipse ||
       ShapeType.diamond ||
       ShapeType.triangle ||
-      ShapeType.star => 10,
+      ShapeType.star ||
+      ShapeType.asymmetric => 10,
       ShapeType.line ||
       ShapeType.arrow ||
       ShapeType.doubleArrow => 20,

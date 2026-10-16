@@ -152,6 +152,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
       ShapeType.diamond => CupertinoIcons.rhombus,
       ShapeType.triangle => Icons.change_history_outlined,
       ShapeType.star => Icons.star_border_rounded,
+      ShapeType.asymmetric => Icons.bookmark_border_rounded,
       ShapeType.line => Icons.horizontal_rule_rounded,
       ShapeType.arrow => Icons.north_east_rounded,
       ShapeType.doubleArrow => Icons.compare_arrows_rounded,

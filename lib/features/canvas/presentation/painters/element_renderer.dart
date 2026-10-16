@@ -45,7 +45,8 @@ class ElementRenderer {
         el.type == ShapeType.ellipse ||
         el.type == ShapeType.diamond ||
         el.type == ShapeType.triangle ||
-        el.type == ShapeType.star;
+        el.type == ShapeType.star ||
+        el.type == ShapeType.asymmetric;
 
     // 1. Draw Fill (if applicable)
     if (isFillable && el.fillStyle != FillStyle.none && el.fillColor != Colors.transparent) {
@@ -107,7 +108,8 @@ class ElementRenderer {
       case ShapeType.diamond:
       case ShapeType.triangle:
       case ShapeType.star:
-        _drawStrokedShape(canvas, el, strokePaint);
+      case ShapeType.asymmetric:
+        _drawStrokedShape(canvas, el, strokePaint, colors);
         break;
 
       case ShapeType.line:
@@ -182,6 +184,16 @@ class ElementRenderer {
       case ShapeType.star:
         _addStarPath(path, rect);
         break;
+      case ShapeType.asymmetric:
+        final indent = math.min(18.0, rect.width * 0.12);
+        path.moveTo(rect.left, rect.top);
+        path.lineTo(rect.right - indent, rect.top);
+        path.lineTo(rect.right, rect.center.dy);
+        path.lineTo(rect.right - indent, rect.bottom);
+        path.lineTo(rect.left, rect.bottom);
+        path.lineTo(rect.left + indent, rect.center.dy);
+        path.close();
+        break;
       default:
         path.addRect(rect);
     }
@@ -208,9 +220,67 @@ class ElementRenderer {
     path.close();
   }
 
-  static void _drawStrokedShape(Canvas canvas, BoardElement el, Paint paint) {
+  static void _drawStrokedShape(
+    Canvas canvas,
+    BoardElement el,
+    Paint paint,
+    BoardColors colors,
+  ) {
     final path = _getShapePath(el);
     _drawStrokedPath(canvas, path, paint, el.strokeStyle);
+    _drawShapeText(canvas, el, colors);
+  }
+
+  static void _drawShapeText(
+    Canvas canvas,
+    BoardElement el,
+    BoardColors colors,
+  ) {
+    if (el.text.trim().isEmpty) return;
+
+    Color textColor;
+    if (el.fillStyle != FillStyle.none &&
+        el.fillColor != Colors.transparent &&
+        el.fillColor.a > 0.25) {
+      final lum = el.fillColor.computeLuminance();
+      textColor =
+          lum > 0.5 ? const Color(0xFF1E1E1E) : const Color(0xFFF8F9FA);
+    } else {
+      textColor = colors.ink;
+    }
+
+    var effectiveFontSize =
+        el.fontSize > 0 && el.fontSize <= 18 ? el.fontSize : 13.5;
+    final maxW = math.max(20.0, el.bounds.width - 24.0);
+    final maxH = math.max(20.0, el.bounds.height - 10.0);
+
+    TextPainter makePainter(double fs) {
+      return TextPainter(
+        text: TextSpan(
+          text: el.text,
+          style: GoogleFonts.inter(
+            color: textColor,
+            fontSize: fs,
+            fontWeight: FontWeight.w600,
+            height: 1.25,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      )..layout(maxWidth: maxW);
+    }
+
+    var painter = makePainter(effectiveFontSize);
+    while (painter.height > maxH && effectiveFontSize > 9.0) {
+      effectiveFontSize -= 1.0;
+      painter = makePainter(effectiveFontSize);
+    }
+
+    final pos = Offset(
+      el.bounds.center.dx - painter.width / 2,
+      el.bounds.center.dy - painter.height / 2,
+    );
+    painter.paint(canvas, pos);
   }
 
   static void _drawStrokedPath(Canvas canvas, Path path, Paint paint, StrokeStyle style) {

@@ -148,6 +148,7 @@ const _$ShapeTypeEnumMap = {
   ShapeType.diamond: 'diamond',
   ShapeType.triangle: 'triangle',
   ShapeType.star: 'star',
+  ShapeType.asymmetric: 'asymmetric',
   ShapeType.line: 'line',
   ShapeType.arrow: 'arrow',
   ShapeType.doubleArrow: 'doubleArrow',

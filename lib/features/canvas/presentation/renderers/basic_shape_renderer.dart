@@ -16,6 +16,7 @@ class BasicShapeRenderer implements ShapeRenderer {
       type == ShapeType.diamond ||
       type == ShapeType.triangle ||
       type == ShapeType.star ||
+      type == ShapeType.asymmetric ||
       type == ShapeType.frame;
 
   @override
@@ -115,6 +116,16 @@ class BasicShapeRenderer implements ShapeRenderer {
             path.lineTo(x, y);
           }
         }
+        path.close();
+        break;
+      case ShapeType.asymmetric:
+        final indent = math.min(18.0, b.width * 0.12);
+        path.moveTo(b.left, b.top);
+        path.lineTo(b.right - indent, b.top);
+        path.lineTo(b.right, b.center.dy);
+        path.lineTo(b.right - indent, b.bottom);
+        path.lineTo(b.left, b.bottom);
+        path.lineTo(b.left + indent, b.center.dy);
         path.close();
         break;
       default:

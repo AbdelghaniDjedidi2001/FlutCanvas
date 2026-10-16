@@ -81,7 +81,8 @@ class SvgExportService {
         el.type == ShapeType.ellipse ||
         el.type == ShapeType.diamond ||
         el.type == ShapeType.triangle ||
-        el.type == ShapeType.star;
+        el.type == ShapeType.star ||
+        el.type == ShapeType.asymmetric;
 
     String fillAttr = 'fill="none"';
     if (isFillable && el.fillStyle != FillStyle.none) {
@@ -137,6 +138,14 @@ class SvgExportService {
             '    <polygon points="$starPoints" $fillAttr stroke="$strokeColor" stroke-width="$strokeWidth" stroke-opacity="$strokeOpacity" $strokeDash/>');
         break;
 
+      case ShapeType.asymmetric:
+        final r = el.bounds;
+        final indent = math.min(18.0, r.width * 0.12);
+        final p = '${r.left},${r.top} ${r.right - indent},${r.top} ${r.right},${r.center.dy} ${r.right - indent},${r.bottom} ${r.left},${r.bottom} ${r.left + indent},${r.center.dy}';
+        buffer.writeln(
+            '    <polygon points="$p" $fillAttr stroke="$strokeColor" stroke-width="$strokeWidth" stroke-opacity="$strokeOpacity" $strokeDash/>');
+        break;
+
       case ShapeType.line:
       case ShapeType.arrow:
       case ShapeType.doubleArrow:
@@ -180,6 +189,10 @@ class SvgExportService {
         buffer.writeln(
             '    <text x="${r.left + 8}" y="${r.top - 6}" font-size="12" font-weight="bold" fill="#748FFC">$title</text>');
         break;
+    }
+
+    if (isFillable && el.text.trim().isNotEmpty) {
+      _renderShapeTextSvg(buffer, el, strokeColor, colors);
     }
 
     if (hasRotation) {
@@ -237,6 +250,40 @@ class SvgExportService {
           '    <rect x="${mid.dx - estimatedWidth / 2}" y="${mid.dy - estimatedHeight / 2}" width="$estimatedWidth" height="$estimatedHeight" rx="6" fill="$bgHex" stroke="$strokeColor" stroke-width="1" stroke-opacity="0.5"/>');
       buffer.writeln(
           '    <text x="${mid.dx}" y="${mid.dy + fontSize * 0.35}" font-size="$fontSize" font-weight="600" fill="$strokeColor" text-anchor="middle">$escaped</text>');
+    }
+  }
+
+  static void _renderShapeTextSvg(
+    StringBuffer buffer,
+    BoardElement el,
+    String strokeColor,
+    BoardColors colors,
+  ) {
+    final rawText = el.text.trim();
+    if (rawText.isEmpty) return;
+
+    String textColor = strokeColor;
+    if (el.fillStyle != FillStyle.none &&
+        el.fillColor != Colors.transparent &&
+        el.fillColor.a > 0.25) {
+      final lum = el.fillColor.computeLuminance();
+      textColor = lum > 0.5 ? '#1E1E1E' : '#F8F9FA';
+    } else {
+      textColor = _colorToHex(colors.ink);
+    }
+
+    final lines = rawText.split('\n');
+    final fontSize = (el.fontSize > 0 && el.fontSize <= 18 ? el.fontSize : 13.5);
+    final lineHeight = fontSize * 1.3;
+    final totalH = lines.length * lineHeight;
+    final mid = el.bounds.center;
+    final startY = mid.dy - (totalH / 2) + (fontSize * 0.85);
+
+    for (var i = 0; i < lines.length; i++) {
+      final lineY = startY + i * lineHeight;
+      final escaped = _escapeXml(lines[i]);
+      buffer.writeln(
+          '    <text x="${mid.dx}" y="$lineY" font-size="$fontSize" font-weight="600" fill="$textColor" text-anchor="middle">$escaped</text>');
     }
   }
 

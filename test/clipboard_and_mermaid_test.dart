@@ -96,6 +96,128 @@ void main() {
       expect(frame.bounds.contains(nodeA.bounds.center), isTrue);
       expect(frame.bounds.contains(nodeB.bounds.center), isTrue);
     });
+
+    test('parses complex user graph with asymmetric shapes, line breaks, classDef styles and subgraphs', () {
+      const script = '''graph TB
+    sq[Square shape] --> ci((Circle shape))
+
+    subgraph A
+        od>Odd shape]-- Two line<br/>edge comment --> ro
+        di{Diamond with <br/> line break} -.-> ro(Rounded<br>square<br>shape)
+        di==>ro2(Rounded square shape)
+    end
+
+    %% Notice that no text in shape are added here instead that is appended further down
+    e --> od3>Really long text with linebreak<br>in an Odd shape]
+
+    %% Comments after double percent signs
+    e((Inner / circle<br>and some odd <br>special characters)) --> f(,.?!+-*ز)
+
+    cyr[Cyrillic]-->cyr2((Circle shape Начало));
+
+     classDef green fill:#9f6,stroke:#333,stroke-width:2px;
+     classDef orange fill:#f96,stroke:#333,stroke-width:4px;
+     class sq,e green
+     class di orange''';
+
+      final elements = MermaidParserService.parseToElements(script: script);
+      expect(elements, isNotEmpty);
+
+      // Shapes: exactly 11 node elements
+      final shapes = elements.where((e) => e.type != ShapeType.frame && e.type != ShapeType.arrow && e.type != ShapeType.line && e.type != ShapeType.doubleArrow).toList();
+      expect(shapes.length, equals(11));
+
+      // Connectors: exactly 7
+      final connectors = elements.where((e) => e.type == ShapeType.arrow || e.type == ShapeType.line || e.type == ShapeType.doubleArrow).toList();
+      expect(connectors.length, equals(7));
+
+      // Frames: exactly 1 (subgraph A)
+      final frames = elements.where((e) => e.type == ShapeType.frame).toList();
+      expect(frames.length, equals(1));
+      expect(frames.first.frameTitle, equals('A'));
+
+      // Check sq: square with classDef green
+      final sq = shapes.firstWhere((e) => e.id == 'mermaid_sq');
+      expect(sq.type, equals(ShapeType.rectangle));
+      expect(sq.text, equals('Square shape'));
+      expect(sq.fillColor, equals(const Color(0xFF99FF66)));
+      expect(sq.color, equals(const Color(0xFF333333)));
+      expect(sq.strokeWidth, equals(2.0));
+
+      // Check ci: circle
+      final ci = shapes.firstWhere((e) => e.id == 'mermaid_ci');
+      expect(ci.type, equals(ShapeType.ellipse));
+      expect(ci.text, equals('Circle shape'));
+
+      // Check od: asymmetric shape
+      final od = shapes.firstWhere((e) => e.id == 'mermaid_od');
+      expect(od.type, equals(ShapeType.asymmetric));
+      expect(od.text, equals('Odd shape'));
+
+      // Check di: diamond with classDef orange and line break
+      final di = shapes.firstWhere((e) => e.id == 'mermaid_di');
+      expect(di.type, equals(ShapeType.diamond));
+      expect(di.text, equals('Diamond with \n line break'));
+      expect(di.fillColor, equals(const Color(0xFFFF9966)));
+      expect(di.color, equals(const Color(0xFF333333)));
+      expect(di.strokeWidth, equals(4.0));
+
+      // Check ro: rounded rectangle with line breaks
+      final ro = shapes.firstWhere((e) => e.id == 'mermaid_ro');
+      expect(ro.type, equals(ShapeType.roundedRectangle));
+      expect(ro.text, equals('Rounded\nsquare\nshape'));
+
+      // Check e: circle with classDef green and multiple lines
+      final eNode = shapes.firstWhere((e) => e.id == 'mermaid_e');
+      expect(eNode.type, equals(ShapeType.ellipse));
+      expect(eNode.text, equals('Inner / circle\nand some odd \nspecial characters'));
+      expect(eNode.fillColor, equals(const Color(0xFF99FF66)));
+
+      // Check od3: asymmetric shape with long text
+      final od3 = shapes.firstWhere((e) => e.id == 'mermaid_od3');
+      expect(od3.type, equals(ShapeType.asymmetric));
+      expect(od3.text, equals('Really long text with linebreak\nin an Odd shape'));
+
+      // Check f: special characters including Arabic
+      final fNode = shapes.firstWhere((e) => e.id == 'mermaid_f');
+      expect(fNode.type, equals(ShapeType.roundedRectangle));
+      expect(fNode.text, equals(',.?!+-*ز'));
+
+      // Check cyr & cyr2: Cyrillic characters
+      final cyr = shapes.firstWhere((e) => e.id == 'mermaid_cyr');
+      expect(cyr.text, equals('Cyrillic'));
+      final cyr2 = shapes.firstWhere((e) => e.id == 'mermaid_cyr2');
+      expect(cyr2.type, equals(ShapeType.ellipse));
+      expect(cyr2.text, equals('Circle shape Начало'));
+
+      // Check edge label
+      final edgeWithLabel = connectors.firstWhere((c) => c.label != null && c.label!.isNotEmpty);
+      expect(edgeWithLabel.label, equals('Two line\nedge comment'));
+
+      // Check dashed edge (di -.-> ro)
+      final dashedEdge = connectors.firstWhere((c) => c.startBinding?.elementId == 'mermaid_di' && c.endBinding?.elementId == 'mermaid_ro');
+      expect(dashedEdge.strokeStyle, equals(StrokeStyle.dashed));
+
+      // Check thick edge (di ==> ro2)
+      final thickEdge = connectors.firstWhere((c) => c.startBinding?.elementId == 'mermaid_di' && c.endBinding?.elementId == 'mermaid_ro2');
+      expect(thickEdge.strokeWidth, equals(3.5));
+
+      // Subgraph A frame contains all its nodes: od, di, ro, ro2
+      final frameA = frames.first;
+      expect(frameA.bounds.contains(od.bounds.center), isTrue);
+      expect(frameA.bounds.contains(di.bounds.center), isTrue);
+      expect(frameA.bounds.contains(ro.bounds.center), isTrue);
+      final ro2 = shapes.firstWhere((e) => e.id == 'mermaid_ro2');
+      expect(frameA.bounds.contains(ro2.bounds.center), isTrue);
+
+      // Verify connected components layout: components are separated horizontally
+      // Comp 1 (sq, ci) is to the left of Subgraph A (od, di, ro, ro2)
+      expect(sq.bounds.right, lessThan(od.bounds.left));
+      // Subgraph A is to the left of Comp 3 (e, od3, f)
+      expect(frameA.bounds.right, lessThan(eNode.bounds.left));
+      // Comp 3 is to the left of Comp 4 (cyr, cyr2)
+      expect(od3.bounds.right, lessThan(cyr.bounds.left));
+    });
   });
 
   group('ExcalidrawImportService Tests', () {

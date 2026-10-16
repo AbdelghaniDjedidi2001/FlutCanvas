@@ -5,6 +5,7 @@ enum ShapeType {
   diamond,
   triangle,
   star,
+  asymmetric,
   line,
   arrow,
   doubleArrow,
