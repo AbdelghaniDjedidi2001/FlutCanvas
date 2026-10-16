@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'shape_type.dart';
@@ -57,8 +58,8 @@ extension ToolExtension on Tool {
         Tool.rectangle => Icons.crop_square,
         Tool.roundedRectangle => Icons.crop_portrait_rounded,
         Tool.ellipse => Icons.circle_outlined,
-        Tool.diamond => Icons.change_history_outlined,
-        Tool.triangle => Icons.play_arrow_outlined,
+        Tool.diamond => CupertinoIcons.rhombus,
+        Tool.triangle => Icons.change_history_outlined,
         Tool.star => Icons.star_border_rounded,
         Tool.line => Icons.horizontal_rule,
         Tool.arrow => Icons.north_east,

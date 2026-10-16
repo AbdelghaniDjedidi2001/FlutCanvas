@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -148,8 +149,8 @@ class _LayersSidebarState extends State<LayersSidebar> {
       ShapeType.rectangle => Icons.crop_square_rounded,
       ShapeType.roundedRectangle => Icons.crop_portrait_rounded,
       ShapeType.ellipse => Icons.circle_outlined,
-      ShapeType.diamond => Icons.change_history_outlined,
-      ShapeType.triangle => Icons.play_arrow_outlined,
+      ShapeType.diamond => CupertinoIcons.rhombus,
+      ShapeType.triangle => Icons.change_history_outlined,
       ShapeType.star => Icons.star_border_rounded,
       ShapeType.line => Icons.horizontal_rule_rounded,
       ShapeType.arrow => Icons.north_east_rounded,

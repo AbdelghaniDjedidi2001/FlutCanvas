@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
@@ -150,6 +151,11 @@ void main() {
 
       final penTool = registry.get(Tool.pen);
       expect(penTool.toolType, equals(Tool.pen));
+    });
+
+    test('Tool icons correctly represent Diamond and Triangle shapes', () {
+      expect(Tool.diamond.icon, equals(CupertinoIcons.rhombus));
+      expect(Tool.triangle.icon, equals(Icons.change_history_outlined));
     });
 
     test('ShapeTool creates draft on pointerDown/move and commits on pointerUp', () {
