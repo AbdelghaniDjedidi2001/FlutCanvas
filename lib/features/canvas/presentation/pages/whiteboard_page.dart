@@ -47,7 +47,7 @@ import 'package:flutcanvas/features/canvas/presentation/widgets/zoom_controls.da
 class WhiteboardPage extends StatefulWidget {
   const WhiteboardPage({super.key, required this.onToggleTheme});
 
-  final void Function(Brightness current) onToggleTheme;
+  final void Function(Brightness current, [Offset? origin]) onToggleTheme;
 
   @override
   State<WhiteboardPage> createState() => _WhiteboardPageState();
