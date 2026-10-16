@@ -124,8 +124,7 @@ class FreehandTool implements CanvasTool {
       context.setDraft(_currentDraft);
 
       // Auto Shape Recognition: cancel + restart the timer on every new point.
-      // This ensures it fires exactly 320 ms after the LAST stroke point,
-      // i.e., when the user pauses or finishes drawing.
+      // Fires after a deliberate 320ms pause at the end of a stroke (draw-and-hold).
       if (!isHighlighter &&
           context.autoShapeRecognition &&
           _points.length >= 3) {

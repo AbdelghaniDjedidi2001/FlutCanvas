@@ -246,6 +246,53 @@ void main() {
       expect(morphed.color, Colors.deepPurple);
       expect(morphed.strokeWidth, 3.0);
     });
+
+    test('recognizes hand-drawn square with rounded corners as rectangle / rounded box, NOT ellipse', () {
+      final square = <Offset>[];
+      final rng = math.Random(42);
+      // Square with slight corner rounding (r = 10 on 100x100)
+      for (double x = 60; x <= 140; x += 5) square.add(Offset(x + (rng.nextDouble() - 0.5) * 3, 50));
+      for (double y = 60; y <= 140; y += 5) square.add(Offset(150, y + (rng.nextDouble() - 0.5) * 3));
+      for (double x = 140; x >= 60; x -= 5) square.add(Offset(x + (rng.nextDouble() - 0.5) * 3, 150));
+      for (double y = 140; y >= 60; y -= 5) square.add(Offset(50, y + (rng.nextDouble() - 0.5) * 3));
+      square.add(square.first);
+
+      final result = ShapeRecognitionService.recognizeShape(square);
+      expect(result, isNotNull);
+      expect(
+        result!.shapeType == ShapeType.rectangle || result.shapeType == ShapeType.roundedRectangle,
+        isTrue,
+        reason: 'Square should be recognized as rectangle or roundedRectangle, but got ${result.shapeType}',
+      );
+    });
+
+    test('recognizes tall/vertical rectangle as rectangle, NOT ellipse', () {
+      final tallRect = generateRectPoints(const Rect.fromLTWH(50, 50, 80, 160));
+      final result = ShapeRecognitionService.recognizeShape(tallRect);
+      expect(result, isNotNull);
+      expect(result!.shapeType, ShapeType.rectangle);
+    });
+
+    test('recognizes triangle drawn starting from base as triangle, NOT diamond or circle', () {
+      final tri = <Offset>[];
+      final rng = math.Random(42);
+      for (double t = 0; t <= 1; t += 0.05) tri.add(Offset(50 + t * 100 + (rng.nextDouble() - 0.5) * 3, 150));
+      for (double t = 0; t <= 1; t += 0.05) tri.add(Offset(150 - t * 50 + (rng.nextDouble() - 0.5) * 3, 150 - t * 100));
+      for (double t = 0; t <= 1; t += 0.05) tri.add(Offset(100 - t * 50 + (rng.nextDouble() - 0.5) * 3, 50 + t * 100));
+
+      final result = ShapeRecognitionService.recognizeShape(tri);
+      expect(result, isNotNull);
+      expect(result!.shapeType, ShapeType.triangle);
+    });
+
+    test('rejects open curved arc / semicircle so it is NOT converted to circle/ellipse', () {
+      final arc = <Offset>[];
+      for (double a = 0; a <= math.pi; a += 0.1) {
+        arc.add(Offset(100 + 40 * math.cos(a), 100 + 40 * math.sin(a)));
+      }
+      final result = ShapeRecognitionService.recognizeShape(arc);
+      expect(result, isNull, reason: 'Open arc must not be converted to circle/ellipse');
+    });
   });
 
   group('ZoomControls Shape Snapping Toggle Tests', () {
