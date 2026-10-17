@@ -3,19 +3,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutcanvas/features/canvas/data/services/alignment_service.dart';
-import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
-import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
-import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_state.dart';
-import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
-import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_state.dart';
 import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/canvas/data/services/alignment_service.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/connector_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
+import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_state.dart';
+import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_cubit.dart';
+import 'package:flutcanvas/features/toolbar/presentation/bloc/tool_state.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_arrange_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_code_snippet_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_connector_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_draw_style_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_fill_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_font_size_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_opacity_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_panel_header.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_stroke_color_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_stroke_style_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_stroke_width_section.dart';
+import 'package:flutcanvas/features/toolbar/presentation/widgets/properties/property_table_section.dart';
 
+/// Floating Properties Panel allowing users to edit styles, stroke, fill,
+/// font size, opacity, and layout of active tools or selected canvas elements.
 class PropertiesPanel extends StatelessWidget {
   const PropertiesPanel({
     super.key,
@@ -160,7 +174,8 @@ class PropertiesPanel extends StatelessWidget {
     final hasGrouped = _hasGroupedElements(activeSelectedElements);
 
     final isHighlighterTarget = (activeSelectedElements.isNotEmpty &&
-            activeSelectedElements.every((e) => e.type == ShapeType.highlighter)) ||
+            activeSelectedElements
+                .every((e) => e.type == ShapeType.highlighter)) ||
         (activeSelectedElements.isEmpty &&
             toolState.currentTool == Tool.highlighter);
     final strokeColorPalette = isHighlighterTarget
@@ -225,62 +240,61 @@ class PropertiesPanel extends StatelessWidget {
       }
     }
 
-    void applyFillStyle(FillStyle f) {
+    void applyFillStyle(FillStyle s) {
       if (onFillStyleChanged != null) {
-        onFillStyleChanged!(f);
+        onFillStyleChanged!(s);
       } else {
-        toolCubit?.setFillStyle(f);
+        toolCubit?.setFillStyle(s);
         if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
           final updated = [
-            for (final el in activeSelectedElements) el.copyWith(fillStyle: f)
+            for (final el in activeSelectedElements) el.copyWith(fillStyle: s)
           ];
           canvasBloc.add(CanvasEvent.updateElements(updated));
         }
       }
     }
 
-    void applyDrawStyle(DrawStyle d) {
+    void applyDrawStyle(DrawStyle s) {
       if (onDrawStyleChanged != null) {
-        onDrawStyleChanged!(d);
+        onDrawStyleChanged!(s);
       } else {
-        toolCubit?.setDrawStyle(d);
+        toolCubit?.setDrawStyle(s);
         if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
           final updated = [
-            for (final el in activeSelectedElements) el.copyWith(drawStyle: d)
+            for (final el in activeSelectedElements) el.copyWith(drawStyle: s)
           ];
           canvasBloc.add(CanvasEvent.updateElements(updated));
         }
       }
     }
 
-    void applyFontSize(double s) {
+    void applyFontSize(double sz) {
       if (onFontSizeChanged != null) {
-        onFontSizeChanged!(s);
+        onFontSizeChanged!(sz);
       } else {
-        toolCubit?.setFontSize(s);
+        toolCubit?.setFontSize(sz);
         if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
           final updated = [
-            for (final el in activeSelectedElements) el.copyWith(fontSize: s)
+            for (final el in activeSelectedElements) el.copyWith(fontSize: sz)
           ];
           canvasBloc.add(CanvasEvent.updateElements(updated));
         }
       }
     }
 
-    void applyOpacity(double o) {
+    void applyOpacity(double op) {
       if (onOpacityChanged != null) {
-        onOpacityChanged!(o);
+        onOpacityChanged!(op);
       } else {
-        toolCubit?.setOpacity(o);
+        toolCubit?.setOpacity(op);
         if (activeSelectedElements.isNotEmpty && canvasBloc != null) {
           final updated = [
-            for (final el in activeSelectedElements) el.copyWith(opacity: o)
+            for (final el in activeSelectedElements) el.copyWith(opacity: op)
           ];
           canvasBloc.add(CanvasEvent.updateElements(updated));
         }
       }
     }
-
 
     void applyConnectorStyle(ConnectorStyle s) {
       if (onConnectorStyleChanged != null) {
@@ -320,383 +334,115 @@ class PropertiesPanel extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header / Selected count / Close
-              Row(
-                children: [
-                  Icon(
-                    activeSelectedElements.isEmpty
-                        ? Icons.tune_rounded
-                        : Icons.edit_note_rounded,
-                    size: 15,
-                    color: scheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      activeSelectedElements.isEmpty
-                          ? 'Default Style'
-                          : '${activeSelectedElements.length} selected',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  if (onClose != null || toolCubit != null)
-                    InkWell(
-                      onTap: onClose ??
-                          () => toolCubit?.setPropertiesOpen(false),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: Icon(
-                          Icons.close,
-                          size: 14,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                ],
+              // Header
+              PropertyPanelHeader(
+                selectedCount: activeSelectedElements.length,
+                onClose: onClose ??
+                    (toolCubit != null
+                        ? () => toolCubit.setPropertiesOpen(false)
+                        : null),
               ),
               const Divider(height: 10),
 
-              // 1. Draw Style (Clean vs Hand-drawn Sketch)
-              const Text('Aesthetic Style',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  _segmentedOption<DrawStyle>(
-                    label: 'Clean',
-                    value: DrawStyle.clean,
-                    groupValue: activeDrawStyle,
-                    onSelect: applyDrawStyle,
-                    scheme: scheme,
-                  ),
-                  const SizedBox(width: 4),
-                  _segmentedOption<DrawStyle>(
-                    label: '✏️ Sketchy',
-                    value: DrawStyle.sketch,
-                    groupValue: activeDrawStyle,
-                    onSelect: applyDrawStyle,
-                    scheme: scheme,
-                  ),
-                ],
+              // 1. Draw Style
+              PropertyDrawStyleSection(
+                activeDrawStyle: activeDrawStyle,
+                onSelectDrawStyle: applyDrawStyle,
               ),
               const SizedBox(height: 9),
 
               // 2. Stroke Color
-              Text(isHighlighterTarget ? 'Highlighter Color' : 'Stroke Color',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              Wrap(
-                spacing: 5,
-                runSpacing: 5,
-                children: [
-                  for (final c in strokeColorPalette)
-                    _colorBubble(
-                      color: isHighlighterTarget
-                          ? colors.displayHighlighter(c)
-                          : colors.display(c),
-                      isSelected: activeColor == c,
-                      onTap: () => applyColor(c),
-                      selectionColor: scheme.primary,
-                    ),
-                ],
+              PropertyStrokeColorSection(
+                activeColor: activeColor,
+                isHighlighterTarget: isHighlighterTarget,
+                strokeColorPalette: strokeColorPalette,
+                colors: colors,
+                onSelectColor: applyColor,
               ),
               const SizedBox(height: 9),
 
               // 3. Fill Style & Color
-              const Text('Fill Style',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  _segmentedOption<FillStyle>(
-                    label: 'None',
-                    value: FillStyle.none,
-                    groupValue: activeFillStyle,
-                    onSelect: applyFillStyle,
-                    scheme: scheme,
-                  ),
-                  const SizedBox(width: 3),
-                  _segmentedOption<FillStyle>(
-                    label: 'Semi',
-                    value: FillStyle.semi,
-                    groupValue: activeFillStyle,
-                    onSelect: applyFillStyle,
-                    scheme: scheme,
-                  ),
-                  const SizedBox(width: 3),
-                  _segmentedOption<FillStyle>(
-                    label: 'Solid',
-                    value: FillStyle.solid,
-                    groupValue: activeFillStyle,
-                    onSelect: applyFillStyle,
-                    scheme: scheme,
-                  ),
-                  const SizedBox(width: 3),
-                  _segmentedOption<FillStyle>(
-                    label: 'Hatch',
-                    value: FillStyle.hatch,
-                    groupValue: activeFillStyle,
-                    onSelect: applyFillStyle,
-                    scheme: scheme,
-                  ),
-                ],
+              PropertyFillSection(
+                activeFillStyle: activeFillStyle,
+                activeFillColor: activeFillColor,
+                colors: colors,
+                onSelectFillStyle: applyFillStyle,
+                onSelectFillColor: applyFillColor,
               ),
-              if (activeFillStyle != FillStyle.none) ...[
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 5,
-                  runSpacing: 5,
-                  children: [
-                    for (final c in BoardColors.stickyNoteColors)
-                      _colorBubble(
-                        color: colors.display(c),
-                        isSelected: activeFillColor == c,
-                        onTap: () => applyFillColor(c),
-                        selectionColor: scheme.primary,
-                      ),
-                  ],
-                ),
-              ],
               const SizedBox(height: 9),
 
               // 4. Stroke Width
-              const Text('Stroke Thickness',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  for (final preset in StrokeWidthPreset.values) ...[
-                    _strokeWidthOption(
-                        preset, activeStrokeWidth, applyStrokeWidth, scheme),
-                    if (preset != StrokeWidthPreset.values.last)
-                      const SizedBox(width: 3),
-                  ],
-                ],
+              PropertyStrokeWidthSection(
+                activeStrokeWidth: activeStrokeWidth,
+                onSelectStrokeWidth: applyStrokeWidth,
               ),
               const SizedBox(height: 9),
 
               // 5. Stroke Style
-              const Text('Stroke Pattern',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  _strokeStyleOption(StrokeStyle.solid, Icons.horizontal_rule,
-                      activeStrokeStyle, applyStrokeStyle, scheme),
-                  const SizedBox(width: 3),
-                  _strokeStyleOption(StrokeStyle.dashed, Icons.more_horiz,
-                      activeStrokeStyle, applyStrokeStyle, scheme),
-                  const SizedBox(width: 3),
-                  _strokeStyleOption(StrokeStyle.dotted, Icons.grain,
-                      activeStrokeStyle, applyStrokeStyle, scheme),
-                ],
+              PropertyStrokeStyleSection(
+                activeStrokeStyle: activeStrokeStyle,
+                onSelectStrokeStyle: applyStrokeStyle,
               ),
               const SizedBox(height: 9),
 
-              // 6. Connectors section
+              // 6. Connector Route
               if (hasConn) ...[
-                const Text('Connector Route',
-                    style:
-                        TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    _connectorStyleOption(
-                      ConnectorStyle.straight,
-                      Icons.linear_scale,
-                      'Line',
-                      activeConnectorStyle,
-                      applyConnectorStyle,
-                      scheme,
-                    ),
-                    const SizedBox(width: 3),
-                    _connectorStyleOption(
-                      ConnectorStyle.orthogonal,
-                      Icons.timeline,
-                      'Elbow',
-                      activeConnectorStyle,
-                      applyConnectorStyle,
-                      scheme,
-                    ),
-                    const SizedBox(width: 3),
-                    _connectorStyleOption(
-                      ConnectorStyle.curved,
-                      Icons.show_chart,
-                      'Curve',
-                      activeConnectorStyle,
-                      applyConnectorStyle,
-                      scheme,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    minimumSize: const Size.fromHeight(26),
-                  ),
-                  onPressed: onEditConnectorLabel,
-                  icon: const Icon(Icons.label_outline_rounded, size: 13),
-                  label: const Text('Add / Edit Line Label',
-                      style: TextStyle(fontSize: 11)),
+                PropertyConnectorSection(
+                  activeConnectorStyle: activeConnectorStyle,
+                  onSelectConnectorStyle: applyConnectorStyle,
+                  onEditConnectorLabel: onEditConnectorLabel,
                 ),
                 const SizedBox(height: 9),
               ],
 
               // 7. Table Controls
               if (hasTbl && tblEl != null) ...[
-                const Text('Table Grid Controls',
-                    style:
-                        TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest
-                        .withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: scheme.outlineVariant.withValues(alpha: 0.3),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: onAddTableRow ??
-                                  () {
-                                    if (canvasBloc != null) {
-                                      final updated = tblEl.addTableRow();
-                                      canvasBloc.add(
-                                          CanvasEvent.updateElement(updated));
-                                    }
-                                  },
-                              icon: const Icon(Icons.add, size: 13),
-                              label: const Text('+ Row',
-                                  style: TextStyle(fontSize: 10)),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: onRemoveTableRow ??
-                                  () {
-                                    if (canvasBloc != null) {
-                                      final updated = tblEl.removeTableRow();
-                                      canvasBloc.add(
-                                          CanvasEvent.updateElement(updated));
-                                    }
-                                  },
-                              icon: const Icon(Icons.remove, size: 13),
-                              label: const Text('- Row',
-                                  style: TextStyle(fontSize: 10)),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: onAddTableColumn ??
-                                  () {
-                                    if (canvasBloc != null) {
-                                      final updated = tblEl.addTableColumn();
-                                      canvasBloc.add(
-                                          CanvasEvent.updateElement(updated));
-                                    }
-                                  },
-                              icon: const Icon(Icons.add, size: 13),
-                              label: const Text('+ Col',
-                                  style: TextStyle(fontSize: 10)),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: onRemoveTableColumn ??
-                                  () {
-                                    if (canvasBloc != null) {
-                                      final updated =
-                                          tblEl.removeTableColumn();
-                                      canvasBloc.add(
-                                          CanvasEvent.updateElement(updated));
-                                    }
-                                  },
-                              icon: const Icon(Icons.remove, size: 13),
-                              label: const Text('- Col',
-                                  style: TextStyle(fontSize: 10)),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          onPressed: () {
-                            if (onToggleTableHeader != null) {
-                              onToggleTableHeader!(!tblEl.tableHasHeader);
-                            } else if (canvasBloc != null) {
-                              final updated = tblEl.copyWith(
-                                tableHasHeader: !tblEl.tableHasHeader,
-                              );
-                              canvasBloc
-                                  .add(CanvasEvent.updateElement(updated));
-                            }
-                          },
-                          icon: Icon(
-                            tblEl.tableHasHeader
-                                ? Icons.check_box
-                                : Icons.check_box_outline_blank,
-                            size: 13,
-                          ),
-                          label: Text(
-                            tblEl.tableHasHeader
-                                ? 'Header Row: ON'
-                                : 'Header Row: OFF',
-                            style: const TextStyle(fontSize: 10),
-                          ),
+                PropertyTableSection(
+                  tableElement: tblEl,
+                  onAddRow: onAddTableRow ??
+                      () {
+                        if (canvasBloc != null) {
+                          canvasBloc.add(
+                            CanvasEvent.updateElement(tblEl.addTableRow()),
+                          );
+                        }
+                      },
+                  onRemoveRow: onRemoveTableRow ??
+                      () {
+                        if (canvasBloc != null) {
+                          canvasBloc.add(
+                            CanvasEvent.updateElement(tblEl.removeTableRow()),
+                          );
+                        }
+                      },
+                  onAddColumn: onAddTableColumn ??
+                      () {
+                        if (canvasBloc != null) {
+                          canvasBloc.add(
+                            CanvasEvent.updateElement(tblEl.addTableColumn()),
+                          );
+                        }
+                      },
+                  onRemoveColumn: onRemoveTableColumn ??
+                      () {
+                        if (canvasBloc != null) {
+                          canvasBloc.add(
+                            CanvasEvent.updateElement(
+                                tblEl.removeTableColumn()),
+                          );
+                        }
+                      },
+                  onToggleHeader: (hasHeader) {
+                    if (onToggleTableHeader != null) {
+                      onToggleTableHeader!(hasHeader);
+                    } else if (canvasBloc != null) {
+                      canvasBloc.add(
+                        CanvasEvent.updateElement(
+                          tblEl.copyWith(tableHasHeader: hasHeader),
                         ),
-                      ),
-                    ],
-                  ),
+                      );
+                    }
+                  },
                 ),
                 const SizedBox(height: 9),
               ],
@@ -713,594 +459,116 @@ class PropertiesPanel extends StatelessWidget {
                       codeEl?.showLineNumbers ??
                       true;
 
-                  const supportedLanguages = [
-                    'dart',
-                    'javascript',
-                    'typescript',
-                    'python',
-                    'html',
-                    'css',
-                    'json',
-                    'sql',
-                    'bash',
-                    'markdown',
-                    'cpp',
-                    'rust',
-                    'go',
-                  ];
-
-                  return Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color:
-                          scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Code Snippet',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                  return PropertyCodeSnippetSection(
+                    codeElement: codeEl,
+                    activeLanguage: activeLang,
+                    activeShowLineNumbers: activeShowLines,
+                    onSelectLanguage: (newLang) {
+                      if (onCodeLanguageChanged != null) {
+                        onCodeLanguageChanged!(newLang);
+                      } else {
+                        toolCubit?.setCodeLanguage(newLang);
+                        if (codeEl != null && canvasBloc != null) {
+                          canvasBloc.add(
+                            CanvasEvent.updateElement(
+                              codeEl.copyWith(codeLanguage: newLang),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    onToggleLineNumbers: (show) {
+                      if (onToggleLineNumbers != null) {
+                        onToggleLineNumbers!(show);
+                      } else if (codeEl != null && canvasBloc != null) {
+                        canvasBloc.add(
+                          CanvasEvent.updateElement(
+                            codeEl.copyWith(showLineNumbers: show),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            const Text('Language:',
-                                style: TextStyle(fontSize: 10)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Container(
-                                height: 26,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 6),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: scheme.outlineVariant
-                                        .withValues(alpha: 0.5),
-                                  ),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: supportedLanguages
-                                            .contains(activeLang.toLowerCase())
-                                        ? activeLang.toLowerCase()
-                                        : 'dart',
-                                    isDense: true,
-                                    isExpanded: true,
-                                    iconSize: 16,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: scheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    items: supportedLanguages
-                                        .map((lang) => DropdownMenuItem(
-                                              value: lang,
-                                              child: Text(lang),
-                                            ))
-                                        .toList(),
-                                    onChanged: (newLang) {
-                                      if (newLang == null) return;
-                                      if (onCodeLanguageChanged != null) {
-                                        onCodeLanguageChanged!(newLang);
-                                      } else {
-                                        toolCubit?.setCodeLanguage(newLang);
-                                        if (codeEl != null &&
-                                            canvasBloc != null) {
-                                          final updated = codeEl.copyWith(
-                                              codeLanguage: newLang);
-                                          canvasBloc.add(
-                                              CanvasEvent.updateElement(
-                                                  updated));
-                                        }
-                                      }
-                                    },
-                                  ),
-                                ),
+                        );
+                      }
+                    },
+                    onCopyCode: onCopyCode ??
+                        () {
+                          if (codeEl != null) {
+                            Clipboard.setData(
+                              ClipboardData(text: codeEl.text),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Code copied to clipboard'),
+                                duration: Duration(seconds: 1),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            onPressed: () {
-                              final newVal = !activeShowLines;
-                              if (onToggleLineNumbers != null) {
-                                onToggleLineNumbers!(newVal);
-                              } else if (codeEl != null && canvasBloc != null) {
-                                final updated =
-                                    codeEl.copyWith(showLineNumbers: newVal);
-                                canvasBloc
-                                    .add(CanvasEvent.updateElement(updated));
-                              }
-                            },
-                            icon: Icon(
-                              activeShowLines
-                                  ? Icons.check_box
-                                  : Icons.check_box_outline_blank,
-                              size: 13,
-                            ),
-                            label: Text(
-                              activeShowLines
-                                  ? 'Line Numbers: ON'
-                                  : 'Line Numbers: OFF',
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          ),
-                        ),
-                        if (codeEl != null) ...[
-                          const SizedBox(height: 4),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.tonalIcon(
-                              style: FilledButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: onCopyCode ??
-                                  () {
-                                    Clipboard.setData(
-                                        ClipboardData(text: codeEl.text));
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('Code copied to clipboard'),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  },
-                              icon: const Icon(Icons.copy_rounded, size: 13),
-                              label: const Text('Copy Code',
-                                  style: TextStyle(fontSize: 10)),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                            );
+                          }
+                        },
                   );
                 }),
                 const SizedBox(height: 9),
               ],
 
               // 8. Typography
-              const Text('Font Size',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  for (final preset in FontSizePreset.values) ...[
-                    _fontSizeOption(
-                        preset, activeFontSize, applyFontSize, scheme),
-                    if (preset != FontSizePreset.values.last)
-                      const SizedBox(width: 3),
-                  ],
-                ],
+              PropertyFontSizeSection(
+                activeFontSize: activeFontSize,
+                onSelectFontSize: applyFontSize,
               ),
               const SizedBox(height: 9),
 
               // 9. Opacity Slider
-              Row(
-                children: [
-                  const Text('Opacity',
-                      style: TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w600)),
-                  const Spacer(),
-                  Text(
-                    '${(activeOpacity * 100).toInt()}%',
-                    style: TextStyle(
-                        fontSize: 10, color: scheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 2.5,
-                  thumbShape:
-                      const RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape:
-                      const RoundSliderOverlayShape(overlayRadius: 10),
-                ),
-                child: Slider(
-                  value: activeOpacity,
-                  min: 0.1,
-                  max: 1.0,
-                  onChanged: applyOpacity,
-                ),
+              PropertyOpacitySection(
+                activeOpacity: activeOpacity,
+                onChangeOpacity: applyOpacity,
               ),
 
-              // 10. Actions (Align, Distribute, Group, Front, Back, Delete)
-              if (activeSelectedElements.isNotEmpty) ...[
-                const Divider(height: 12),
-                const Text('Layout & Arrange',
-                    style:
-                        TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 5),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    if (activeSelectedElements.length >= 2) ...[
-                      _actionButton(
-                        icon: Icons.align_horizontal_left,
-                        tooltip: 'Align Left',
-                        onTap: () {
-                          if (onAlign != null) {
-                            onAlign!('left');
-                          } else {
-                            canvasBloc?.add(const CanvasEvent.alignSelected(
-                                AlignDirection.left));
-                          }
-                        },
-                        scheme: scheme,
-                      ),
-                      _actionButton(
-                        icon: Icons.align_horizontal_center,
-                        tooltip: 'Align Center',
-                        onTap: () {
-                          if (onAlign != null) {
-                            onAlign!('center');
-                          } else {
-                            canvasBloc?.add(const CanvasEvent.alignSelected(
-                                AlignDirection.center));
-                          }
-                        },
-                        scheme: scheme,
-                      ),
-                      _actionButton(
-                        icon: Icons.align_horizontal_right,
-                        tooltip: 'Align Right',
-                        onTap: () {
-                          if (onAlign != null) {
-                            onAlign!('right');
-                          } else {
-                            canvasBloc?.add(const CanvasEvent.alignSelected(
-                                AlignDirection.right));
-                          }
-                        },
-                        scheme: scheme,
-                      ),
-                      _actionButton(
-                        icon: Icons.align_vertical_top,
-                        tooltip: 'Align Top',
-                        onTap: () {
-                          if (onAlign != null) {
-                            onAlign!('top');
-                          } else {
-                            canvasBloc?.add(const CanvasEvent.alignSelected(
-                                AlignDirection.top));
-                          }
-                        },
-                        scheme: scheme,
-                      ),
-                    ],
-                    if (activeSelectedElements.length >= 3) ...[
-                      _actionButton(
-                        icon: Icons.horizontal_distribute,
-                        tooltip: 'Distribute Horizontally',
-                        onTap: () {
-                          if (onDistribute != null) {
-                            onDistribute!('horizontal');
-                          } else {
-                            canvasBloc?.add(
-                                const CanvasEvent.distributeSelected(
-                                    DistributeDirection.horizontal));
-                          }
-                        },
-                        scheme: scheme,
-                      ),
-                    ],
-                    if (activeSelectedElements.length >= 2)
-                      _actionButton(
-                        icon: Icons.group,
-                        tooltip: 'Group (Ctrl+G)',
-                        onTap: onGroup ??
-                            () => canvasBloc
-                                ?.add(const CanvasEvent.groupSelected()),
-                        scheme: scheme,
-                      ),
-                    if (hasGrouped)
-                      _actionButton(
-                        icon: Icons.group_remove_outlined,
-                        tooltip: 'Ungroup (Ctrl+Shift+G)',
-                        onTap: onUngroup ??
-                            () => canvasBloc
-                                ?.add(const CanvasEvent.ungroupSelected()),
-                        scheme: scheme,
-                      ),
-                    _actionButton(
-                      icon: Icons.flip_to_front,
-                      tooltip: 'Bring to Front (])',
-                      onTap: onBringToFront ??
-                          () => canvasBloc
-                              ?.add(const CanvasEvent.bringSelectedToFront()),
-                      scheme: scheme,
-                    ),
-                    _actionButton(
-                      icon: Icons.flip_to_back,
-                      tooltip: 'Send to Back ([)',
-                      onTap: onSendToBack ??
-                          () => canvasBloc
-                              ?.add(const CanvasEvent.sendSelectedToBack()),
-                      scheme: scheme,
-                    ),
-                    _actionButton(
-                      icon: Icons.lock_outline,
-                      tooltip: 'Toggle Lock',
-                      onTap: onToggleLock ??
-                          () => canvasBloc
-                              ?.add(const CanvasEvent.toggleLockSelected()),
-                      scheme: scheme,
-                    ),
-                    _actionButton(
-                      icon: Icons.delete_outline,
-                      tooltip: 'Delete (Del)',
-                      color: Colors.redAccent,
-                      onTap: onDelete ??
-                          () => canvasBloc
-                              ?.add(const CanvasEvent.deleteSelected()),
-                      scheme: scheme,
-                    ),
-                  ],
+              // 10. Layout & Arrange Actions
+              if (activeSelectedElements.isNotEmpty)
+                PropertyArrangeSection(
+                  selectedCount: activeSelectedElements.length,
+                  hasGrouped: hasGrouped,
+                  onAlign: (alignment) {
+                    if (onAlign != null) {
+                      onAlign!(alignment);
+                    } else {
+                      final dir = switch (alignment) {
+                        'left' => AlignDirection.left,
+                        'center' => AlignDirection.center,
+                        'right' => AlignDirection.right,
+                        'top' => AlignDirection.top,
+                        _ => AlignDirection.left,
+                      };
+                      canvasBloc?.add(CanvasEvent.alignSelected(dir));
+                    }
+                  },
+                  onDistribute: (direction) {
+                    if (onDistribute != null) {
+                      onDistribute!(direction);
+                    } else {
+                      canvasBloc?.add(
+                        const CanvasEvent.distributeSelected(
+                          DistributeDirection.horizontal,
+                        ),
+                      );
+                    }
+                  },
+                  onGroup: onGroup ??
+                      () => canvasBloc?.add(const CanvasEvent.groupSelected()),
+                  onUngroup: onUngroup ??
+                      () => canvasBloc
+                          ?.add(const CanvasEvent.ungroupSelected()),
+                  onBringToFront: onBringToFront ??
+                      () => canvasBloc
+                          ?.add(const CanvasEvent.bringSelectedToFront()),
+                  onSendToBack: onSendToBack ??
+                      () => canvasBloc
+                          ?.add(const CanvasEvent.sendSelectedToBack()),
+                  onToggleLock: onToggleLock ??
+                      () => canvasBloc
+                          ?.add(const CanvasEvent.toggleLockSelected()),
+                  onDelete: onDelete ??
+                      () => canvasBloc
+                          ?.add(const CanvasEvent.deleteSelected()),
                 ),
-              ],
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _actionButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onTap,
-    required ColorScheme scheme,
-    Color? color,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, size: 14, color: color ?? scheme.onSurfaceVariant),
-        ),
-      ),
-    );
-  }
-
-  Widget _colorBubble({
-    required Color color,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required Color selectionColor,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Container(
-          width: 17,
-          height: 17,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isSelected ? selectionColor : Colors.grey.shade400,
-              width: isSelected ? 2.5 : 1.0,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _segmentedOption<T>({
-    required String label,
-    required T value,
-    required T groupValue,
-    required void Function(T value) onSelect,
-    required ColorScheme scheme,
-  }) {
-    final isSelected = value == groupValue;
-    return Expanded(
-      child: InkWell(
-        onTap: () => onSelect(value),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.6)
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _strokeWidthOption(
-    StrokeWidthPreset preset,
-    double currentWidth,
-    void Function(double w) onSelect,
-    ColorScheme scheme,
-  ) {
-    final isSelected = (currentWidth - preset.width).abs() < 0.2;
-    return Expanded(
-      child: InkWell(
-        onTap: () => onSelect(preset.width),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.6)
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Container(
-            width: 14,
-            height: preset.width,
-            decoration: BoxDecoration(
-              color: isSelected ? scheme.primary : Colors.grey,
-              borderRadius: BorderRadius.circular(1),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _strokeStyleOption(
-    StrokeStyle style,
-    IconData icon,
-    StrokeStyle currentStyle,
-    void Function(StrokeStyle s) onSelect,
-    ColorScheme scheme,
-  ) {
-    final isSelected = currentStyle == style;
-    return Expanded(
-      child: InkWell(
-        onTap: () => onSelect(style),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.6)
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Icon(icon,
-              size: 15, color: isSelected ? scheme.primary : Colors.grey),
-        ),
-      ),
-    );
-  }
-
-  Widget _connectorStyleOption(
-    ConnectorStyle style,
-    IconData icon,
-    String label,
-    ConnectorStyle currentStyle,
-    void Function(ConnectorStyle s) onSelect,
-    ColorScheme scheme,
-  ) {
-    final isSelected = currentStyle == style;
-    return Expanded(
-      child: InkWell(
-        onTap: () => onSelect(style),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.6)
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 11,
-                color: isSelected ? scheme.primary : scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color:
-                      isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _fontSizeOption(
-    FontSizePreset preset,
-    double currentSize,
-    void Function(double s) onSelect,
-    ColorScheme scheme,
-  ) {
-    final isSelected = (currentSize - preset.size).abs() < 1.0;
-    return Expanded(
-      child: InkWell(
-        onTap: () => onSelect(preset.size),
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? scheme.primaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isSelected
-                  ? scheme.primary.withValues(alpha: 0.6)
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-          ),
-          child: Text(
-            preset.label,
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? scheme.onPrimaryContainer : scheme.onSurface,
-            ),
           ),
         ),
       ),

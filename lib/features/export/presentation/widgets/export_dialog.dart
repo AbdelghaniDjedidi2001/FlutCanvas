@@ -4,16 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/core/services/downloader/file_downloader.dart';
+import 'package:flutcanvas/features/canvas/data/services/excalidraw_import_service.dart';
+import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
-import 'package:flutcanvas/features/canvas/data/services/excalidraw_import_service.dart';
 import 'package:flutcanvas/features/export/data/services/export_service.dart';
-import 'package:flutcanvas/core/services/downloader/file_downloader.dart';
-import 'package:flutcanvas/features/canvas/data/services/mermaid_parser_service.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_processing_banner.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_status_banner.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_data.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_pdf.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_png.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_svg.dart';
 
 enum ExportFormatTab { png, svg, pdf, json }
 
+/// Dialog for exporting canvas elements to PNG, SVG, PDF, or JSON data,
+/// as well as importing external diagram formats (Excalidraw, Mermaid, JSON).
 class ExportDialog extends StatefulWidget {
   const ExportDialog({
     super.key,
@@ -98,7 +106,8 @@ class _ExportDialogState extends State<ExportDialog> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: isDark ? 0.18 : 0.12),
+                    color:
+                        scheme.primary.withValues(alpha: isDark ? 0.18 : 0.12),
                     borderRadius: BorderRadius.circular(11),
                     border: Border.all(
                       color: scheme.primary.withValues(alpha: 0.25),
@@ -150,7 +159,7 @@ class _ExportDialogState extends State<ExportDialog> {
             ),
             const SizedBox(height: 18),
 
-            // 2. Modern Segmented Tab Pills
+            // 2. Segmented Tab Pills
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -199,70 +208,18 @@ class _ExportDialogState extends State<ExportDialog> {
             const SizedBox(height: 16),
 
             // 3. Active Processing Indicator Banner
-            if (_isProcessing) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                margin: const EdgeInsets.only(bottom: 14),
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: scheme.primary.withValues(alpha: 0.35)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            color: scheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _processingTitle,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: scheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        minHeight: 3.5,
-                        backgroundColor: scheme.primary.withValues(alpha: 0.15),
-                        color: scheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _processingSubtitle,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+            if (_isProcessing)
+              ExportProcessingBanner(
+                title: _processingTitle,
+                subtitle: _processingSubtitle,
               ),
-            ],
 
             // 4. Tab Content Card
             Flexible(
               child: SingleChildScrollView(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 160),
-                  child: _buildActiveTabContent(scheme, isDark),
+                  child: _buildActiveTabContent(),
                 ),
               ),
             ),
@@ -270,44 +227,9 @@ class _ExportDialogState extends State<ExportDialog> {
             // 5. Status / Feedback Toast Banner
             if (_statusMessage != null && !_isProcessing) ...[
               const SizedBox(height: 12),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                decoration: BoxDecoration(
-                  color: _isError
-                      ? scheme.errorContainer.withValues(alpha: 0.7)
-                      : (isDark
-                          ? scheme.primaryContainer.withValues(alpha: 0.3)
-                          : const Color(0xFFEBFBEE)),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: _isError
-                        ? scheme.error.withValues(alpha: 0.5)
-                        : (isDark ? scheme.primary.withValues(alpha: 0.3) : const Color(0xFFB2F2BB)),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _isError ? Icons.error_outline_rounded : Icons.check_circle_rounded,
-                      size: 16,
-                      color: _isError ? scheme.error : const Color(0xFF2B8A3E),
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Text(
-                        _statusMessage!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _isError
-                              ? scheme.onErrorContainer
-                              : (isDark ? scheme.onPrimaryContainer : const Color(0xFF2B8A3E)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ExportStatusBanner(
+                message: _statusMessage!,
+                isError: _isError,
               ),
             ],
           ],
@@ -343,7 +265,8 @@ class _ExportDialogState extends State<ExportDialog> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
                       blurRadius: 4,
                       offset: const Offset(0, 1.5),
                     )
@@ -362,7 +285,9 @@ class _ExportDialogState extends State<ExportDialog> {
               Icon(
                 icon,
                 size: 15,
-                color: isSelected ? scheme.primary : scheme.onSurfaceVariant.withValues(alpha: 0.75),
+                color: isSelected
+                    ? scheme.primary
+                    : scheme.onSurfaceVariant.withValues(alpha: 0.75),
               ),
               const SizedBox(width: 6),
               Flexible(
@@ -384,584 +309,46 @@ class _ExportDialogState extends State<ExportDialog> {
     );
   }
 
-  Widget _buildActiveTabContent(ColorScheme scheme, bool isDark) {
+  Widget _buildActiveTabContent() {
+    final hasElements = widget.elements.isNotEmpty;
+
     return switch (_selectedTab) {
-      ExportFormatTab.png => _buildPngTab(scheme, isDark),
-      ExportFormatTab.svg => _buildSvgTab(scheme, isDark),
-      ExportFormatTab.pdf => _buildPdfTab(scheme, isDark),
-      ExportFormatTab.json => _buildJsonTab(scheme, isDark),
+      ExportFormatTab.png => ExportTabPng(
+          includeBackground: _pngIncludeBackground,
+          onToggleBackground: (val) =>
+              setState(() => _pngIncludeBackground = val),
+          scale: _pngScale,
+          onScaleChanged: (scale) => setState(() => _pngScale = scale),
+          isProcessing: _isProcessing,
+          hasElements: hasElements,
+          onExportPng: _handleExportPng,
+        ),
+      ExportFormatTab.svg => ExportTabSvg(
+          includeBackground: _svgIncludeBackground,
+          onToggleBackground: (val) =>
+              setState(() => _svgIncludeBackground = val),
+          isProcessing: _isProcessing,
+          hasElements: hasElements,
+          onDownloadSvg: _handleDownloadSvg,
+          onCopySvg: _handleCopySvg,
+        ),
+      ExportFormatTab.pdf => ExportTabPdf(
+          pdfMode: _pdfMode,
+          onModeChanged: (mode) => setState(() => _pdfMode = mode),
+          frameCount: _frameCount,
+          boardCount: _boardCount,
+          isProcessing: _isProcessing,
+          hasElements: hasElements,
+          onExportPdf: _handleExportPdf,
+        ),
+      ExportFormatTab.json => ExportTabData(
+          isProcessing: _isProcessing,
+          hasElements: hasElements,
+          onDownloadJson: _handleDownloadJson,
+          onCopyJson: _handleCopyJsonToClipboard,
+          onImportFile: _handleImportFile,
+        ),
     };
-  }
-
-  // ── PNG Tab ────────────────────────────────────────────────────────
-  Widget _buildPngTab(ColorScheme scheme, bool isDark) {
-    final hasElements = widget.elements.isNotEmpty;
-
-    return Column(
-      key: const ValueKey('tab_png'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Settings Card
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.035)
-                : Colors.black.withValues(alpha: 0.025),
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Column(
-            children: [
-              // 1. Background Toggle
-              Row(
-                children: [
-                  Icon(
-                    Icons.format_paint_outlined,
-                    size: 18,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Canvas Background',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                        Text(
-                          'Include solid background or export transparent PNG',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Transform.scale(
-                    scale: 0.85,
-                    child: Switch(
-                      value: _pngIncludeBackground,
-                      onChanged: _isProcessing
-                          ? null
-                          : (v) => setState(() => _pngIncludeBackground = v),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(height: 20, thickness: 0.8),
-
-              // 2. Resolution Scale Pills
-              Row(
-                children: [
-                  Icon(
-                    Icons.aspect_ratio_rounded,
-                    size: 18,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Resolution Scale',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                        Text(
-                          'Select output pixel density',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _scaleChip(1.0, '1x', scheme, isDark),
-                  const SizedBox(width: 6),
-                  _scaleChip(2.0, '2x', scheme, isDark),
-                  const SizedBox(width: 6),
-                  _scaleChip(3.0, '3x', scheme, isDark),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Primary Action Button
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(45),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 1.5,
-          ),
-          onPressed: _isProcessing || !hasElements ? null : _handleExportPng,
-          icon: _isProcessing
-              ? const SizedBox(
-                  width: 17,
-                  height: 17,
-                  child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
-                )
-              : const Icon(Icons.download_rounded, size: 19),
-          label: Text(
-            _isProcessing ? 'Generating PNG...' : 'Download PNG Image (.png)',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _scaleChip(double scale, String label, ColorScheme scheme, bool isDark) {
-    final isSelected = _pngScale == scale;
-    return GestureDetector(
-      onTap: _isProcessing ? null : () => setState(() => _pngScale = scale),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? scheme.primary
-              : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05)),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? scheme.primary
-                : scheme.outlineVariant.withValues(alpha: 0.3),
-            width: 1.0,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? scheme.onPrimary : scheme.onSurface,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── SVG Tab ────────────────────────────────────────────────────────
-  Widget _buildSvgTab(ColorScheme scheme, bool isDark) {
-    final hasElements = widget.elements.isNotEmpty;
-
-    return Column(
-      key: const ValueKey('tab_svg'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Vector Feature Callout
-        Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            color: scheme.primary.withValues(alpha: isDark ? 0.08 : 0.05),
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.22),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.auto_awesome_rounded, size: 18, color: scheme.primary),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Vector SVG preserves infinite scalability, shadows, connectors, and full syntax-highlighted code blocks with zero pixelation.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.35,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Background Toggle Box
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.035)
-                : Colors.black.withValues(alpha: 0.025),
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.format_paint_outlined, size: 18, color: scheme.onSurfaceVariant),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Include canvas background in SVG',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-              Transform.scale(
-                scale: 0.85,
-                child: Switch(
-                  value: _svgIncludeBackground,
-                  onChanged: _isProcessing
-                      ? null
-                      : (v) => setState(() => _svgIncludeBackground = v),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Action Buttons Row
-        Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(45),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 1.5,
-                ),
-                onPressed: _isProcessing || !hasElements ? null : _handleDownloadSvg,
-                icon: _isProcessing
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
-                      )
-                    : const Icon(Icons.download_rounded, size: 19),
-                label: const Text(
-                  'Download SVG',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(45),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
-                ),
-                onPressed: _isProcessing || !hasElements ? null : _handleCopySvg,
-                icon: const Icon(Icons.copy_rounded, size: 17),
-                label: const Text(
-                  'Copy SVG XML',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ── PDF Tab ────────────────────────────────────────────────────────
-  Widget _buildPdfTab(ColorScheme scheme, bool isDark) {
-    final hasElements = widget.elements.isNotEmpty;
-    final frameCount = _frameCount;
-    final boardCount = _boardCount;
-
-    return Column(
-      key: const ValueKey('tab_pdf'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildPdfCard(
-          mode: PdfExportMode.currentBoard,
-          title: 'Current Board (Single Page)',
-          subtitle: 'Single high-resolution landscape page',
-          icon: Icons.crop_landscape_rounded,
-          enabled: !_isProcessing,
-          scheme: scheme,
-          isDark: isDark,
-        ),
-        const SizedBox(height: 8),
-        _buildPdfCard(
-          mode: PdfExportMode.presentationSlides,
-          title: 'Presentation Slide Deck',
-          subtitle: frameCount > 0
-              ? 'Multi-page deck (1 page per Frame)'
-              : 'Add Slide Frame elements to enable presentation export',
-          badgeText: frameCount > 0 ? '$frameCount slides' : 'No frames',
-          icon: Icons.slideshow_rounded,
-          enabled: !_isProcessing && frameCount > 0,
-          scheme: scheme,
-          isDark: isDark,
-        ),
-        const SizedBox(height: 8),
-        _buildPdfCard(
-          mode: PdfExportMode.allBoards,
-          title: 'All Workspace Boards',
-          subtitle: 'Multi-page document across all board tabs',
-          badgeText: '$boardCount boards',
-          icon: Icons.dashboard_customize_outlined,
-          enabled: !_isProcessing && boardCount > 1,
-          scheme: scheme,
-          isDark: isDark,
-        ),
-        const SizedBox(height: 16),
-
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(45),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 1.5,
-          ),
-          onPressed: _isProcessing || !hasElements ? null : _handleExportPdf,
-          icon: _isProcessing
-              ? const SizedBox(
-                  width: 17,
-                  height: 17,
-                  child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white),
-                )
-              : const Icon(Icons.picture_as_pdf_rounded, size: 19),
-          label: Text(
-            _isProcessing ? 'Generating PDF...' : 'Download PDF Document (.pdf)',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPdfCard({
-    required PdfExportMode mode,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    String? badgeText,
-    required bool enabled,
-    required ColorScheme scheme,
-    required bool isDark,
-  }) {
-    final isSelected = _pdfMode == mode;
-    return GestureDetector(
-      onTap: enabled ? () => setState(() => _pdfMode = mode) : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? scheme.primary.withValues(alpha: isDark ? 0.14 : 0.08)
-              : (isDark ? Colors.white.withValues(alpha: 0.035) : Colors.black.withValues(alpha: 0.025)),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? scheme.primary
-                : scheme.outlineVariant.withValues(alpha: 0.3),
-            width: isSelected ? 1.5 : 1.0,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? scheme.primary.withValues(alpha: 0.2)
-                    : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05)),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: isSelected ? scheme.primary : (enabled ? scheme.onSurfaceVariant : Colors.grey),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                            color: enabled ? scheme.onSurface : Colors.grey,
-                          ),
-                        ),
-                      ),
-                      if (badgeText != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? scheme.primary.withValues(alpha: 0.2)
-                                : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06)),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            badgeText,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: isSelected ? scheme.primary : scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: enabled ? scheme.onSurfaceVariant : Colors.grey.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected ? scheme.primary : Colors.transparent,
-                border: Border.all(
-                  color: isSelected ? scheme.primary : scheme.outlineVariant,
-                  width: 1.5,
-                ),
-              ),
-              child: isSelected
-                  ? const Icon(Icons.check, size: 12, color: Colors.white)
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── JSON Data Tab ──────────────────────────────────────────────────
-  Widget _buildJsonTab(ColorScheme scheme, bool isDark) {
-    final hasElements = widget.elements.isNotEmpty;
-
-    return Column(
-      key: const ValueKey('tab_json'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Save & Copy Actions Box
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.035)
-                : Colors.black.withValues(alpha: 0.025),
-            borderRadius: BorderRadius.circular(13),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.25),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Save Native Whiteboard Data',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Export entire canvas elements with styles, layers and connections.',
-                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(42),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: _isProcessing || !hasElements ? null : _handleDownloadJson,
-                      icon: const Icon(Icons.save_alt_rounded, size: 17),
-                      label: const Text('Save File'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(42),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
-                      ),
-                      onPressed: _isProcessing || !hasElements ? null : _handleCopyJsonToClipboard,
-                      icon: const Icon(Icons.copy_rounded, size: 17),
-                      label: const Text('Copy JSON'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Import Section Button
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(44),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            side: BorderSide(color: scheme.primary.withValues(alpha: 0.4)),
-            backgroundColor: scheme.primary.withValues(alpha: isDark ? 0.08 : 0.04),
-          ),
-          onPressed: _isProcessing ? null : _handleImportFile,
-          icon: Icon(Icons.folder_open_rounded, size: 19, color: scheme.primary),
-          label: Text(
-            'Open / Import File...',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 12.5,
-              color: scheme.primary,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   // ── Action Handlers ────────────────────────────────────────────────
@@ -1001,7 +388,8 @@ class _ExportDialogState extends State<ExportDialog> {
         );
         if (mounted) {
           setState(() {
-            _statusMessage = 'PNG downloaded ($filename, ${(pngBytes.lengthInBytes / 1024).toStringAsFixed(1)} KB).';
+            _statusMessage =
+                'PNG downloaded ($filename, ${(pngBytes.lengthInBytes / 1024).toStringAsFixed(1)} KB).';
             _isError = false;
           });
         }
@@ -1022,7 +410,8 @@ class _ExportDialogState extends State<ExportDialog> {
     setState(() {
       _isProcessing = true;
       _processingTitle = 'Generating Vector SVG Graphic';
-      _processingSubtitle = 'Computing vector paths and connector geometries...';
+      _processingSubtitle =
+          'Computing vector paths and connector geometries...';
       _statusMessage = null;
       _isError = false;
     });
@@ -1144,7 +533,8 @@ class _ExportDialogState extends State<ExportDialog> {
 
       if (mounted) {
         setState(() {
-          _statusMessage = 'PDF generated ($filename, ${(pdfBytes.lengthInBytes / 1024).toStringAsFixed(1)} KB).';
+          _statusMessage =
+              'PDF generated ($filename, ${(pdfBytes.lengthInBytes / 1024).toStringAsFixed(1)} KB).';
           _isError = false;
         });
       }
@@ -1174,7 +564,8 @@ class _ExportDialogState extends State<ExportDialog> {
     try {
       final jsonStr = ExportService.exportToJson(widget.elements);
       if (mounted) {
-        setState(() => _processingSubtitle = 'Triggering .whiteboard download...');
+        setState(
+            () => _processingSubtitle = 'Triggering .whiteboard download...');
       }
       await Future<void>.delayed(const Duration(milliseconds: 20));
 
@@ -1218,7 +609,8 @@ class _ExportDialogState extends State<ExportDialog> {
       await Clipboard.setData(ClipboardData(text: jsonStr));
       if (mounted) {
         setState(() {
-          _statusMessage = 'Whiteboard data (${widget.elements.length} elements) copied to clipboard!';
+          _statusMessage =
+              'Whiteboard data (${widget.elements.length} elements) copied to clipboard!';
           _isError = false;
         });
       }
@@ -1246,7 +638,14 @@ class _ExportDialogState extends State<ExportDialog> {
     try {
       final result = await FilePickerPlatform.instance.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['json', 'whiteboard', 'excalidraw', 'mermaid', 'mmd', 'txt'],
+        allowedExtensions: [
+          'json',
+          'whiteboard',
+          'excalidraw',
+          'mermaid',
+          'mmd',
+          'txt',
+        ],
       );
 
       if (result.isNotEmpty) {
@@ -1256,7 +655,8 @@ class _ExportDialogState extends State<ExportDialog> {
 
         List<BoardElement>? imported;
         if (ExcalidrawImportService.isExcalidrawJson(content)) {
-          imported = ExcalidrawImportService.importFromExcalidraw(jsonStr: content);
+          imported =
+              ExcalidrawImportService.importFromExcalidraw(jsonStr: content);
         } else if (MermaidParserService.isMermaidSyntax(content)) {
           imported = MermaidParserService.parseToElements(script: content);
         } else {
