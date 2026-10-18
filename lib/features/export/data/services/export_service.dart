@@ -10,9 +10,11 @@ import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/presentation/painters/element_renderer.dart';
 import 'pdf_export_service.dart';
 import 'svg_export_service.dart';
+import 'mermaid_export_service.dart';
 
 export 'pdf_export_service.dart' show PdfExportMode;
 export 'svg_export_service.dart';
+export 'mermaid_export_service.dart';
 
 class ExportService {
   /// Renders all elements onto a high-resolution PNG image with progress feedback
@@ -92,6 +94,19 @@ class ExportService {
       elements: elements,
       colors: colors,
       includeBackground: includeBackground,
+    );
+  }
+
+  /// Exports elements to Mermaid flowchart syntax
+  static String exportToMermaid({
+    required List<BoardElement> elements,
+    MermaidDirection direction = MermaidDirection.auto,
+    bool includeStyles = true,
+  }) {
+    return MermaidExportService.exportToMermaid(
+      elements: elements,
+      direction: direction,
+      includeStyles: includeStyles,
     );
   }
 

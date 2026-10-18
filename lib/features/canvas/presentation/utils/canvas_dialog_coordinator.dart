@@ -10,6 +10,7 @@ import 'package:flutcanvas/features/canvas/presentation/bloc/boards_cubit.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
 import 'package:flutcanvas/features/canvas/presentation/controllers/canvas_viewport_controller.dart';
+import 'package:flutcanvas/features/canvas/presentation/widgets/command_palette/command_palette_dialog.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/mermaid_dialog.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/shortcuts_help_dialog.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/template_picker_dialog.dart';
@@ -136,5 +137,34 @@ class CanvasDialogCoordinator {
       context.read<CanvasBloc>().add(CanvasEvent.addElement(newElement));
       showToast(context, 'Inserted Image');
     }
+  }
+
+  static void showCommandPaletteDialog({
+    required BuildContext context,
+    required CanvasViewportController viewport,
+    required Size viewSize,
+    VoidCallback? onToggleTheme,
+    VoidCallback? onOpenExport,
+    VoidCallback? onOpenTemplates,
+    VoidCallback? onStartPresentation,
+    VoidCallback? onOpenHelp,
+    VoidCallback? onInsertImage,
+    VoidCallback? onOpenMermaidImport,
+  }) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (_) => CommandPaletteDialog(
+        viewport: viewport,
+        viewSize: viewSize,
+        onToggleTheme: onToggleTheme,
+        onOpenExport: onOpenExport,
+        onOpenTemplates: onOpenTemplates,
+        onStartPresentation: onStartPresentation,
+        onOpenHelp: onOpenHelp,
+        onInsertImage: onInsertImage,
+        onOpenMermaidImport: onOpenMermaidImport,
+      ),
+    );
   }
 }

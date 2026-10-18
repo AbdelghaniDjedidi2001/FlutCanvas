@@ -23,6 +23,10 @@ void main() {
 
   testWidgets('WhiteboardApp renders canvas, multi-board tabs, and toolbar smoke test',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await tester.pumpWidget(const WhiteboardApp());
     await tester.pumpAndSettle();
 

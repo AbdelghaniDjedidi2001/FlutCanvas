@@ -11,14 +11,16 @@ import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/export/data/services/export_service.dart';
+import 'package:flutcanvas/features/export/data/services/mermaid_export_service.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_processing_banner.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_status_banner.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_data.dart';
+import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_mermaid.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_pdf.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_png.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_svg.dart';
 
-enum ExportFormatTab { png, svg, pdf, json }
+enum ExportFormatTab { png, svg, pdf, mermaid, json }
 
 /// Dialog for exporting canvas elements to PNG, SVG, PDF, or JSON data,
 /// as well as importing external diagram formats (Excalidraw, Mermaid, JSON).
@@ -54,6 +56,10 @@ class _ExportDialogState extends State<ExportDialog> {
 
   // PDF settings
   PdfExportMode _pdfMode = PdfExportMode.currentBoard;
+
+  // Mermaid settings
+  MermaidDirection _mermaidDirection = MermaidDirection.auto;
+  bool _mermaidIncludeStyles = true;
 
   bool _isProcessing = false;
   String _processingTitle = 'Processing export...';
@@ -192,6 +198,13 @@ class _ExportDialogState extends State<ExportDialog> {
                     tab: ExportFormatTab.pdf,
                     label: 'PDF',
                     icon: Icons.picture_as_pdf_outlined,
+                    scheme: scheme,
+                    isDark: isDark,
+                  ),
+                  _tabPill(
+                    tab: ExportFormatTab.mermaid,
+                    label: 'Mermaid',
+                    icon: Icons.account_tree_outlined,
                     scheme: scheme,
                     isDark: isDark,
                   ),
@@ -341,6 +354,18 @@ class _ExportDialogState extends State<ExportDialog> {
           hasElements: hasElements,
           onExportPdf: _handleExportPdf,
         ),
+      ExportFormatTab.mermaid => ExportTabMermaid(
+          isProcessing: _isProcessing,
+          hasElements: hasElements,
+          direction: _mermaidDirection,
+          includeStyles: _mermaidIncludeStyles,
+          mermaidCode: _getMermaidPreview(),
+          onDirectionChanged: (dir) => setState(() => _mermaidDirection = dir),
+          onIncludeStylesChanged: (val) =>
+              setState(() => _mermaidIncludeStyles = val),
+          onCopyMermaid: _handleCopyMermaid,
+          onDownloadMmd: _handleDownloadMmd,
+        ),
       ExportFormatTab.json => ExportTabData(
           isProcessing: _isProcessing,
           hasElements: hasElements,
@@ -349,6 +374,85 @@ class _ExportDialogState extends State<ExportDialog> {
           onImportFile: _handleImportFile,
         ),
     };
+  }
+
+  // ── Mermaid Export Handlers ─────────────────────────────────────────
+  String _getMermaidPreview() {
+    return ExportService.exportToMermaid(
+      elements: widget.elements,
+      direction: _mermaidDirection,
+      includeStyles: _mermaidIncludeStyles,
+    );
+  }
+
+  Future<void> _handleCopyMermaid() async {
+    setState(() {
+      _isProcessing = true;
+      _processingTitle = 'Generating Mermaid Script';
+      _processingSubtitle = 'Copying flowchart markdown to clipboard...';
+      _statusMessage = null;
+      _isError = false;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
+    try {
+      final code = _getMermaidPreview();
+      final markdown = '```mermaid\n$code```';
+      await Clipboard.setData(ClipboardData(text: markdown));
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Mermaid markdown copied to clipboard!';
+          _isError = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Copy failed: $e';
+          _isError = true;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleDownloadMmd() async {
+    setState(() {
+      _isProcessing = true;
+      _processingTitle = 'Exporting Mermaid File';
+      _processingSubtitle = 'Generating .mmd diagram file...';
+      _statusMessage = null;
+      _isError = false;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
+    try {
+      final code = _getMermaidPreview();
+      final filename = '$_safeBaseName.mmd';
+      FileDownloader.downloadString(
+        content: code,
+        filename: filename,
+        mimeType: 'text/plain',
+      );
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Mermaid file downloaded ($filename).';
+          _isError = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Mermaid export failed: $e';
+          _isError = true;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
   }
 
   // ── Action Handlers ────────────────────────────────────────────────

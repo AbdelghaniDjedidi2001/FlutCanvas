@@ -14,11 +14,13 @@ import 'package:flutcanvas/features/toolbar/presentation/widgets/main_toolbar.da
 class CanvasTopBar extends StatelessWidget {
   final CanvasViewportController viewport;
   final Size Function() getViewSize;
+  final VoidCallback? onOpenCommandPalette;
 
   const CanvasTopBar({
     super.key,
     required this.viewport,
     required this.getViewSize,
+    this.onOpenCommandPalette,
   });
 
   @override
@@ -36,6 +38,10 @@ class CanvasTopBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const BoardTabsBar(),
+            if (onOpenCommandPalette != null) ...[
+              const SizedBox(width: 8),
+              _CommandPaletteButton(onPressed: onOpenCommandPalette!),
+            ],
             const SizedBox(width: 8),
             Expanded(
               child: Center(
@@ -79,3 +85,85 @@ class CanvasTopBar extends StatelessWidget {
     );
   }
 }
+
+class _CommandPaletteButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _CommandPaletteButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Tooltip(
+      message: 'Command Palette (Cmd+K / Ctrl+K)',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1E222D).withValues(alpha: 0.95)
+                  : Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.25),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1.5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.search_rounded,
+                  size: 16,
+                  color: scheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Actions',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '⌘K',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+

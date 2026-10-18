@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
+import 'package:flutcanvas/features/export/data/services/mermaid_export_service.dart';
 import 'package:flutcanvas/features/export/data/services/pdf_export_service.dart';
 
 abstract class ExportRepository {
@@ -27,6 +28,12 @@ abstract class ExportRepository {
     List<BoardDocument>? allBoards,
     PdfExportMode mode = PdfExportMode.currentBoard,
     void Function(String status)? onProgress,
+  });
+
+  String exportToMermaid({
+    required List<BoardElement> elements,
+    MermaidDirection direction = MermaidDirection.auto,
+    bool includeStyles = true,
   });
 
   String exportToJson(List<BoardElement> elements);

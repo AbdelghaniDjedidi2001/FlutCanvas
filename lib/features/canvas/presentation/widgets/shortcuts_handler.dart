@@ -21,6 +21,7 @@ class CanvasShortcutsHandler extends StatelessWidget {
   final VoidCallback? onOpenHelp;
   final VoidCallback? onToggleTheme;
   final VoidCallback? onEscape;
+  final VoidCallback? onOpenCommandPalette;
   final VoidCallback? onNextSlide;
   final VoidCallback? onPreviousSlide;
   final bool isPresentationMode;
@@ -40,6 +41,7 @@ class CanvasShortcutsHandler extends StatelessWidget {
     this.onOpenHelp,
     this.onToggleTheme,
     this.onEscape,
+    this.onOpenCommandPalette,
     this.onNextSlide,
     this.onPreviousSlide,
     this.isPresentationMode = false,
@@ -109,6 +111,12 @@ class CanvasShortcutsHandler extends StatelessWidget {
           } else {
             context.read<CanvasBloc>().add(const CanvasEvent.clearSelection());
           }
+          return KeyEventResult.handled;
+        }
+
+        // Command Palette: Cmd+K / Ctrl+K
+        if (isControlOrCmd && event.logicalKey == LogicalKeyboardKey.keyK) {
+          onOpenCommandPalette?.call();
           return KeyEventResult.handled;
         }
 

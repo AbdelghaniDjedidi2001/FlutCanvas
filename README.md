@@ -48,7 +48,12 @@ Instant one-click diagram generators for rapid brainstorming:
 
 ### 🚀 Import & Export
 - **High-Res PNG Export**: Render the entire board or selected areas at high resolution (with transparent or solid background options).
+- **Vector SVG & Presentation PDF**: High-quality scalable vector SVG and multi-page PDF presentation deck exports.
+- **Bidirectional Mermaid Flowcharts**: Parse Mermaid markdown into editable canvas elements and export visual diagrams back to clean Mermaid flowchart syntax (`.mmd`).
 - **JSON Serialization**: Export boards to formatted JSON files or import existing diagrams.
+
+### 🔍 Command Palette & Spotlight (`Cmd + K`)
+- Fast keyboard-driven command runner to switch tools, invoke actions, toggle theme/grid/layers, and search on-canvas text with instant camera zoom-and-focus.
 
 ---
 
@@ -56,6 +61,7 @@ Instant one-click diagram generators for rapid brainstorming:
 
 | Shortcut | Action |
 | :--- | :--- |
+| **`Ctrl/Cmd + K`** | **Command Palette / Spotlight Search** |
 | **`V`** | Select / Transform Tool |
 | **`H`** / **`Space + Drag`** | Hand / Pan Canvas |
 | **`R`** / **`Shift + R`** | Rectangle / Rounded Box |

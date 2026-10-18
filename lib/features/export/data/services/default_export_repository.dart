@@ -61,6 +61,19 @@ class DefaultExportRepository implements ExportRepository {
   }
 
   @override
+  String exportToMermaid({
+    required List<BoardElement> elements,
+    MermaidDirection direction = MermaidDirection.auto,
+    bool includeStyles = true,
+  }) {
+    return ExportService.exportToMermaid(
+      elements: elements,
+      direction: direction,
+      includeStyles: includeStyles,
+    );
+  }
+
+  @override
   String exportToJson(List<BoardElement> elements) {
     return ExportService.exportToJson(elements);
   }

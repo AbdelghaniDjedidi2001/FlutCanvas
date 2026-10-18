@@ -109,6 +109,41 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
     }
   }
 
+  void _openCommandPalette(BuildContext context) {
+    CanvasDialogCoordinator.showCommandPaletteDialog(
+      context: context,
+      viewport: _viewport,
+      viewSize: _viewSize,
+      onToggleTheme: () => widget.onToggleTheme(Theme.of(context).brightness),
+      onOpenExport: () => CanvasDialogCoordinator.showExportDialog(
+        context,
+        _viewport,
+        _viewSize,
+      ),
+      onOpenTemplates: () => CanvasDialogCoordinator.showTemplatesDialog(
+        context,
+        _viewport,
+        _viewSize,
+      ),
+      onStartPresentation: () {
+        final elements = context.read<CanvasBloc>().state.elements;
+        context.read<PresentationCubit>().startPresentation(elements);
+      },
+      onOpenHelp: () =>
+          CanvasDialogCoordinator.showShortcutsHelpDialog(context),
+      onInsertImage: () => CanvasDialogCoordinator.handleInsertImage(
+        context,
+        _viewport,
+        _viewSize,
+      ),
+      onOpenMermaidImport: () => CanvasDialogCoordinator.showMermaidDialog(
+        context,
+        _viewport,
+        _viewSize,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = BoardColors.of(context);
@@ -149,6 +184,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                 CanvasDialogCoordinator.showShortcutsHelpDialog(context),
             onToggleTheme: () =>
                 widget.onToggleTheme(Theme.of(context).brightness),
+            onOpenCommandPalette: () => _openCommandPalette(context),
             onEscape: () => _onEscape(context, isPresenting),
             onNextSlide: () => context.read<PresentationCubit>().nextSlide(),
             onPreviousSlide: () =>
@@ -184,6 +220,7 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                     CanvasTopBar(
                       viewport: _viewport,
                       getViewSize: () => _viewSize,
+                      onOpenCommandPalette: () => _openCommandPalette(context),
                     ),
 
                     // 3. Floating Properties Panel Overlay
