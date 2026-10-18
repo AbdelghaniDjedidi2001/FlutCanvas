@@ -28,5 +28,6 @@ abstract class ToolState with _$ToolState {
     @Default(true) bool autoShapeRecognition,
     @Default(false) bool isPropertiesOpen,
     @Default(false) bool isLayersOpen,
+    @Default(false) bool isIconLibraryOpen,
   }) = _ToolState;
 }

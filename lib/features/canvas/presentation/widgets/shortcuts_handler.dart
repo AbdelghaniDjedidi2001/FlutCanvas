@@ -199,6 +199,12 @@ class CanvasShortcutsHandler extends StatelessWidget {
           return KeyEventResult.handled;
         }
 
+        // Toggle Cloud & Tech Icon Library: Alt+I
+        if (isAlt && !isShift && event.logicalKey == LogicalKeyboardKey.keyI) {
+          context.read<ToolCubit>().toggleIconLibrary();
+          return KeyEventResult.handled;
+        }
+
         // Toggle Dark/Light Mode: Alt+Shift+D
         if (isAlt && isShift && event.logicalKey == LogicalKeyboardKey.keyD) {
           onToggleTheme?.call();

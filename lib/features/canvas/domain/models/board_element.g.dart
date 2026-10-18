@@ -103,6 +103,8 @@ _BoardElement _$BoardElementFromJson(
       'tableHasHeader',
       (v) => v as bool? ?? true,
     ),
+    iconName: $checkedConvert('iconName', (v) => v as String?),
+    iconCategory: $checkedConvert('iconCategory', (v) => v as String?),
   );
   return val;
 });
@@ -139,6 +141,8 @@ Map<String, dynamic> _$BoardElementToJson(_BoardElement instance) =>
       'showLineNumbers': instance.showLineNumbers,
       'tableData': const TableDataConverter().toJson(instance.tableData),
       'tableHasHeader': instance.tableHasHeader,
+      'iconName': instance.iconName,
+      'iconCategory': instance.iconCategory,
     };
 
 const _$ShapeTypeEnumMap = {
@@ -160,6 +164,7 @@ const _$ShapeTypeEnumMap = {
   ShapeType.frame: 'frame',
   ShapeType.codeBlock: 'codeBlock',
   ShapeType.table: 'table',
+  ShapeType.icon: 'icon',
 };
 
 const _$StrokeStyleEnumMap = {

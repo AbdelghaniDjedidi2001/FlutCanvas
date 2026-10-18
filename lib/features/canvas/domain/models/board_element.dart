@@ -91,6 +91,8 @@ abstract class BoardElement with _$BoardElement {
     @Default(true) bool showLineNumbers,
     @TableDataConverter() List<List<String>>? tableData,
     @Default(true) bool tableHasHeader,
+    String? iconName,
+    String? iconCategory,
   }) = _BoardElement;
 
   const BoardElement._();
@@ -235,6 +237,7 @@ abstract class BoardElement with _$BoardElement {
       ShapeType.image => 'Image',
       ShapeType.codeBlock => 'Code (${codeLanguage ?? "Dart"})',
       ShapeType.table => 'Table (${tableRowCount}x$tableColCount)',
+      ShapeType.icon => 'Icon (${iconName ?? "Cloud"})',
     };
   }
 
@@ -338,6 +341,7 @@ abstract class BoardElement with _$BoardElement {
       case ShapeType.text:
       case ShapeType.image:
       case ShapeType.frame:
+      case ShapeType.icon:
         return bounds.inflate(shapeTol).contains(testPoint);
 
       case ShapeType.ellipse:
@@ -415,6 +419,8 @@ abstract class BoardElement with _$BoardElement {
       'showLineNumbers': showLineNumbers,
       'tableData': tableData,
       'tableHasHeader': tableHasHeader,
+      'iconName': iconName,
+      'iconCategory': iconCategory,
     };
   }
 
@@ -492,6 +498,8 @@ abstract class BoardElement with _$BoardElement {
       showLineNumbers: map['showLineNumbers'] as bool? ?? true,
       tableData: parsedTableData,
       tableHasHeader: map['tableHasHeader'] as bool? ?? true,
+      iconName: map['iconName'] as String?,
+      iconCategory: map['iconCategory'] as String?,
     );
   }
 

@@ -79,4 +79,10 @@ class ToolCubit extends Cubit<ToolState> {
       emit(state.copyWith(isLayersOpen: !state.isLayersOpen));
 
   void setLayersOpen(bool open) => emit(state.copyWith(isLayersOpen: open));
+
+  void toggleIconLibrary() =>
+      emit(state.copyWith(isIconLibraryOpen: !state.isIconLibraryOpen));
+
+  void setIconLibraryOpen(bool open) =>
+      emit(state.copyWith(isIconLibraryOpen: open));
 }

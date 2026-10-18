@@ -8,6 +8,7 @@ import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
 import 'package:flutcanvas/features/canvas/data/services/connector_routing_service.dart';
 import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tech_icons.dart';
 
 class SvgExportService {
   static String exportToSvg({
@@ -188,6 +189,10 @@ class SvgExportService {
             '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}" fill="none" stroke="#748FFC" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.8" />');
         buffer.writeln(
             '    <text x="${r.left + 8}" y="${r.top - 6}" font-size="12" font-weight="bold" fill="#748FFC">$title</text>');
+        break;
+
+      case ShapeType.icon:
+        _renderIconNodeSvg(buffer, el, strokeColor, colors);
         break;
     }
 
@@ -650,5 +655,46 @@ class SvgExportService {
             '    <text x="$x" y="$y" font-size="$fontSize" font-weight="$weight" fill="$fill">$escaped</text>');
       }
     }
+  }
+
+  static void _renderIconNodeSvg(
+    StringBuffer buffer,
+    BoardElement el,
+    String strokeColor,
+    BoardColors colors,
+  ) {
+    final r = el.bounds;
+    final isDark = colors.isDark;
+    final iconDef = el.iconName != null ? TechIconRegistry.findById(el.iconName!) : null;
+    final brandColorHex = iconDef != null ? _colorToHex(iconDef.brandColor) : strokeColor;
+    final labelText = _escapeXml(el.text.trim().isNotEmpty
+        ? el.text.trim()
+        : (iconDef?.defaultLabel ?? el.customName ?? 'Architecture Node'));
+    final emoji = iconDef?.emoji ?? '⚡';
+
+    // 1. Card container
+    final cardBg = el.fillColor != Colors.transparent && el.fillColor.a > 0
+        ? _colorToHex(el.fillColor)
+        : (isDark ? '#1E222D' : '#FFFFFF');
+    final borderColor = el.color != Colors.transparent ? strokeColor : (isDark ? '#333A48' : '#E2E8F0');
+
+    buffer.writeln(
+        '    <rect x="${r.left}" y="${r.top}" width="${r.width}" height="${r.height}" rx="10" fill="$cardBg" stroke="$borderColor" stroke-width="1.2" opacity="${el.opacity}"/>');
+
+    // 2. Icon Badge
+    final badgeSize = math.min(r.width * 0.42, math.min(r.height * 0.48, 44.0));
+    final badgeLeft = r.center.dx - badgeSize / 2;
+    final badgeTop = r.top + math.max(8.0, (r.height - badgeSize - 26.0) / 2);
+
+    buffer.writeln(
+        '    <rect x="$badgeLeft" y="$badgeTop" width="$badgeSize" height="$badgeSize" rx="8" fill="$brandColorHex" fill-opacity="0.15" stroke="$brandColorHex" stroke-width="1" stroke-opacity="0.4"/>');
+    buffer.writeln(
+        '    <text x="${badgeLeft + badgeSize / 2}" y="${badgeTop + badgeSize * 0.68}" font-size="${badgeSize * 0.52}" text-anchor="middle">$emoji</text>');
+
+    // 3. Label text
+    final textColor = isDark ? '#F1F3F5' : '#1E293B';
+    final labelY = badgeTop + badgeSize + 16.0;
+    buffer.writeln(
+        '    <text x="${r.center.dx}" y="$labelY" font-size="11" font-weight="600" fill="$textColor" text-anchor="middle">$labelText</text>');
   }
 }

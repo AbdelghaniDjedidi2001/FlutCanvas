@@ -32,6 +32,8 @@ class MainToolbar extends StatelessWidget {
   final bool? isPropertiesOpen;
   final VoidCallback? onToggleLayers;
   final bool? isLayersOpen;
+  final VoidCallback? onToggleIconLibrary;
+  final bool? isIconLibraryOpen;
   final VoidCallback? onInsertImage;
 
   const MainToolbar({
@@ -54,6 +56,8 @@ class MainToolbar extends StatelessWidget {
     this.isPropertiesOpen,
     this.onToggleLayers,
     this.isLayersOpen,
+    this.onToggleIconLibrary,
+    this.isIconLibraryOpen,
     this.openCommentsCount,
     this.onInsertImage,
   });
@@ -78,6 +82,8 @@ class MainToolbar extends StatelessWidget {
     final activeIsPropertiesOpen =
         isPropertiesOpen ?? toolState.isPropertiesOpen;
     final activeIsLayersOpen = isLayersOpen ?? toolState.isLayersOpen;
+    final activeIsIconLibraryOpen =
+        isIconLibraryOpen ?? toolState.isIconLibraryOpen;
     final activeCommentsCount = openCommentsCount ??
         commentsState.comments.where((c) => !c.isResolved).length;
 
@@ -157,6 +163,25 @@ class MainToolbar extends StatelessWidget {
                   iconSize: 18,
                   onPressed: onOpenTemplates,
                   icon: const Icon(Icons.auto_awesome_mosaic_outlined),
+                ),
+              ),
+              Tooltip(
+                message: 'Cloud & Architecture Icons (Alt+I)',
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 18,
+                  style: activeIsIconLibraryOpen
+                      ? IconButton.styleFrom(
+                          backgroundColor: scheme.primaryContainer,
+                          foregroundColor: scheme.onPrimaryContainer,
+                        )
+                      : null,
+                  onPressed: onToggleIconLibrary ??
+                      () => toolCubit?.toggleIconLibrary(),
+                  icon: Icon(
+                    Icons.category_outlined,
+                    color: activeIsIconLibraryOpen ? scheme.primary : null,
+                  ),
                 ),
               ),
               Tooltip(

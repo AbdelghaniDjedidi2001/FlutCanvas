@@ -70,6 +70,8 @@ class CanvasTopBar extends StatelessWidget {
                       context.read<ToolCubit>().togglePropertiesPanel(),
                   onToggleLayers: () =>
                       context.read<ToolCubit>().toggleLayersSidebar(),
+                  onToggleIconLibrary: () =>
+                      context.read<ToolCubit>().toggleIconLibrary(),
                   onInsertImage: () =>
                       CanvasDialogCoordinator.handleInsertImage(
                     context,

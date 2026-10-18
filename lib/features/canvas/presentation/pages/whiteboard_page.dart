@@ -15,6 +15,7 @@ import 'package:flutcanvas/features/canvas/presentation/utils/canvas_dialog_coor
 import 'package:flutcanvas/features/canvas/presentation/widgets/board_workspace_sync.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/canvas_bottom_controls.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/canvas_empty_guide_overlay.dart';
+import 'package:flutcanvas/features/canvas/presentation/widgets/canvas_icon_library_overlay.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/canvas_interactive_surface.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/canvas_layers_overlay.dart';
 import 'package:flutcanvas/features/canvas/presentation/widgets/canvas_properties_overlay.dart';
@@ -227,6 +228,12 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                     CanvasPropertiesOverlay(
                       viewport: _viewport,
                       textEditingController: _textEditingController,
+                    ),
+
+                    // 3.5 Floating Cloud & Tech Icon Library Overlay
+                    CanvasIconLibraryOverlay(
+                      viewport: _viewport,
+                      getViewSize: () => _viewSize,
                     ),
 
                     // 4. Floating Layers / Object Tree Sidebar

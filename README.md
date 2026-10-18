@@ -46,6 +46,12 @@ Instant one-click diagram generators for rapid brainstorming:
 - **Presentation Viewer (`F5`)**: Step sequentially through slides with animated zoom-to-fit camera framing.
 - **Laser Pointer (`K`)**: Ephemeral glowing laser trail with auto-decay for live walkthroughs and demos.
 
+### ☁️ Cloud & Architecture Icon Library (`Alt + I`)
+- **40+ Curated Components**: Cloud & Compute (AWS Lambda, EC2, Cloud Run, Azure Functions), Databases (PostgreSQL, MySQL, Redis, MongoDB, Cassandra, S3, DynamoDB), Messaging & Networking (Kafka, RabbitMQ, GraphQL, NGINX, Cloudflare, Webhooks), DevOps (Docker, Kubernetes, Jenkins, GitLab, GitHub, Terraform), and Client Devices (Web, Mobile, Desktop, IoT, IAM).
+- **Searchable Slide-Out Drawer**: Instant real-time search, category chips, and one-click insertion onto the infinite canvas.
+- **First-Class Architecture Nodes**: Rendered with brand color badges, vector icons, auto-contrast backgrounds, and editable labels.
+- **Export & CLI Integration**: Fully supported in Vector SVG export, directional Mermaid export, and Spotlight Command Palette (`Cmd + K`).
+
 ### 🚀 Import & Export
 - **High-Res PNG Export**: Render the entire board or selected areas at high resolution (with transparent or solid background options).
 - **Vector SVG & Presentation PDF**: High-quality scalable vector SVG and multi-page PDF presentation deck exports.
@@ -53,7 +59,7 @@ Instant one-click diagram generators for rapid brainstorming:
 - **JSON Serialization**: Export boards to formatted JSON files or import existing diagrams.
 
 ### 🔍 Command Palette & Spotlight (`Cmd + K`)
-- Fast keyboard-driven command runner to switch tools, invoke actions, toggle theme/grid/layers, and search on-canvas text with instant camera zoom-and-focus.
+- Fast keyboard-driven command runner to switch tools, invoke actions, toggle theme/grid/layers/icons, insert architecture components directly, and search on-canvas text with instant camera zoom-and-focus.
 
 ---
 
@@ -62,6 +68,8 @@ Instant one-click diagram generators for rapid brainstorming:
 | Shortcut | Action |
 | :--- | :--- |
 | **`Ctrl/Cmd + K`** | **Command Palette / Spotlight Search** |
+| **`Alt + I`** | **Toggle Cloud & Tech Icon Library** |
+| **`Alt + L`** | Toggle Layers & Object Tree Sidebar |
 | **`V`** | Select / Transform Tool |
 | **`H`** / **`Space + Drag`** | Hand / Pan Canvas |
 | **`R`** / **`Shift + R`** | Rectangle / Rounded Box |

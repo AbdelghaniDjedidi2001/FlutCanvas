@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tech_icons.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tool.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
@@ -118,6 +119,44 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
     addTool('tool_frame', 'Slide Frame', Tool.frame, Icons.filter_frames_outlined, 'F', ['presentation', 'slide', 'subgraph', 'boundary']);
     addTool('tool_eraser', 'Eraser', Tool.eraser, Icons.auto_fix_normal_outlined, 'E', ['delete', 'remove', 'scratch']);
     addTool('tool_laser', 'Laser Pointer', Tool.laser, Icons.adjust_rounded, 'K', ['presentation', 'demo', 'trail']);
+
+    // ── 1.5 Architecture Icons ────────────────────────────────────────────
+    for (final def in TechIconRegistry.icons) {
+      items.add(CommandPaletteItem(
+        id: 'insert_tech_icon_${def.id}',
+        title: 'Insert ${def.name} Icon',
+        subtitle: '${def.category.label} • Architecture Component',
+        category: CommandCategory.tools,
+        icon: def.icon,
+        iconColor: def.brandColor,
+        keywords: ['insert', 'icon', 'cloud', 'architecture', ...def.keywords, def.category.name],
+        onExecute: () {
+          Navigator.of(context).pop();
+          final center = widget.viewSize == Size.zero
+              ? const Offset(300, 300)
+              : widget.viewport.toWorld(
+                  Offset(widget.viewSize.width / 2, widget.viewSize.height / 2),
+                );
+          const width = 120.0;
+          const height = 90.0;
+          final colors = BoardColors.of(context);
+          final element = BoardElement(
+            id: 'icon_${DateTime.now().millisecondsSinceEpoch}',
+            type: ShapeType.icon,
+            start: center - const Offset(width / 2, height / 2),
+            end: center + const Offset(width / 2, height / 2),
+            iconName: def.id,
+            iconCategory: def.category.name,
+            text: def.defaultLabel,
+            color: def.brandColor,
+            fillColor: colors.isDark ? const Color(0xFF1E222D) : Colors.white,
+            strokeWidth: 1.5,
+          );
+          canvasBloc.add(CanvasEvent.addElement(element));
+          canvasBloc.add(CanvasEvent.selectElements({element.id}));
+        },
+      ));
+    }
 
     // ── 2. Actions ────────────────────────────────────────────────────────
     items.add(CommandPaletteItem(
@@ -374,6 +413,19 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
       },
     ));
 
+    items.add(CommandPaletteItem(
+      id: 'view_toggle_icon_library',
+      title: 'Toggle Cloud & Architecture Icons',
+      category: CommandCategory.view,
+      icon: Icons.category_outlined,
+      shortcut: 'Alt+I',
+      keywords: ['cloud', 'aws', 'gcp', 'azure', 'docker', 'k8s', 'tech', 'icons', 'library'],
+      onExecute: () {
+        Navigator.of(context).pop();
+        toolCubit.toggleIconLibrary();
+      },
+    ));
+
     // ── 4. Import & Export ────────────────────────────────────────────────
     items.add(CommandPaletteItem(
       id: 'export_dialog',
@@ -475,12 +527,19 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
       final label = el.label?.trim() ?? '';
       final title = el.frameTitle?.trim() ?? '';
       final customName = el.customName?.trim() ?? '';
+      final iconName = el.iconName != null
+          ? (TechIconRegistry.findById(el.iconName!)?.name ?? el.iconName!)
+          : '';
 
       final displayText = text.isNotEmpty
           ? text
           : (title.isNotEmpty
               ? title
-              : (label.isNotEmpty ? label : (customName.isNotEmpty ? customName : '')));
+              : (label.isNotEmpty
+                  ? label
+                  : (iconName.isNotEmpty
+                      ? iconName
+                      : (customName.isNotEmpty ? customName : ''))));
 
       if (displayText.isEmpty) continue;
 
@@ -491,6 +550,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         ShapeType.table => 'Data Table',
         ShapeType.diamond => 'Decision Diamond',
         ShapeType.arrow => 'Connector Arrow',
+        ShapeType.icon => 'Architecture Icon',
         _ => _capitalize(el.type.name),
       };
 
@@ -502,6 +562,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         ShapeType.diamond => Icons.change_history_outlined,
         ShapeType.arrow => Icons.arrow_forward_rounded,
         ShapeType.ellipse => Icons.circle_outlined,
+        ShapeType.icon => Icons.category_outlined,
         _ => Icons.crop_square_rounded,
       };
 
@@ -511,7 +572,12 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         subtitle: '$typeName • at (${el.bounds.left.round()}, ${el.bounds.top.round()})',
         category: CommandCategory.elements,
         icon: icon,
-        keywords: [typeName, displayText, el.type.name],
+        keywords: [
+          typeName,
+          displayText,
+          el.type.name,
+          if (el.iconCategory != null) el.iconCategory!,
+        ],
         onExecute: () {
           Navigator.of(context).pop();
           // 1. Select the matching element

@@ -11,7 +11,6 @@ import 'package:flutcanvas/features/canvas/domain/models/board_document.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/export/data/services/export_service.dart';
-import 'package:flutcanvas/features/export/data/services/mermaid_export_service.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_processing_banner.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_status_banner.dart';
 import 'package:flutcanvas/features/export/presentation/widgets/tabs/export_tab_data.dart';

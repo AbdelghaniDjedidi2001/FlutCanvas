@@ -40,7 +40,6 @@ class _MermaidNode {
     this.shapeType = ShapeType.rectangle,
     this.subgraphId,
     this.className,
-    this.directStyle,
   });
 }
 

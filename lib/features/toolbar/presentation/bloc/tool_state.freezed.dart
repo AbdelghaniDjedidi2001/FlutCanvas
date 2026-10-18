@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ToolState {
 
- Tool get currentTool; Color get strokeColor; Color get fillColor; double get strokeWidth; StrokeStyle get strokeStyle; FillStyle get fillStyle; DrawStyle get drawStyle; double get fontSize; double get opacity; double get rotation; ConnectorStyle get connectorStyle; String get codeLanguage; bool get gridSnap; bool get smartGuides; bool get autoShapeRecognition; bool get isPropertiesOpen; bool get isLayersOpen;
+ Tool get currentTool; Color get strokeColor; Color get fillColor; double get strokeWidth; StrokeStyle get strokeStyle; FillStyle get fillStyle; DrawStyle get drawStyle; double get fontSize; double get opacity; double get rotation; ConnectorStyle get connectorStyle; String get codeLanguage; bool get gridSnap; bool get smartGuides; bool get autoShapeRecognition; bool get isPropertiesOpen; bool get isLayersOpen; bool get isIconLibraryOpen;
 /// Create a copy of ToolState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ToolStateCopyWith<ToolState> get copyWith => _$ToolStateCopyWithImpl<ToolState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ToolState&&(identical(other.currentTool, currentTool) || other.currentTool == currentTool)&&(identical(other.strokeColor, strokeColor) || other.strokeColor == strokeColor)&&(identical(other.fillColor, fillColor) || other.fillColor == fillColor)&&(identical(other.strokeWidth, strokeWidth) || other.strokeWidth == strokeWidth)&&(identical(other.strokeStyle, strokeStyle) || other.strokeStyle == strokeStyle)&&(identical(other.fillStyle, fillStyle) || other.fillStyle == fillStyle)&&(identical(other.drawStyle, drawStyle) || other.drawStyle == drawStyle)&&(identical(other.fontSize, fontSize) || other.fontSize == fontSize)&&(identical(other.opacity, opacity) || other.opacity == opacity)&&(identical(other.rotation, rotation) || other.rotation == rotation)&&(identical(other.connectorStyle, connectorStyle) || other.connectorStyle == connectorStyle)&&(identical(other.codeLanguage, codeLanguage) || other.codeLanguage == codeLanguage)&&(identical(other.gridSnap, gridSnap) || other.gridSnap == gridSnap)&&(identical(other.smartGuides, smartGuides) || other.smartGuides == smartGuides)&&(identical(other.autoShapeRecognition, autoShapeRecognition) || other.autoShapeRecognition == autoShapeRecognition)&&(identical(other.isPropertiesOpen, isPropertiesOpen) || other.isPropertiesOpen == isPropertiesOpen)&&(identical(other.isLayersOpen, isLayersOpen) || other.isLayersOpen == isLayersOpen));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ToolState&&(identical(other.currentTool, currentTool) || other.currentTool == currentTool)&&(identical(other.strokeColor, strokeColor) || other.strokeColor == strokeColor)&&(identical(other.fillColor, fillColor) || other.fillColor == fillColor)&&(identical(other.strokeWidth, strokeWidth) || other.strokeWidth == strokeWidth)&&(identical(other.strokeStyle, strokeStyle) || other.strokeStyle == strokeStyle)&&(identical(other.fillStyle, fillStyle) || other.fillStyle == fillStyle)&&(identical(other.drawStyle, drawStyle) || other.drawStyle == drawStyle)&&(identical(other.fontSize, fontSize) || other.fontSize == fontSize)&&(identical(other.opacity, opacity) || other.opacity == opacity)&&(identical(other.rotation, rotation) || other.rotation == rotation)&&(identical(other.connectorStyle, connectorStyle) || other.connectorStyle == connectorStyle)&&(identical(other.codeLanguage, codeLanguage) || other.codeLanguage == codeLanguage)&&(identical(other.gridSnap, gridSnap) || other.gridSnap == gridSnap)&&(identical(other.smartGuides, smartGuides) || other.smartGuides == smartGuides)&&(identical(other.autoShapeRecognition, autoShapeRecognition) || other.autoShapeRecognition == autoShapeRecognition)&&(identical(other.isPropertiesOpen, isPropertiesOpen) || other.isPropertiesOpen == isPropertiesOpen)&&(identical(other.isLayersOpen, isLayersOpen) || other.isLayersOpen == isLayersOpen)&&(identical(other.isIconLibraryOpen, isIconLibraryOpen) || other.isIconLibraryOpen == isIconLibraryOpen));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentTool,strokeColor,fillColor,strokeWidth,strokeStyle,fillStyle,drawStyle,fontSize,opacity,rotation,connectorStyle,codeLanguage,gridSnap,smartGuides,autoShapeRecognition,isPropertiesOpen,isLayersOpen);
+int get hashCode => Object.hash(runtimeType,currentTool,strokeColor,fillColor,strokeWidth,strokeStyle,fillStyle,drawStyle,fontSize,opacity,rotation,connectorStyle,codeLanguage,gridSnap,smartGuides,autoShapeRecognition,isPropertiesOpen,isLayersOpen,isIconLibraryOpen);
 
 @override
 String toString() {
-  return 'ToolState(currentTool: $currentTool, strokeColor: $strokeColor, fillColor: $fillColor, strokeWidth: $strokeWidth, strokeStyle: $strokeStyle, fillStyle: $fillStyle, drawStyle: $drawStyle, fontSize: $fontSize, opacity: $opacity, rotation: $rotation, connectorStyle: $connectorStyle, codeLanguage: $codeLanguage, gridSnap: $gridSnap, smartGuides: $smartGuides, autoShapeRecognition: $autoShapeRecognition, isPropertiesOpen: $isPropertiesOpen, isLayersOpen: $isLayersOpen)';
+  return 'ToolState(currentTool: $currentTool, strokeColor: $strokeColor, fillColor: $fillColor, strokeWidth: $strokeWidth, strokeStyle: $strokeStyle, fillStyle: $fillStyle, drawStyle: $drawStyle, fontSize: $fontSize, opacity: $opacity, rotation: $rotation, connectorStyle: $connectorStyle, codeLanguage: $codeLanguage, gridSnap: $gridSnap, smartGuides: $smartGuides, autoShapeRecognition: $autoShapeRecognition, isPropertiesOpen: $isPropertiesOpen, isLayersOpen: $isLayersOpen, isIconLibraryOpen: $isIconLibraryOpen)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ToolStateCopyWith<$Res>  {
   factory $ToolStateCopyWith(ToolState value, $Res Function(ToolState) _then) = _$ToolStateCopyWithImpl;
 @useResult
 $Res call({
- Tool currentTool, Color strokeColor, Color fillColor, double strokeWidth, StrokeStyle strokeStyle, FillStyle fillStyle, DrawStyle drawStyle, double fontSize, double opacity, double rotation, ConnectorStyle connectorStyle, String codeLanguage, bool gridSnap, bool smartGuides, bool autoShapeRecognition, bool isPropertiesOpen, bool isLayersOpen
+ Tool currentTool, Color strokeColor, Color fillColor, double strokeWidth, StrokeStyle strokeStyle, FillStyle fillStyle, DrawStyle drawStyle, double fontSize, double opacity, double rotation, ConnectorStyle connectorStyle, String codeLanguage, bool gridSnap, bool smartGuides, bool autoShapeRecognition, bool isPropertiesOpen, bool isLayersOpen, bool isIconLibraryOpen
 });
 
 
@@ -62,7 +62,7 @@ class _$ToolStateCopyWithImpl<$Res>
 
 /// Create a copy of ToolState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? currentTool = null,Object? strokeColor = null,Object? fillColor = null,Object? strokeWidth = null,Object? strokeStyle = null,Object? fillStyle = null,Object? drawStyle = null,Object? fontSize = null,Object? opacity = null,Object? rotation = null,Object? connectorStyle = null,Object? codeLanguage = null,Object? gridSnap = null,Object? smartGuides = null,Object? autoShapeRecognition = null,Object? isPropertiesOpen = null,Object? isLayersOpen = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? currentTool = null,Object? strokeColor = null,Object? fillColor = null,Object? strokeWidth = null,Object? strokeStyle = null,Object? fillStyle = null,Object? drawStyle = null,Object? fontSize = null,Object? opacity = null,Object? rotation = null,Object? connectorStyle = null,Object? codeLanguage = null,Object? gridSnap = null,Object? smartGuides = null,Object? autoShapeRecognition = null,Object? isPropertiesOpen = null,Object? isLayersOpen = null,Object? isIconLibraryOpen = null,}) {
   return _then(_self.copyWith(
 currentTool: null == currentTool ? _self.currentTool : currentTool // ignore: cast_nullable_to_non_nullable
 as Tool,strokeColor: null == strokeColor ? _self.strokeColor : strokeColor // ignore: cast_nullable_to_non_nullable
@@ -81,6 +81,7 @@ as bool,smartGuides: null == smartGuides ? _self.smartGuides : smartGuides // ig
 as bool,autoShapeRecognition: null == autoShapeRecognition ? _self.autoShapeRecognition : autoShapeRecognition // ignore: cast_nullable_to_non_nullable
 as bool,isPropertiesOpen: null == isPropertiesOpen ? _self.isPropertiesOpen : isPropertiesOpen // ignore: cast_nullable_to_non_nullable
 as bool,isLayersOpen: null == isLayersOpen ? _self.isLayersOpen : isLayersOpen // ignore: cast_nullable_to_non_nullable
+as bool,isIconLibraryOpen: null == isIconLibraryOpen ? _self.isIconLibraryOpen : isIconLibraryOpen // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -166,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Tool currentTool,  Color strokeColor,  Color fillColor,  double strokeWidth,  StrokeStyle strokeStyle,  FillStyle fillStyle,  DrawStyle drawStyle,  double fontSize,  double opacity,  double rotation,  ConnectorStyle connectorStyle,  String codeLanguage,  bool gridSnap,  bool smartGuides,  bool autoShapeRecognition,  bool isPropertiesOpen,  bool isLayersOpen)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Tool currentTool,  Color strokeColor,  Color fillColor,  double strokeWidth,  StrokeStyle strokeStyle,  FillStyle fillStyle,  DrawStyle drawStyle,  double fontSize,  double opacity,  double rotation,  ConnectorStyle connectorStyle,  String codeLanguage,  bool gridSnap,  bool smartGuides,  bool autoShapeRecognition,  bool isPropertiesOpen,  bool isLayersOpen,  bool isIconLibraryOpen)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ToolState() when $default != null:
-return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.strokeWidth,_that.strokeStyle,_that.fillStyle,_that.drawStyle,_that.fontSize,_that.opacity,_that.rotation,_that.connectorStyle,_that.codeLanguage,_that.gridSnap,_that.smartGuides,_that.autoShapeRecognition,_that.isPropertiesOpen,_that.isLayersOpen);case _:
+return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.strokeWidth,_that.strokeStyle,_that.fillStyle,_that.drawStyle,_that.fontSize,_that.opacity,_that.rotation,_that.connectorStyle,_that.codeLanguage,_that.gridSnap,_that.smartGuides,_that.autoShapeRecognition,_that.isPropertiesOpen,_that.isLayersOpen,_that.isIconLibraryOpen);case _:
   return orElse();
 
 }
@@ -187,10 +188,10 @@ return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.stroke
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Tool currentTool,  Color strokeColor,  Color fillColor,  double strokeWidth,  StrokeStyle strokeStyle,  FillStyle fillStyle,  DrawStyle drawStyle,  double fontSize,  double opacity,  double rotation,  ConnectorStyle connectorStyle,  String codeLanguage,  bool gridSnap,  bool smartGuides,  bool autoShapeRecognition,  bool isPropertiesOpen,  bool isLayersOpen)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Tool currentTool,  Color strokeColor,  Color fillColor,  double strokeWidth,  StrokeStyle strokeStyle,  FillStyle fillStyle,  DrawStyle drawStyle,  double fontSize,  double opacity,  double rotation,  ConnectorStyle connectorStyle,  String codeLanguage,  bool gridSnap,  bool smartGuides,  bool autoShapeRecognition,  bool isPropertiesOpen,  bool isLayersOpen,  bool isIconLibraryOpen)  $default,) {final _that = this;
 switch (_that) {
 case _ToolState():
-return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.strokeWidth,_that.strokeStyle,_that.fillStyle,_that.drawStyle,_that.fontSize,_that.opacity,_that.rotation,_that.connectorStyle,_that.codeLanguage,_that.gridSnap,_that.smartGuides,_that.autoShapeRecognition,_that.isPropertiesOpen,_that.isLayersOpen);case _:
+return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.strokeWidth,_that.strokeStyle,_that.fillStyle,_that.drawStyle,_that.fontSize,_that.opacity,_that.rotation,_that.connectorStyle,_that.codeLanguage,_that.gridSnap,_that.smartGuides,_that.autoShapeRecognition,_that.isPropertiesOpen,_that.isLayersOpen,_that.isIconLibraryOpen);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +208,10 @@ return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.stroke
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Tool currentTool,  Color strokeColor,  Color fillColor,  double strokeWidth,  StrokeStyle strokeStyle,  FillStyle fillStyle,  DrawStyle drawStyle,  double fontSize,  double opacity,  double rotation,  ConnectorStyle connectorStyle,  String codeLanguage,  bool gridSnap,  bool smartGuides,  bool autoShapeRecognition,  bool isPropertiesOpen,  bool isLayersOpen)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Tool currentTool,  Color strokeColor,  Color fillColor,  double strokeWidth,  StrokeStyle strokeStyle,  FillStyle fillStyle,  DrawStyle drawStyle,  double fontSize,  double opacity,  double rotation,  ConnectorStyle connectorStyle,  String codeLanguage,  bool gridSnap,  bool smartGuides,  bool autoShapeRecognition,  bool isPropertiesOpen,  bool isLayersOpen,  bool isIconLibraryOpen)?  $default,) {final _that = this;
 switch (_that) {
 case _ToolState() when $default != null:
-return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.strokeWidth,_that.strokeStyle,_that.fillStyle,_that.drawStyle,_that.fontSize,_that.opacity,_that.rotation,_that.connectorStyle,_that.codeLanguage,_that.gridSnap,_that.smartGuides,_that.autoShapeRecognition,_that.isPropertiesOpen,_that.isLayersOpen);case _:
+return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.strokeWidth,_that.strokeStyle,_that.fillStyle,_that.drawStyle,_that.fontSize,_that.opacity,_that.rotation,_that.connectorStyle,_that.codeLanguage,_that.gridSnap,_that.smartGuides,_that.autoShapeRecognition,_that.isPropertiesOpen,_that.isLayersOpen,_that.isIconLibraryOpen);case _:
   return null;
 
 }
@@ -222,7 +223,7 @@ return $default(_that.currentTool,_that.strokeColor,_that.fillColor,_that.stroke
 
 
 class _ToolState implements ToolState {
-  const _ToolState({this.currentTool = Tool.rectangle, this.strokeColor = kInk, this.fillColor = Colors.transparent, this.strokeWidth = 2.5, this.strokeStyle = StrokeStyle.solid, this.fillStyle = FillStyle.none, this.drawStyle = DrawStyle.clean, this.fontSize = 22.0, this.opacity = 1.0, this.rotation = 0.0, this.connectorStyle = ConnectorStyle.straight, this.codeLanguage = 'dart', this.gridSnap = false, this.smartGuides = true, this.autoShapeRecognition = true, this.isPropertiesOpen = false, this.isLayersOpen = false});
+  const _ToolState({this.currentTool = Tool.rectangle, this.strokeColor = kInk, this.fillColor = Colors.transparent, this.strokeWidth = 2.5, this.strokeStyle = StrokeStyle.solid, this.fillStyle = FillStyle.none, this.drawStyle = DrawStyle.clean, this.fontSize = 22.0, this.opacity = 1.0, this.rotation = 0.0, this.connectorStyle = ConnectorStyle.straight, this.codeLanguage = 'dart', this.gridSnap = false, this.smartGuides = true, this.autoShapeRecognition = true, this.isPropertiesOpen = false, this.isLayersOpen = false, this.isIconLibraryOpen = false});
   
 
 @override@JsonKey() final  Tool currentTool;
@@ -242,6 +243,7 @@ class _ToolState implements ToolState {
 @override@JsonKey() final  bool autoShapeRecognition;
 @override@JsonKey() final  bool isPropertiesOpen;
 @override@JsonKey() final  bool isLayersOpen;
+@override@JsonKey() final  bool isIconLibraryOpen;
 
 /// Create a copy of ToolState
 /// with the given fields replaced by the non-null parameter values.
@@ -253,16 +255,16 @@ _$ToolStateCopyWith<_ToolState> get copyWith => __$ToolStateCopyWithImpl<_ToolSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ToolState&&(identical(other.currentTool, currentTool) || other.currentTool == currentTool)&&(identical(other.strokeColor, strokeColor) || other.strokeColor == strokeColor)&&(identical(other.fillColor, fillColor) || other.fillColor == fillColor)&&(identical(other.strokeWidth, strokeWidth) || other.strokeWidth == strokeWidth)&&(identical(other.strokeStyle, strokeStyle) || other.strokeStyle == strokeStyle)&&(identical(other.fillStyle, fillStyle) || other.fillStyle == fillStyle)&&(identical(other.drawStyle, drawStyle) || other.drawStyle == drawStyle)&&(identical(other.fontSize, fontSize) || other.fontSize == fontSize)&&(identical(other.opacity, opacity) || other.opacity == opacity)&&(identical(other.rotation, rotation) || other.rotation == rotation)&&(identical(other.connectorStyle, connectorStyle) || other.connectorStyle == connectorStyle)&&(identical(other.codeLanguage, codeLanguage) || other.codeLanguage == codeLanguage)&&(identical(other.gridSnap, gridSnap) || other.gridSnap == gridSnap)&&(identical(other.smartGuides, smartGuides) || other.smartGuides == smartGuides)&&(identical(other.autoShapeRecognition, autoShapeRecognition) || other.autoShapeRecognition == autoShapeRecognition)&&(identical(other.isPropertiesOpen, isPropertiesOpen) || other.isPropertiesOpen == isPropertiesOpen)&&(identical(other.isLayersOpen, isLayersOpen) || other.isLayersOpen == isLayersOpen));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ToolState&&(identical(other.currentTool, currentTool) || other.currentTool == currentTool)&&(identical(other.strokeColor, strokeColor) || other.strokeColor == strokeColor)&&(identical(other.fillColor, fillColor) || other.fillColor == fillColor)&&(identical(other.strokeWidth, strokeWidth) || other.strokeWidth == strokeWidth)&&(identical(other.strokeStyle, strokeStyle) || other.strokeStyle == strokeStyle)&&(identical(other.fillStyle, fillStyle) || other.fillStyle == fillStyle)&&(identical(other.drawStyle, drawStyle) || other.drawStyle == drawStyle)&&(identical(other.fontSize, fontSize) || other.fontSize == fontSize)&&(identical(other.opacity, opacity) || other.opacity == opacity)&&(identical(other.rotation, rotation) || other.rotation == rotation)&&(identical(other.connectorStyle, connectorStyle) || other.connectorStyle == connectorStyle)&&(identical(other.codeLanguage, codeLanguage) || other.codeLanguage == codeLanguage)&&(identical(other.gridSnap, gridSnap) || other.gridSnap == gridSnap)&&(identical(other.smartGuides, smartGuides) || other.smartGuides == smartGuides)&&(identical(other.autoShapeRecognition, autoShapeRecognition) || other.autoShapeRecognition == autoShapeRecognition)&&(identical(other.isPropertiesOpen, isPropertiesOpen) || other.isPropertiesOpen == isPropertiesOpen)&&(identical(other.isLayersOpen, isLayersOpen) || other.isLayersOpen == isLayersOpen)&&(identical(other.isIconLibraryOpen, isIconLibraryOpen) || other.isIconLibraryOpen == isIconLibraryOpen));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentTool,strokeColor,fillColor,strokeWidth,strokeStyle,fillStyle,drawStyle,fontSize,opacity,rotation,connectorStyle,codeLanguage,gridSnap,smartGuides,autoShapeRecognition,isPropertiesOpen,isLayersOpen);
+int get hashCode => Object.hash(runtimeType,currentTool,strokeColor,fillColor,strokeWidth,strokeStyle,fillStyle,drawStyle,fontSize,opacity,rotation,connectorStyle,codeLanguage,gridSnap,smartGuides,autoShapeRecognition,isPropertiesOpen,isLayersOpen,isIconLibraryOpen);
 
 @override
 String toString() {
-  return 'ToolState(currentTool: $currentTool, strokeColor: $strokeColor, fillColor: $fillColor, strokeWidth: $strokeWidth, strokeStyle: $strokeStyle, fillStyle: $fillStyle, drawStyle: $drawStyle, fontSize: $fontSize, opacity: $opacity, rotation: $rotation, connectorStyle: $connectorStyle, codeLanguage: $codeLanguage, gridSnap: $gridSnap, smartGuides: $smartGuides, autoShapeRecognition: $autoShapeRecognition, isPropertiesOpen: $isPropertiesOpen, isLayersOpen: $isLayersOpen)';
+  return 'ToolState(currentTool: $currentTool, strokeColor: $strokeColor, fillColor: $fillColor, strokeWidth: $strokeWidth, strokeStyle: $strokeStyle, fillStyle: $fillStyle, drawStyle: $drawStyle, fontSize: $fontSize, opacity: $opacity, rotation: $rotation, connectorStyle: $connectorStyle, codeLanguage: $codeLanguage, gridSnap: $gridSnap, smartGuides: $smartGuides, autoShapeRecognition: $autoShapeRecognition, isPropertiesOpen: $isPropertiesOpen, isLayersOpen: $isLayersOpen, isIconLibraryOpen: $isIconLibraryOpen)';
 }
 
 
@@ -273,7 +275,7 @@ abstract mixin class _$ToolStateCopyWith<$Res> implements $ToolStateCopyWith<$Re
   factory _$ToolStateCopyWith(_ToolState value, $Res Function(_ToolState) _then) = __$ToolStateCopyWithImpl;
 @override @useResult
 $Res call({
- Tool currentTool, Color strokeColor, Color fillColor, double strokeWidth, StrokeStyle strokeStyle, FillStyle fillStyle, DrawStyle drawStyle, double fontSize, double opacity, double rotation, ConnectorStyle connectorStyle, String codeLanguage, bool gridSnap, bool smartGuides, bool autoShapeRecognition, bool isPropertiesOpen, bool isLayersOpen
+ Tool currentTool, Color strokeColor, Color fillColor, double strokeWidth, StrokeStyle strokeStyle, FillStyle fillStyle, DrawStyle drawStyle, double fontSize, double opacity, double rotation, ConnectorStyle connectorStyle, String codeLanguage, bool gridSnap, bool smartGuides, bool autoShapeRecognition, bool isPropertiesOpen, bool isLayersOpen, bool isIconLibraryOpen
 });
 
 
@@ -290,7 +292,7 @@ class __$ToolStateCopyWithImpl<$Res>
 
 /// Create a copy of ToolState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? currentTool = null,Object? strokeColor = null,Object? fillColor = null,Object? strokeWidth = null,Object? strokeStyle = null,Object? fillStyle = null,Object? drawStyle = null,Object? fontSize = null,Object? opacity = null,Object? rotation = null,Object? connectorStyle = null,Object? codeLanguage = null,Object? gridSnap = null,Object? smartGuides = null,Object? autoShapeRecognition = null,Object? isPropertiesOpen = null,Object? isLayersOpen = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? currentTool = null,Object? strokeColor = null,Object? fillColor = null,Object? strokeWidth = null,Object? strokeStyle = null,Object? fillStyle = null,Object? drawStyle = null,Object? fontSize = null,Object? opacity = null,Object? rotation = null,Object? connectorStyle = null,Object? codeLanguage = null,Object? gridSnap = null,Object? smartGuides = null,Object? autoShapeRecognition = null,Object? isPropertiesOpen = null,Object? isLayersOpen = null,Object? isIconLibraryOpen = null,}) {
   return _then(_ToolState(
 currentTool: null == currentTool ? _self.currentTool : currentTool // ignore: cast_nullable_to_non_nullable
 as Tool,strokeColor: null == strokeColor ? _self.strokeColor : strokeColor // ignore: cast_nullable_to_non_nullable
@@ -309,6 +311,7 @@ as bool,smartGuides: null == smartGuides ? _self.smartGuides : smartGuides // ig
 as bool,autoShapeRecognition: null == autoShapeRecognition ? _self.autoShapeRecognition : autoShapeRecognition // ignore: cast_nullable_to_non_nullable
 as bool,isPropertiesOpen: null == isPropertiesOpen ? _self.isPropertiesOpen : isPropertiesOpen // ignore: cast_nullable_to_non_nullable
 as bool,isLayersOpen: null == isLayersOpen ? _self.isLayersOpen : isLayersOpen // ignore: cast_nullable_to_non_nullable
+as bool,isIconLibraryOpen: null == isIconLibraryOpen ? _self.isIconLibraryOpen : isIconLibraryOpen // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

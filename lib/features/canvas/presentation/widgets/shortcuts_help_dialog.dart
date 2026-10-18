@@ -125,6 +125,7 @@ class ShortcutsHelpDialog extends StatelessWidget {
                         _ShortcutItem('Pan Canvas', 'Middle Drag / Space + Drag'),
                         _ShortcutItem('Zoom In / Out', 'Mouse Scroll Wheel'),
                         _ShortcutItem('Toggle Layers / Object Tree', 'Alt + L'),
+                        _ShortcutItem('Toggle Cloud & Tech Icons', 'Alt + I'),
                         _ShortcutItem('Toggle Smart Snapping Guides', 'S'),
                         _ShortcutItem('Toggle Grid Snapping', 'G'),
                         _ShortcutItem('Toggle Dark/Light Mode', 'Alt + Shift + D'),

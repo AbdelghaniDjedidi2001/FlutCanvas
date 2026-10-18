@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/stroke_fill_style.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tech_icons.dart';
 
 enum MermaidDirection {
   auto,
@@ -168,6 +169,7 @@ class MermaidExportService {
       ShapeType.ellipse => 'circ',
       ShapeType.table => 'tbl',
       ShapeType.codeBlock => 'code',
+      ShapeType.icon => 'icon',
       _ => 'node',
     };
     return '${prefix}_$index';
@@ -180,6 +182,9 @@ class MermaidExportService {
         rawText = node.customName!.trim();
       } else if (node.type == ShapeType.stickyNote) {
         rawText = 'Sticky Note';
+      } else if (node.type == ShapeType.icon) {
+        final def = node.iconName != null ? TechIconRegistry.findById(node.iconName!) : null;
+        rawText = def?.defaultLabel ?? 'Architecture Node';
       } else {
         rawText = _capitalize(node.type.name);
       }
@@ -198,6 +203,11 @@ class MermaidExportService {
       ShapeType.stickyNote => '$id["📝 $text"]',
       ShapeType.codeBlock => '$id["`$text`"]',
       ShapeType.table => '$id["📊 $text"]',
+      ShapeType.icon => () {
+        final def = node.iconName != null ? TechIconRegistry.findById(node.iconName!) : null;
+        final emoji = def?.emoji ?? '🔷';
+        return '$id["$emoji $text"]';
+      }(),
       _ => '$id["$text"]',
     };
   }

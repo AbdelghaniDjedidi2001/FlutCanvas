@@ -164,6 +164,7 @@ class _LayersSidebarState extends State<LayersSidebar> {
       ShapeType.image => Icons.image_outlined,
       ShapeType.codeBlock => Icons.code_rounded,
       ShapeType.table => Icons.table_chart_outlined,
+      ShapeType.icon => Icons.category_outlined,
     };
   }
 

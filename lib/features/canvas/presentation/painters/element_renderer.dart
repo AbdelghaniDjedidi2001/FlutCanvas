@@ -12,6 +12,7 @@ import 'package:flutcanvas/core/services/text/markdown_text_service.dart';
 import 'package:flutcanvas/core/services/text/syntax_highlighter_service.dart';
 import 'rough_sketch_painter.dart';
 import '../renderers/shape_renderer_registry.dart';
+import 'package:flutcanvas/features/canvas/domain/models/tech_icons.dart';
 
 class ElementRenderer {
   static void draw(Canvas canvas, BoardElement el, BoardColors colors) {
@@ -145,6 +146,10 @@ class ElementRenderer {
 
       case ShapeType.frame:
         _drawFrame(canvas, el, colors);
+        break;
+
+      case ShapeType.icon:
+        _drawIconNode(canvas, el, colors);
         break;
     }
   }
@@ -932,6 +937,127 @@ class ElementRenderer {
         textPainter.paint(canvas, Offset(textX, textY));
         canvas.restore();
       }
+    }
+  }
+
+  static void _drawIconNode(Canvas canvas, BoardElement el, BoardColors colors) {
+    final rect = el.bounds;
+    final isDark = colors.isDark;
+
+    final iconDef = el.iconName != null ? TechIconRegistry.findById(el.iconName!) : null;
+    final brandColor = iconDef?.brandColor ?? (el.color != Colors.transparent ? el.color : const Color(0xFF3B82F6));
+    final iconData = iconDef?.icon ?? Icons.widgets_rounded;
+    final labelText = el.text.trim().isNotEmpty
+        ? el.text.trim()
+        : (iconDef?.defaultLabel ?? el.customName ?? 'Architecture Node');
+
+    // 1. Soft Shadow
+    final shadowPaint = Paint()
+      ..color = const Color(0x18000000)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect.shift(const Offset(0, 3)), const Radius.circular(12)),
+      shadowPaint,
+    );
+
+    // 2. Card Background Fill
+    final cardBg = el.fillColor != Colors.transparent && el.fillColor.a > 0
+        ? el.fillColor.withValues(alpha: el.opacity)
+        : (isDark
+            ? const Color(0xFF1E222D).withValues(alpha: el.opacity)
+            : Colors.white.withValues(alpha: el.opacity));
+    final bgPaint = Paint()
+      ..color = cardBg
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
+      bgPaint,
+    );
+
+    // 3. Card Border
+    final borderColor = el.color != Colors.transparent
+        ? colors.display(el.color).withValues(alpha: el.opacity)
+        : (isDark
+            ? Colors.white.withValues(alpha: 0.12)
+            : Colors.black.withValues(alpha: 0.10));
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.0, el.strokeWidth);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
+      borderPaint,
+    );
+
+    // 4. Brand Icon Badge
+    final badgeSize = math.min(rect.width * 0.42, math.min(rect.height * 0.48, 44.0));
+    final badgeLeft = rect.center.dx - badgeSize / 2;
+    final badgeTop = rect.top + math.max(8.0, (rect.height - badgeSize - 26.0) / 2);
+    final badgeRect = Rect.fromLTWH(badgeLeft, badgeTop, badgeSize, badgeSize);
+
+    final badgeBgPaint = Paint()
+      ..color = brandColor.withValues(alpha: isDark ? 0.20 : 0.12)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(badgeRect, const Radius.circular(10)),
+      badgeBgPaint,
+    );
+
+    final badgeBorderPaint = Paint()
+      ..color = brandColor.withValues(alpha: 0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(badgeRect, const Radius.circular(10)),
+      badgeBorderPaint,
+    );
+
+    // 5. Draw Icon Glyph inside badge
+    final iconPainter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(iconData.codePoint),
+        style: TextStyle(
+          inherit: false,
+          color: brandColor,
+          fontSize: badgeSize * 0.58,
+          fontFamily: iconData.fontFamily,
+          package: iconData.fontPackage,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final iconOffset = Offset(
+      badgeRect.center.dx - iconPainter.width / 2,
+      badgeRect.center.dy - iconPainter.height / 2,
+    );
+    iconPainter.paint(canvas, iconOffset);
+
+    // 6. Draw Label Typography underneath badge
+    final textColor = isDark ? const Color(0xFFF1F3F5) : const Color(0xFF1E293B);
+    final labelFontSize = (el.fontSize * 0.55).clamp(9.5, 13.0);
+    final labelPainter = TextPainter(
+      text: TextSpan(
+        text: labelText,
+        style: GoogleFonts.inter(
+          color: textColor,
+          fontSize: labelFontSize,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+      maxLines: 2,
+      ellipsis: '...',
+    )..layout(maxWidth: math.max(10.0, rect.width - 12.0));
+
+    final labelY = badgeTop + badgeSize + 6.0;
+    final labelX = rect.center.dx - labelPainter.width / 2;
+    if (labelY + labelPainter.height <= rect.bottom + 4) {
+      canvas.save();
+      canvas.clipRect(rect.deflate(2));
+      labelPainter.paint(canvas, Offset(labelX, labelY));
+      canvas.restore();
     }
   }
 }
