@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutcanvas/core/di/injection.dart';
+import 'package:flutcanvas/features/broadcast/presentation/bloc/broadcast_cubit.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/boards_cubit.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
 import 'package:flutcanvas/features/comments/presentation/bloc/comments_cubit.dart';
@@ -28,6 +29,9 @@ class AppBlocProviders extends StatelessWidget {
         BlocProvider<ExportCubit>(create: (_) => getIt<ExportCubit>()),
         BlocProvider<PresentationCubit>(
           create: (_) => getIt<PresentationCubit>(),
+        ),
+        BlocProvider<BroadcastCubit>(
+          create: (_) => getIt<BroadcastCubit>(),
         ),
       ],
       child: child,

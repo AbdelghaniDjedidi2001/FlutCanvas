@@ -52,6 +52,14 @@ Instant one-click diagram generators for rapid brainstorming:
 - **First-Class Architecture Nodes**: Rendered with brand color badges, vector icons, auto-contrast backgrounds, and editable labels.
 - **Export & CLI Integration**: Fully supported in Vector SVG export, directional Mermaid export, and Spotlight Command Palette (`Cmd + K`).
 
+### 📡 Local Network Live Broadcast & Presenter Sync (`Alt + B`)
+- **Zero-Cloud & 100% Offline**: Embedded native HTTP and WebSocket server hosted directly on your local Wi-Fi / LAN (`dart:io` `HttpServer` & `WebSocketTransformer`) on port 4040 with automatic fallback to 4041–4049.
+- **Self-Contained Audience Web Viewer**: Served directly at `http://<lan-ip>:<port>` with zero external CDN scripts or dependencies. Works completely offline on local Wi-Fi routers or mobile hotspots.
+- **Real-Time Presenter Camera Tracking**: Audience view smoothly tracks presenter pan, zoom, and framing with interpolated camera LERP and interactive "Follow Presenter" toggle.
+- **Laser Pointer & Slide Deck Sync**: Real-time streaming of glowing laser pointer trails (`K`) and presentation deck slide jumps (`F5`).
+- **Scan-to-Join QR Code Dialog**: Built-in QR code modal (`Alt + B`) allowing audience members in meeting rooms or lecture halls to scan and connect instantly with smartphones or laptops.
+- **Top Bar Live HUD**: Pulsing emerald live indicator badge with active connected viewer count.
+
 ### 🚀 Import & Export
 - **High-Res PNG Export**: Render the entire board or selected areas at high resolution (with transparent or solid background options).
 - **Vector SVG & Presentation PDF**: High-quality scalable vector SVG and multi-page PDF presentation deck exports.
@@ -68,6 +76,7 @@ Instant one-click diagram generators for rapid brainstorming:
 | Shortcut | Action |
 | :--- | :--- |
 | **`Ctrl/Cmd + K`** | **Command Palette / Spotlight Search** |
+| **`Alt + B`** | **Toggle LAN Live Broadcast Dialog** |
 | **`Alt + I`** | **Toggle Cloud & Tech Icon Library** |
 | **`Alt + L`** | Toggle Layers & Object Tree Sidebar |
 | **`V`** | Select / Transform Tool |

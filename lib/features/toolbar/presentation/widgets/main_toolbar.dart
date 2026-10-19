@@ -34,6 +34,7 @@ class MainToolbar extends StatelessWidget {
   final bool? isLayersOpen;
   final VoidCallback? onToggleIconLibrary;
   final bool? isIconLibraryOpen;
+  final VoidCallback? onOpenBroadcast;
   final VoidCallback? onInsertImage;
 
   const MainToolbar({
@@ -58,6 +59,7 @@ class MainToolbar extends StatelessWidget {
     this.isLayersOpen,
     this.onToggleIconLibrary,
     this.isIconLibraryOpen,
+    this.onOpenBroadcast,
     this.openCommentsCount,
     this.onInsertImage,
   });
@@ -196,6 +198,15 @@ class MainToolbar extends StatelessWidget {
                     Icons.slideshow_rounded,
                     color: activeHasFrames ? scheme.primary : null,
                   ),
+                ),
+              ),
+              Tooltip(
+                message: 'LAN Live Broadcast (Alt+B)',
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 18,
+                  onPressed: onOpenBroadcast,
+                  icon: const Icon(Icons.wifi_tethering_rounded),
                 ),
               ),
               _divider(scheme),

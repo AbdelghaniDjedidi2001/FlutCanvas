@@ -52,6 +52,7 @@ dependencies:
   # Dependency injection
   get_it: ^8.0.0
   injectable: ^2.5.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

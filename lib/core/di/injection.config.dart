@@ -14,6 +14,10 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../../features/broadcast/data/services/lan_broadcast_server.dart'
+    as _i221;
+import '../../features/broadcast/presentation/bloc/broadcast_cubit.dart'
+    as _i652;
 import '../../features/canvas/data/datasources/board_local_data_source.dart'
     as _i868;
 import '../../features/canvas/data/repositories/shared_prefs_board_repository.dart'
@@ -79,6 +83,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i653.LayersCubit>(() => _i653.LayersCubit());
     gh.factory<_i837.PresentationCubit>(() => _i837.PresentationCubit());
     gh.factory<_i453.ToolCubit>(() => _i453.ToolCubit());
+    gh.lazySingleton<_i221.LanBroadcastServer>(
+      () => _i221.LanBroadcastServer(),
+    );
     gh.lazySingleton<_i939.ToolRegistry>(() => _i939.ToolRegistry());
     gh.lazySingleton<_i10.ClipboardRepository>(
       () => _i680.DefaultClipboardRepository(),
@@ -93,6 +100,9 @@ extension GetItInjectableX on _i174.GetIt {
         groupElements: gh<_i680.GroupElementsUseCase>(),
         ungroupElements: gh<_i123.UngroupElementsUseCase>(),
       ),
+    );
+    gh.factoryParam<_i652.BroadcastCubit, _i221.LanBroadcastServer?, dynamic>(
+      (server, _) => _i652.BroadcastCubit(server: server),
     );
     gh.factory<_i599.ExportCubit>(
       () => _i599.ExportCubit(gh<_i1051.ExportRepository>()),
