@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:flutcanvas/features/broadcast/presentation/widgets/broadcast_dialog.dart';
+import 'package:flutcanvas/features/broadcast/presentation/widgets/broadcast_hud_pill.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_event.dart';
 import 'package:flutcanvas/features/canvas/presentation/controllers/canvas_viewport_controller.dart';
@@ -43,6 +45,10 @@ class CanvasTopBar extends StatelessWidget {
               _CommandPaletteButton(onPressed: onOpenCommandPalette!),
             ],
             const SizedBox(width: 8),
+            BroadcastHudPill(
+              onTap: () => BroadcastDialog.show(context, viewport: viewport),
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: Center(
                 child: MainToolbar(
@@ -72,6 +78,8 @@ class CanvasTopBar extends StatelessWidget {
                       context.read<ToolCubit>().toggleLayersSidebar(),
                   onToggleIconLibrary: () =>
                       context.read<ToolCubit>().toggleIconLibrary(),
+                  onOpenBroadcast: () =>
+                      BroadcastDialog.show(context, viewport: viewport),
                   onInsertImage: () =>
                       CanvasDialogCoordinator.handleInsertImage(
                     context,

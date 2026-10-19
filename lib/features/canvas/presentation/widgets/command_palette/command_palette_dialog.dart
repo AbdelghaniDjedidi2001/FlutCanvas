@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutcanvas/core/constants/board_colors.dart';
+import 'package:flutcanvas/features/broadcast/presentation/widgets/broadcast_dialog.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/tech_icons.dart';
@@ -516,6 +517,19 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         } else {
           presentationCubit.startPresentation(canvasState.elements);
         }
+      },
+    ));
+
+    items.add(CommandPaletteItem(
+      id: 'pres_lan_broadcast',
+      title: 'LAN Live Broadcast & Viewer Sync...',
+      category: CommandCategory.presentation,
+      icon: Icons.wifi_tethering_rounded,
+      shortcut: 'Alt+B',
+      keywords: ['broadcast', 'lan', 'wifi', 'share', 'stream', 'live', 'sync', 'qr'],
+      onExecute: () {
+        Navigator.of(context).pop();
+        BroadcastDialog.show(context, viewport: widget.viewport);
       },
     ));
 

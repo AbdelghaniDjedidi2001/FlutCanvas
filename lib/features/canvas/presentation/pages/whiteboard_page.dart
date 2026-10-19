@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:flutcanvas/features/broadcast/presentation/widgets/broadcast_dialog.dart';
+import 'package:flutcanvas/features/broadcast/presentation/widgets/broadcast_listener_bridge.dart';
 import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/boards_cubit.dart';
@@ -186,6 +188,8 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
             onToggleTheme: () =>
                 widget.onToggleTheme(Theme.of(context).brightness),
             onOpenCommandPalette: () => _openCommandPalette(context),
+            onOpenBroadcast: () =>
+                BroadcastDialog.show(context, viewport: _viewport),
             onEscape: () => _onEscape(context, isPresenting),
             onNextSlide: () => context.read<PresentationCubit>().nextSlide(),
             onPreviousSlide: () =>
@@ -194,8 +198,11 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
               builder: (context, constraints) {
                 _viewSize = constraints.biggest;
 
-                return Stack(
-                  children: [
+                return BroadcastListenerBridge(
+                  viewport: _viewport,
+                  interaction: _interaction,
+                  child: Stack(
+                    children: [
                     // 1. Interactive Multi-Layer Canvas Surface
                     CanvasInteractiveSurface(
                       viewport: _viewport,
@@ -268,7 +275,8 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
                       getViewSize: () => _viewSize,
                     ),
                   ],
-                );
+                ),
+              );
               },
             ),
           ),

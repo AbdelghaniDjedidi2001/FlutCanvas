@@ -42,10 +42,13 @@ class CanvasShortcutsHandler extends StatelessWidget {
     this.onToggleTheme,
     this.onEscape,
     this.onOpenCommandPalette,
+    this.onOpenBroadcast,
     this.onNextSlide,
     this.onPreviousSlide,
     this.isPresentationMode = false,
   });
+
+  final VoidCallback? onOpenBroadcast;
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +205,12 @@ class CanvasShortcutsHandler extends StatelessWidget {
         // Toggle Cloud & Tech Icon Library: Alt+I
         if (isAlt && !isShift && event.logicalKey == LogicalKeyboardKey.keyI) {
           context.read<ToolCubit>().toggleIconLibrary();
+          return KeyEventResult.handled;
+        }
+
+        // Toggle LAN Live Broadcast: Alt+B
+        if (isAlt && !isShift && event.logicalKey == LogicalKeyboardKey.keyB) {
+          onOpenBroadcast?.call();
           return KeyEventResult.handled;
         }
 
