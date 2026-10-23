@@ -29,6 +29,7 @@ class CommandPaletteDialog extends StatefulWidget {
   final VoidCallback? onOpenHelp;
   final VoidCallback? onInsertImage;
   final VoidCallback? onOpenMermaidImport;
+  final VoidCallback? onOpenAiPrompt;
 
   const CommandPaletteDialog({
     super.key,
@@ -41,6 +42,7 @@ class CommandPaletteDialog extends StatefulWidget {
     this.onOpenHelp,
     this.onInsertImage,
     this.onOpenMermaidImport,
+    this.onOpenAiPrompt,
   });
 
   @override
@@ -183,6 +185,30 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
       onExecute: () {
         Navigator.of(context).pop();
         canvasBloc.add(const CanvasEvent.redo());
+      },
+    ));
+
+    items.add(CommandPaletteItem(
+      id: 'ai_text_to_diagram',
+      title: 'AI Text-to-Diagram (Prompt to Canvas)...',
+      subtitle: 'Generate architecture or mindmap from prompt',
+      category: CommandCategory.actions,
+      icon: Icons.auto_awesome,
+      shortcut: 'Cmd+Shift+A',
+      keywords: [
+        'ai',
+        'gemini',
+        'prompt',
+        'generate',
+        'architecture',
+        'mindmap',
+        'flowchart',
+        'diagram',
+        'text'
+      ],
+      onExecute: () {
+        Navigator.of(context).pop();
+        widget.onOpenAiPrompt?.call();
       },
     ));
 

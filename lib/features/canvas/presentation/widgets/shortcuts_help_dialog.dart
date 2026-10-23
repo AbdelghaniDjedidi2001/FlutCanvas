@@ -121,6 +121,7 @@ class ShortcutsHelpDialog extends StatelessWidget {
                       context,
                       title: '📐 Viewport & Navigation',
                       items: [
+                        _ShortcutItem('AI Text-to-Diagram (Prompt to Canvas)', 'Ctrl / Cmd + Shift + A'),
                         _ShortcutItem('Command Palette / Spotlight', 'Ctrl / Cmd + K'),
                         _ShortcutItem('Pan Canvas', 'Middle Drag / Space + Drag'),
                         _ShortcutItem('Zoom In / Out', 'Mouse Scroll Wheel'),

@@ -54,6 +54,10 @@ dependencies:
   injectable: ^2.5.0
   qr_flutter: ^4.1.0
 
+  # AI integration
+  google_generative_ai: ^0.4.6
+  web: ^1.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

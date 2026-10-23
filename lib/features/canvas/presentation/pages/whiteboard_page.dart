@@ -144,6 +144,11 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
         _viewport,
         _viewSize,
       ),
+      onOpenAiPrompt: () => CanvasDialogCoordinator.showAiPromptBarDialog(
+        context,
+        _viewport,
+        _viewSize,
+      ),
     );
   }
 
@@ -188,6 +193,11 @@ class _WhiteboardPageState extends State<WhiteboardPage> {
             onToggleTheme: () =>
                 widget.onToggleTheme(Theme.of(context).brightness),
             onOpenCommandPalette: () => _openCommandPalette(context),
+            onOpenAiPrompt: () => CanvasDialogCoordinator.showAiPromptBarDialog(
+              context,
+              _viewport,
+              _viewSize,
+            ),
             onOpenBroadcast: () =>
                 BroadcastDialog.show(context, viewport: _viewport),
             onEscape: () => _onEscape(context, isPresenting),

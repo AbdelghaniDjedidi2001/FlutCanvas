@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutcanvas/core/di/injection.dart';
+import 'package:flutcanvas/features/ai_diagram/presentation/bloc/ai_diagram_cubit.dart';
 import 'package:flutcanvas/features/broadcast/presentation/bloc/broadcast_cubit.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/boards_cubit.dart';
 import 'package:flutcanvas/features/canvas/presentation/bloc/canvas_bloc.dart';
@@ -32,6 +33,9 @@ class AppBlocProviders extends StatelessWidget {
         ),
         BlocProvider<BroadcastCubit>(
           create: (_) => getIt<BroadcastCubit>(),
+        ),
+        BlocProvider<AiDiagramCubit>(
+          create: (_) => getIt<AiDiagramCubit>(),
         ),
       ],
       child: child,
