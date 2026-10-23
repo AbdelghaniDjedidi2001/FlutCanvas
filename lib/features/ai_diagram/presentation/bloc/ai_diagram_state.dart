@@ -17,7 +17,7 @@ class AiDiagramState {
     this.status = AiDiagramStatus.initial,
     this.provider = AiDiagramProvider.gemini,
     this.apiKey = '',
-    this.model = 'gemini-1.5-flash',
+    this.model = 'gemini-3.8-flash',
     this.loadingMessage,
     this.errorMessage,
     this.lastResult,

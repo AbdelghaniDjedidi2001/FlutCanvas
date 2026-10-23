@@ -50,7 +50,7 @@ class DefaultAiDiagramRepository implements AiDiagramRepository {
 
   @override
   String getModel() {
-    return _prefs.getString(_keyModel) ?? 'gemini-1.5-flash';
+    return _prefs.getString(_keyModel) ?? 'gemini-3.8-flash';
   }
 
   @override
