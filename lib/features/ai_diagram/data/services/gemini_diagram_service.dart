@@ -18,18 +18,49 @@ class GeminiDiagramService {
       );
     }
 
-    final model = GenerativeModel(
-      model: modelName,
-      apiKey: cleanKey,
-      systemInstruction: Content.system(AiPromptTemplates.systemInstruction),
-      generationConfig: GenerationConfig(
-        temperature: 0.2,
-      ),
-    );
+    // Try selected model first, then auto-fallback to compatible models if 404 / not found
+    final candidateModels = <String>[
+      modelName,
+      if (modelName != 'gemini-1.5-flash-latest') 'gemini-1.5-flash-latest',
+      if (modelName != 'gemini-2.0-flash') 'gemini-2.0-flash',
+      if (modelName != 'gemini-1.5-pro') 'gemini-1.5-pro',
+      if (modelName != 'gemini-pro') 'gemini-pro',
+    ];
 
-    final response = await model.generateContent([Content.text(prompt)]);
-    final rawText = response.text ?? '';
-    return cleanMermaidOutput(rawText);
+    Object? lastError;
+    for (final candidate in candidateModels) {
+      try {
+        final model = GenerativeModel(
+          model: candidate,
+          apiKey: cleanKey,
+          systemInstruction: Content.system(AiPromptTemplates.systemInstruction),
+          generationConfig: GenerationConfig(
+            temperature: 0.2,
+          ),
+        );
+
+        final response = await model.generateContent([Content.text(prompt)]);
+        final rawText = response.text ?? '';
+        if (rawText.trim().isNotEmpty) {
+          return cleanMermaidOutput(rawText);
+        }
+      } catch (e) {
+        lastError = e;
+        final errStr = e.toString().toLowerCase();
+        // If not a model-availability or 404 issue, don't continue falling back
+        if (!errStr.contains('not found') &&
+            !errStr.contains('404') &&
+            !errStr.contains('is not supported for generatecontent')) {
+          rethrow;
+        }
+      }
+    }
+
+    if (lastError != null) {
+      throw lastError;
+    }
+
+    return '';
   }
 
   static String cleanMermaidOutput(String raw) {
