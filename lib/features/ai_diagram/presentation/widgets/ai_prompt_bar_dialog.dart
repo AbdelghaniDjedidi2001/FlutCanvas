@@ -386,14 +386,14 @@ class _AiPromptBarDialogState extends State<AiPromptBarDialog>
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: const [
-                          'gemini-1.5-flash',
+                          'gemini-3.8-flash',
+                          'gemini-2.5-flash',
                           'gemini-1.5-flash-latest',
-                          'gemini-2.0-flash',
+                          'gemini-1.5-flash',
                           'gemini-1.5-pro',
-                          'gemini-pro',
                         ].contains(state.model)
                             ? state.model
-                            : 'gemini-1.5-flash',
+                            : 'gemini-3.8-flash',
                         isExpanded: true,
                         style: TextStyle(
                           fontSize: 12,
@@ -404,24 +404,24 @@ class _AiPromptBarDialogState extends State<AiPromptBarDialog>
                             : Colors.white,
                         items: const [
                           DropdownMenuItem(
-                            value: 'gemini-1.5-flash',
-                            child: Text('gemini-1.5-flash (Fast & Balanced)'),
+                            value: 'gemini-3.8-flash',
+                            child: Text('gemini-3.8-flash (Recommended)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'gemini-2.5-flash',
+                            child: Text('gemini-2.5-flash'),
                           ),
                           DropdownMenuItem(
                             value: 'gemini-1.5-flash-latest',
                             child: Text('gemini-1.5-flash-latest'),
                           ),
                           DropdownMenuItem(
-                            value: 'gemini-2.0-flash',
-                            child: Text('gemini-2.0-flash (Next-Gen Flash)'),
+                            value: 'gemini-1.5-flash',
+                            child: Text('gemini-1.5-flash'),
                           ),
                           DropdownMenuItem(
                             value: 'gemini-1.5-pro',
                             child: Text('gemini-1.5-pro (High Reasoning)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'gemini-pro',
-                            child: Text('gemini-pro (Legacy)'),
                           ),
                         ],
                         onChanged: (val) {

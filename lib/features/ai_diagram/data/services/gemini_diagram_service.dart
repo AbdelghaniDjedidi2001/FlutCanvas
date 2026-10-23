@@ -9,7 +9,7 @@ class GeminiDiagramService {
   Future<String> generateDiagram({
     required String prompt,
     required String apiKey,
-    String modelName = 'gemini-1.5-flash',
+    String modelName = 'gemini-3.8-flash',
   }) async {
     final cleanKey = apiKey.trim();
     if (cleanKey.isEmpty) {
@@ -18,13 +18,14 @@ class GeminiDiagramService {
       );
     }
 
-    // Try selected model first, then auto-fallback to compatible models if 404 / not found
+    // Try selected model first, then auto-fallback to compatible models if 404 / deprecated / not found
     final candidateModels = <String>[
       modelName,
+      if (modelName != 'gemini-3.8-flash') 'gemini-3.8-flash',
+      if (modelName != 'gemini-2.5-flash') 'gemini-2.5-flash',
       if (modelName != 'gemini-1.5-flash-latest') 'gemini-1.5-flash-latest',
-      if (modelName != 'gemini-2.0-flash') 'gemini-2.0-flash',
+      if (modelName != 'gemini-1.5-flash') 'gemini-1.5-flash',
       if (modelName != 'gemini-1.5-pro') 'gemini-1.5-pro',
-      if (modelName != 'gemini-pro') 'gemini-pro',
     ];
 
     Object? lastError;
@@ -47,10 +48,13 @@ class GeminiDiagramService {
       } catch (e) {
         lastError = e;
         final errStr = e.toString().toLowerCase();
-        // If not a model-availability or 404 issue, don't continue falling back
-        if (!errStr.contains('not found') &&
-            !errStr.contains('404') &&
-            !errStr.contains('is not supported for generatecontent')) {
+        final isModelIssue = errStr.contains('not found') ||
+            errStr.contains('404') ||
+            errStr.contains('no longer available') ||
+            errStr.contains('is not supported for generatecontent') ||
+            errStr.contains('deprecated');
+        // If not a model-availability issue, don't continue falling back
+        if (!isModelIssue) {
           rethrow;
         }
       }
