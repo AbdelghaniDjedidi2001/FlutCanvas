@@ -362,6 +362,77 @@ class _AiPromptBarDialogState extends State<AiPromptBarDialog>
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.psychology_outlined,
+                    size: 16, color: Color(0xFF4C6EF5)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Model:',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? Colors.white24 : Colors.black26,
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: const [
+                          'gemini-1.5-flash',
+                          'gemini-1.5-flash-latest',
+                          'gemini-2.0-flash',
+                          'gemini-1.5-pro',
+                          'gemini-pro',
+                        ].contains(state.model)
+                            ? state.model
+                            : 'gemini-1.5-flash',
+                        isExpanded: true,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        dropdownColor: isDark
+                            ? const Color(0xFF262C38)
+                            : Colors.white,
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'gemini-1.5-flash',
+                            child: Text('gemini-1.5-flash (Fast & Balanced)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'gemini-1.5-flash-latest',
+                            child: Text('gemini-1.5-flash-latest'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'gemini-2.0-flash',
+                            child: Text('gemini-2.0-flash (Next-Gen Flash)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'gemini-1.5-pro',
+                            child: Text('gemini-1.5-pro (High Reasoning)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'gemini-pro',
+                            child: Text('gemini-pro (Legacy)'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) cubit.setModel(val);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ] else ...[
             const SizedBox(height: 10),
             Container(
