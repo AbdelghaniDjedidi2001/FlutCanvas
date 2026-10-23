@@ -148,7 +148,7 @@ class _AiPromptBarDialogState extends State<AiPromptBarDialog>
                           _buildErrorBanner(context, state.errorMessage!, isDark),
 
                         if (state.isGenerating)
-                          _buildLoadingIndicator(state.loadingMessage, isDark),
+                          _buildLiveGenerationHud(state, isDark),
 
                         // 5. Raw Code Preview (if generated & requested)
                         if (_showRawCode && state.lastResult != null)
@@ -654,33 +654,171 @@ class _AiPromptBarDialogState extends State<AiPromptBarDialog>
     );
   }
 
-  Widget _buildLoadingIndicator(String? message, bool isDark) {
+  Widget _buildLiveGenerationHud(AiDiagramState state, bool isDark) {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 14),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF4C6EF5).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        color: isDark ? const Color(0xFF161922) : const Color(0xFFF1F3F9),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFF4C6EF5).withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step Progress Row
+          Row(
+            children: [
+              _buildStepPill(
+                label: '1. Connect',
+                isActive: state.currentStep == 1,
+                isDone: state.currentStep > 1,
+                isDark: isDark,
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right, size: 14, color: Colors.grey),
+              const SizedBox(width: 6),
+              _buildStepPill(
+                label: '2. Generate',
+                isActive: state.currentStep == 2,
+                isDone: state.currentStep > 2,
+                isDark: isDark,
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right, size: 14, color: Colors.grey),
+              const SizedBox(width: 6),
+              _buildStepPill(
+                label: '3. Layout',
+                isActive: state.currentStep == 3,
+                isDone: false,
+                isDark: isDark,
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF20C997),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Live Stream',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Status Message
+          Row(
+            children: [
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C6EF5)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  state.loadingMessage ?? 'Contacting Gemini AI...',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4C6EF5),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Live Streaming Terminal Window
+          if (state.hasStreamingOutput) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxHeight: 130),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.black54 : Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black12,
+                ),
+              ),
+              child: SingleChildScrollView(
+                reverse: true,
+                child: SelectableText(
+                  state.streamingCode,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 11,
+                    height: 1.35,
+                    color: isDark
+                        ? const Color(0xFF69DB7C)
+                        : const Color(0xFF2B8A3E),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepPill({
+    required String label,
+    required bool isActive,
+    required bool isDone,
+    required bool isDark,
+  }) {
+    Color bg;
+    Color fg;
+    if (isDone) {
+      bg = const Color(0xFF20C997).withValues(alpha: 0.15);
+      fg = const Color(0xFF20C997);
+    } else if (isActive) {
+      bg = const Color(0xFF4C6EF5).withValues(alpha: 0.2);
+      fg = const Color(0xFF4C6EF5);
+    } else {
+      bg = isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05);
+      fg = isDark ? Colors.white38 : Colors.black38;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.2,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4C6EF5)),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              message ?? 'Generating shapes, styles & layout...',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF4C6EF5),
-              ),
+          if (isDone) ...[
+            const Icon(Icons.check, size: 11, color: Color(0xFF20C997)),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isActive || isDone ? FontWeight.bold : FontWeight.w500,
+              color: fg,
             ),
           ),
         ],

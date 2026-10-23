@@ -70,11 +70,13 @@ class DefaultAiDiagramRepository implements AiDiagramRepository {
     required Offset origin,
     Color defaultColor = const Color(0xFF1971C2),
     AiDiagramProvider? overrideProvider,
+    void Function(String partialCode, String statusMessage)? onProgress,
   }) async {
     final provider = overrideProvider ?? getProvider();
     String mermaidCode;
 
     if (provider == AiDiagramProvider.chromeNano) {
+      onProgress?.call('', 'Running on-device Gemini Nano model...');
       mermaidCode = await WindowAiService.generate(
         prompt: prompt,
         systemInstruction: AiPromptTemplates.systemInstruction,
@@ -90,12 +92,15 @@ class DefaultAiDiagramRepository implements AiDiagramRepository {
         prompt: prompt,
         apiKey: apiKey,
         modelName: getModel(),
+        onProgress: onProgress,
       );
     }
 
     if (mermaidCode.trim().isEmpty) {
       throw StateError('The AI returned an empty diagram response.');
     }
+
+    onProgress?.call(mermaidCode, 'Placing shapes & routing connectors...');
 
     // Parse the generated Mermaid code into native BoardElement shapes & connectors
     final elements = MermaidParserService.parseToElements(
