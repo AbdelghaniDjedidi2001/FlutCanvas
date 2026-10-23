@@ -14,6 +14,14 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
+import '../../features/ai_diagram/data/repositories/default_ai_diagram_repository.dart'
+    as _i449;
+import '../../features/ai_diagram/data/services/gemini_diagram_service.dart'
+    as _i944;
+import '../../features/ai_diagram/domain/repositories/ai_diagram_repository.dart'
+    as _i475;
+import '../../features/ai_diagram/presentation/bloc/ai_diagram_cubit.dart'
+    as _i372;
 import '../../features/broadcast/data/services/lan_broadcast_server.dart'
     as _i221;
 import '../../features/broadcast/presentation/bloc/broadcast_cubit.dart'
@@ -83,6 +91,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i653.LayersCubit>(() => _i653.LayersCubit());
     gh.factory<_i837.PresentationCubit>(() => _i837.PresentationCubit());
     gh.factory<_i453.ToolCubit>(() => _i453.ToolCubit());
+    gh.lazySingleton<_i944.GeminiDiagramService>(
+      () => const _i944.GeminiDiagramService(),
+    );
     gh.lazySingleton<_i221.LanBroadcastServer>(
       () => _i221.LanBroadcastServer(),
     );
@@ -92,6 +103,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1051.ExportRepository>(
       () => _i158.DefaultExportRepository(),
+    );
+    gh.lazySingleton<_i475.AiDiagramRepository>(
+      () => _i449.DefaultAiDiagramRepository(
+        gh<_i460.SharedPreferences>(),
+        gh<_i944.GeminiDiagramService>(),
+      ),
     );
     gh.factory<_i796.CanvasBloc>(
       () => _i796.CanvasBloc(
@@ -109,6 +126,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i868.BoardLocalDataSource>(
       () => _i868.SharedPrefsBoardDataSource(gh<_i460.SharedPreferences>()),
+    );
+    gh.factory<_i372.AiDiagramCubit>(
+      () => _i372.AiDiagramCubit(gh<_i475.AiDiagramRepository>()),
     );
     gh.lazySingleton<_i818.BoardRepository>(
       () => _i388.SharedPrefsBoardRepository(gh<_i868.BoardLocalDataSource>()),

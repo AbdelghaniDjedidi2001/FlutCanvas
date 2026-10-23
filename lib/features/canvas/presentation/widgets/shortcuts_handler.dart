@@ -22,6 +22,7 @@ class CanvasShortcutsHandler extends StatelessWidget {
   final VoidCallback? onToggleTheme;
   final VoidCallback? onEscape;
   final VoidCallback? onOpenCommandPalette;
+  final VoidCallback? onOpenAiPrompt;
   final VoidCallback? onNextSlide;
   final VoidCallback? onPreviousSlide;
   final bool isPresentationMode;
@@ -42,6 +43,7 @@ class CanvasShortcutsHandler extends StatelessWidget {
     this.onToggleTheme,
     this.onEscape,
     this.onOpenCommandPalette,
+    this.onOpenAiPrompt,
     this.onOpenBroadcast,
     this.onNextSlide,
     this.onPreviousSlide,
@@ -158,8 +160,18 @@ class CanvasShortcutsHandler extends StatelessWidget {
           return KeyEventResult.handled;
         }
 
+        // AI Text-to-Diagram Prompt Bar: Cmd+Shift+A / Ctrl+Shift+A
+        if (isControlOrCmd &&
+            isShift &&
+            event.logicalKey == LogicalKeyboardKey.keyA) {
+          onOpenAiPrompt?.call();
+          return KeyEventResult.handled;
+        }
+
         // Select All: Cmd+A
-        if (isControlOrCmd && event.logicalKey == LogicalKeyboardKey.keyA) {
+        if (isControlOrCmd &&
+            !isShift &&
+            event.logicalKey == LogicalKeyboardKey.keyA) {
           final allIds = context
               .read<CanvasBloc>()
               .state

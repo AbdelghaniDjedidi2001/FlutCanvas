@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutcanvas/core/constants/board_colors.dart';
 import 'package:flutcanvas/core/services/media/image_service.dart';
+import 'package:flutcanvas/features/ai_diagram/presentation/widgets/ai_prompt_bar_dialog.dart';
 import 'package:flutcanvas/features/canvas/domain/models/board_element.dart';
 import 'package:flutcanvas/features/canvas/domain/models/shape_type.dart';
 import 'package:flutcanvas/features/canvas/domain/models/templates.dart';
@@ -105,6 +106,33 @@ class CanvasDialogCoordinator {
     );
   }
 
+  static void showAiPromptBarDialog(
+    BuildContext context,
+    CanvasViewportController viewport,
+    Size viewSize,
+  ) {
+    final center = viewport.toWorld(
+      Offset(viewSize.width / 2, viewSize.height / 2),
+    );
+
+    showDialog(
+      context: context,
+      builder: (_) => AiPromptBarDialog(
+        targetOrigin: center - const Offset(200, 150),
+        onInsert: (elements) {
+          context.read<CanvasBloc>().add(CanvasEvent.addElements(elements));
+          final ids = elements.map((e) => e.id).toSet();
+          context.read<CanvasBloc>().add(CanvasEvent.selectElements(ids));
+          viewport.zoomToFit(elements, viewSize);
+          showToast(
+            context,
+            '✨ Injected ${elements.length} AI diagram elements',
+          );
+        },
+      ),
+    );
+  }
+
   static void showShortcutsHelpDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -150,6 +178,7 @@ class CanvasDialogCoordinator {
     VoidCallback? onOpenHelp,
     VoidCallback? onInsertImage,
     VoidCallback? onOpenMermaidImport,
+    VoidCallback? onOpenAiPrompt,
   }) {
     showDialog(
       context: context,
@@ -164,6 +193,7 @@ class CanvasDialogCoordinator {
         onOpenHelp: onOpenHelp,
         onInsertImage: onInsertImage,
         onOpenMermaidImport: onOpenMermaidImport,
+        onOpenAiPrompt: onOpenAiPrompt,
       ),
     );
   }
