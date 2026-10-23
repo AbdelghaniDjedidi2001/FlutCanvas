@@ -16,6 +16,7 @@ analyzer:
     - "**/*.freezed.dart"
     - "**/*.g.dart"
     - "**/*.config.dart"
+    - macos/**
 
 linter:
   rules:
