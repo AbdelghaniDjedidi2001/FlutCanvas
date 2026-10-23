@@ -89,9 +89,11 @@ class AiDiagramCubit extends Cubit<AiDiagramState> {
     emit(
       state.copyWith(
         status: AiDiagramStatus.generating,
+        currentStep: 1,
+        clearStreaming: true,
         loadingMessage: state.provider == AiDiagramProvider.chromeNano
-            ? 'Generating on-device with Gemini Nano (window.ai)...'
-            : 'Designing architecture & routing shapes with Gemini AI...',
+            ? 'Initializing on-device Gemini Nano (window.ai)...'
+            : 'Connecting to Gemini AI...',
         clearError: true,
       ),
     );
@@ -102,6 +104,19 @@ class AiDiagramCubit extends Cubit<AiDiagramState> {
         origin: origin,
         defaultColor: defaultColor,
         overrideProvider: state.provider,
+        onProgress: (partialCode, status) {
+          int step = 2;
+          if (status.contains('Synthesizing') || status.contains('Placing')) {
+            step = 3;
+          }
+          emit(
+            state.copyWith(
+              streamingCode: partialCode,
+              loadingMessage: status,
+              currentStep: step,
+            ),
+          );
+        },
       );
 
       emit(

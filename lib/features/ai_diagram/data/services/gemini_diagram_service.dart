@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:injectable/injectable.dart';
 import 'ai_prompt_templates.dart';
@@ -10,6 +11,7 @@ class GeminiDiagramService {
     required String prompt,
     required String apiKey,
     String modelName = 'gemini-3.8-flash',
+    void Function(String partialCode, String statusMessage)? onProgress,
   }) async {
     final cleanKey = apiKey.trim();
     if (cleanKey.isEmpty) {
@@ -31,6 +33,7 @@ class GeminiDiagramService {
     Object? lastError;
     for (final candidate in candidateModels) {
       try {
+        onProgress?.call('', 'Connecting to $candidate...');
         final model = GenerativeModel(
           model: candidate,
           apiKey: cleanKey,
@@ -40,11 +43,35 @@ class GeminiDiagramService {
           ),
         );
 
-        final response = await model.generateContent([Content.text(prompt)]);
-        final rawText = response.text ?? '';
+        final buffer = StringBuffer();
+        final stream = model
+            .generateContentStream([Content.text(prompt)])
+            .timeout(const Duration(seconds: 25));
+
+        await for (final chunk in stream) {
+          final chunkText = chunk.text ?? '';
+          buffer.write(chunkText);
+          final currentRaw = buffer.toString();
+          final nodeCount =
+              RegExp(r'\[|\(|\{\|\[\(').allMatches(currentRaw).length;
+          onProgress?.call(
+            cleanMermaidOutput(currentRaw),
+            'Streaming diagram ($nodeCount shapes detected)...',
+          );
+        }
+
+        final rawText = buffer.toString();
         if (rawText.trim().isNotEmpty) {
+          onProgress?.call(
+            cleanMermaidOutput(rawText),
+            'Synthesizing layout & shapes...',
+          );
           return cleanMermaidOutput(rawText);
         }
+      } on TimeoutException {
+        lastError = Exception(
+          'Connection to Gemini timed out after 25s. Please check your network or try again.',
+        );
       } catch (e) {
         lastError = e;
         final errStr = e.toString().toLowerCase();

@@ -28,8 +28,10 @@ class FakeGeminiDiagramService extends GeminiDiagramService {
   Future<String> generateDiagram({
     required String prompt,
     required String apiKey,
-    String modelName = 'gemini-1.5-flash',
+    String modelName = 'gemini-3.8-flash',
+    void Function(String partialCode, String statusMessage)? onProgress,
   }) async {
+    onProgress?.call(fakeResponse, 'Streaming fake response...');
     return GeminiDiagramService.cleanMermaidOutput(fakeResponse);
   }
 }

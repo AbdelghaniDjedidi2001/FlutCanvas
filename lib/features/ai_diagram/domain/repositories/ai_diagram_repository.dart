@@ -20,5 +20,6 @@ abstract class AiDiagramRepository {
     required Offset origin,
     Color defaultColor,
     AiDiagramProvider? overrideProvider,
+    void Function(String partialCode, String statusMessage)? onProgress,
   });
 }
