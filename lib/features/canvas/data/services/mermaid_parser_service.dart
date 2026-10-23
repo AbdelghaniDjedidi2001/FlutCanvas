@@ -871,14 +871,41 @@ class MermaidParserService {
     }
 
     final sortedRanks = rankGroups.keys.toList()..sort();
-    const rankSpacing = 90.0;
-    const nodeSpacing = 36.0;
+    const rankSpacing = 160.0;
+    const nodeSpacing = 64.0;
 
     // Position ranks
     var depthPos = 0.0;
 
     for (final r in sortedRanks) {
       final group = rankGroups[r]!;
+
+      // Sort nodes in this rank to align with their parent nodes' average position (reduces line crossings)
+      if (r > 0) {
+        group.sort((a, b) {
+          final parentsA = incoming[a.id] ?? [];
+          final parentsB = incoming[b.id] ?? [];
+          double avgA = 0;
+          if (parentsA.isNotEmpty) {
+            avgA = parentsA
+                    .map((pId) => isHorizontal
+                        ? (nodeMap[pId]?.position.dy ?? 0.0)
+                        : (nodeMap[pId]?.position.dx ?? 0.0))
+                    .reduce((sum, v) => sum + v) /
+                parentsA.length;
+          }
+          double avgB = 0;
+          if (parentsB.isNotEmpty) {
+            avgB = parentsB
+                    .map((pId) => isHorizontal
+                        ? (nodeMap[pId]?.position.dy ?? 0.0)
+                        : (nodeMap[pId]?.position.dx ?? 0.0))
+                    .reduce((sum, v) => sum + v) /
+                parentsB.length;
+          }
+          return avgA.compareTo(avgB);
+        });
+      }
 
       // Calculate max depth in this rank
       var maxDepthInRank = 0.0;
