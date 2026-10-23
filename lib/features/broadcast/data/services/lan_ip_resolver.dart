@@ -7,6 +7,10 @@ class LanIpResolver {
 
   /// Resolves the local IPv4 address best suited for audience devices on the same Wi-Fi / LAN.
   static Future<String> getLocalIpAddress() async {
+    if (kIsWeb) {
+      return '127.0.0.1';
+    }
+
     try {
       final interfaces = await NetworkInterface.list(
         includeLoopback: false,
