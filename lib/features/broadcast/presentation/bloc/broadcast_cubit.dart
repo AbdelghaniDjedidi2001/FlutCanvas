@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -38,6 +39,16 @@ class BroadcastCubit extends Cubit<BroadcastState> {
     double? zoom,
   }) async {
     if (state.isBroadcasting) return true;
+
+    if (kIsWeb) {
+      emit(state.copyWith(
+        isBroadcasting: false,
+        isStarting: false,
+        errorMessage:
+            'Broadcasting is not supported in web browsers. Please run FlutCanvas as a desktop app (macOS, Windows, Linux).',
+      ));
+      return false;
+    }
 
     emit(state.copyWith(isStarting: true, errorMessage: null));
 

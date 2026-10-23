@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -347,6 +348,55 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (kIsWeb) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.amber.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.desktop_windows_outlined,
+                  size: 20,
+                  color: Colors.amber,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Desktop App Required for Hosting',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Web browsers cannot bind local socket servers. Run FlutCanvas as a macOS/desktop app to host live Wi-Fi broadcasts.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          height: 1.35,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+
         // Features preview
         Container(
           padding: const EdgeInsets.all(14),
@@ -401,6 +451,7 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
               height: 38,
               child: TextField(
                 controller: _portController,
+                enabled: !kIsWeb,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
                 decoration: InputDecoration(
@@ -449,15 +500,17 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
         // Start Broadcast Button
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF10B981),
-            foregroundColor: Colors.white,
+            backgroundColor: kIsWeb
+                ? scheme.surfaceContainerHighest
+                : const Color(0xFF10B981),
+            foregroundColor: kIsWeb ? scheme.onSurfaceVariant : Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            elevation: 3,
+            elevation: kIsWeb ? 0 : 3,
           ),
-          onPressed: state.isStarting
+          onPressed: kIsWeb || state.isStarting
               ? null
               : () async {
                   final port = int.tryParse(_portController.text) ?? 4040;
@@ -482,9 +535,14 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
                     valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 )
-              : const Icon(Icons.wifi_tethering_rounded, size: 20),
+              : Icon(
+                  kIsWeb ? Icons.desktop_access_disabled_rounded : Icons.wifi_tethering_rounded,
+                  size: 20,
+                ),
           label: Text(
-            state.isStarting ? 'Starting Server...' : 'Start Live Broadcast',
+            kIsWeb
+                ? 'Desktop App Required'
+                : (state.isStarting ? 'Starting Server...' : 'Start Live Broadcast'),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
           ),
         ),

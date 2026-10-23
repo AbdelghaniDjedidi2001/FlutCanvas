@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:injectable/injectable.dart';
@@ -38,6 +39,10 @@ class LanBroadcastServer {
     int maxPortAttempts = 10,
   }) async {
     if (isRunning) return true;
+    if (kIsWeb) {
+      debugPrint('LanBroadcastServer: Hosting is not supported on Web (browsers cannot bind sockets).');
+      return false;
+    }
 
     _localIp = await LanIpResolver.getLocalIpAddress();
 
