@@ -3,25 +3,10 @@
 > An infinite virtual whiteboard, diagramming, and visual thinking canvas built with Flutter, Clean Architecture, and BLoC.
 
 <p align="center">
-  <img src="assets/images/main.png" alt="FlutCanvas Main Preview" width="100%" />
+  <img src="assets/images/main.gif" alt="FlutCanvas Preview" width="100%" />
 </p>
 
 FlutCanvas is a modern, lightweight, and extensible digital whiteboard designed for visual thinkers, software architects, teams, and presenters. Combining freehand sketching, smart magnetic diagramming, AI-driven generation, local network live broadcasting, presentation frames, and architecture icon libraries, FlutCanvas delivers a seamless visual workspace across Web, Desktop (macOS, Windows, Linux), and Tablets.
-
----
-
-## 📹 Video Walkthrough & Demo
-
-Explore FlutCanvas in action with the feature walkthrough video:
-
-<p align="center">
-  <video src="assets/images/main.mov" controls="controls" width="100%" poster="assets/images/main.png">
-    <a href="assets/images/main.mov">▶️ Click here to watch / download the feature demonstration video (main.mov)</a>
-  </video>
-</p>
-
-> [!TIP]
-> If your browser or markdown viewer doesn't play the video inline, open or download it directly: [**`assets/images/main.mov`**](assets/images/main.mov).
 
 ---
 
