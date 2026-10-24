@@ -1,74 +1,72 @@
-Ran command: `find . -maxdepth 3 -not -path '*/.*'`
-Viewed README.md:1-150
+# FlutCanvas — Project Objectives & Roadmap
 
-Here is a curated roadmap of high-impact features and enhancements you can add to **FlutCanvas**, categorized from quick wins to game-changing capabilities:
+This document outlines the architectural objectives, completed milestones, and future roadmap for **FlutCanvas**.
 
 ---
+
+## 🎯 Project Vision
+
+To build a high-performance, private, extensible, and beautifully crafted virtual whiteboard, diagramming canvas, and visual presentation suite with Flutter. FlutCanvas serves visual thinkers, software architects, engineering teams, and educators with first-class local-first guarantees, AI-assisted diagram generation, and zero-cloud local network broadcasting.
+
+---
+
+## ✅ Completed & Shipped Milestones
 
 ### 1. 🤖 AI-Powered Canvas Superpowers
-* **Text-to-Diagram / Flowchart Generation**: Prompt Gemini/Claude to generate flowcharts, system architectures, mind maps, or sequence diagrams directly into native canvas nodes.
-* **Handwritten Sketch-to-Shape Auto-Correction**: Draw a messy circle or rough square and have it automatically snap into a crisp vector shape (similar to Apple Notes / GoodNotes shape recognition).
-* **AI Sticky Note Summarization & Clustering**: Select a cluster of brainstorming sticky notes and click *"Group by Theme"* or *"Generate Executive Summary"*.
-* **Smart Expansion / "Continue Idea"**: Right-click a mind map node or flowchart block and select *"Suggest next steps"* to have AI generate connected child nodes.
+- [x] **AI Text-to-Diagram Generation**: Natural language prompt bar (`Ctrl/Cmd + Shift + A`) powering instant flowchart, cloud architecture, and sequence diagram creation.
+- [x] **Multi-Model Support with Automatic Fallback**: Google Gemini (`gemini-3.8-flash`, `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`, `gemini-1.5-pro`) and in-browser native `window.ai`.
+- [x] **Real-Time Token Streaming HUD**: Live streaming token preview with interactive terminal output and step-by-step progress tracking.
+- [x] **Collision-Free Auto-Layout**: Expanded rank spacing and node separation preventing overlaps on complex subgraphs and long labels.
+- [x] **Handwritten Sketch-to-Shape Auto-Recognition**: Natural hand-drawn sketches (circles, rectangles, rounded boxes, triangles, diamonds, stars, arrows) automatically classified and snapped to crisp vector shapes when held for 380ms.
 
----
-
-### 2. ⚡ Real-Time Collaboration & Cloud Sync
-* **Live Multiplayer Collaboration**: Real-time cursor tracking (showing user names and colored live cursors) and synchronized element state using **WebSockets**, **Supabase Realtime**, **Firebase Realtime Database**, or **CRDTs (Liveblocks / Yjs via Dart)**.
-* **Canvas Comments & Mentions**: Pin threaded discussion comments (`@user`) anywhere on the canvas or directly attached to specific shapes.
-* **Follow Presenter Mode**: Click on a collaborator’s avatar to follow their camera pan and zoom in real-time.
-
----
+### 2. ⚡ Real-Time Collaboration & Presenter Sync
+- [x] **Zero-Cloud LAN Live Broadcast (`Alt + B`)**: Built-in HTTP and WebSocket server running locally on port 4040 (automatic fallback to 4041–4049). Hosted via desktop apps (**macOS, Windows, Linux**).
+- [x] **Self-Contained Offline Web Viewer**: Zero external CDN scripts or dependencies; audience connects from **any device** (iOS, Android, macOS, Windows, Linux) via local Wi-Fi / hotspot browser.
+- [x] **Scan-to-Join QR Code Modal**: Audience members scan a QR code to immediately connect from phone, tablet, or browser.
+- [x] **Follow Presenter Mode**: Audience view smoothly tracks presenter pan, zoom, framing (via interpolated camera LERP), and presentation slide jumps.
+- [x] **Laser Pointer Sync (`K`)**: Ephemeral glowing laser pointer trails streamed to all audience screens in real-time.
+- [x] **Threaded Canvas Comments & Review Pins**: Pin discussion threads directly to canvas locations or specific shapes.
 
 ### 3. 📐 Advanced Diagramming & Visual Tools
-* **Smart Auto-Routing Connectors (Orthogonal / Curved Bézier)**:
-  * **Elbow / Orthogonal connectors** that automatically route around obstacles without overlapping shapes.
-  * **Smooth Bézier curve connectors** with draggable curvature control points.
-  * Customizable connector labels (text centered or aligned along the line).
-* **Custom Freeform Polygon / Pen Tool (Bézier Paths)**: Full vector path tool with editable anchor points and control handles (like Illustrator or Figma).
-* **Tables & Grid Elements**: Native editable tabular blocks for comparison matrixes, data tables, and spreadsheets.
-* **Rich Markdown / LaTeX Math Support**: Render markdown formatting, lists, code blocks, and mathematical equations ($E = mc^2$) inside sticky notes and text blocks.
-* **Canvas Links & Hyperlinks**: Make shapes and text clickable to navigate to external URLs or jump to another board / frame within the document.
-
----
+- [x] **Smart Magnetic Connectors & Routing**:
+  - Automatic 4-way anchor point detection on shapes.
+  - Straight, orthogonal / elbow step routing, and curved Bézier connectors.
+  - Dynamic follow-through when connected shapes move or resize.
+- [x] **Tables & Grid Elements**: Configurable rows, columns, direct cell editing (`Tab`/double-click), and styling controls.
+- [x] **Syntax-Highlighted Code Blocks (`C`)**: Code snippet cards supporting syntax highlighting for multiple programming languages.
+- [x] **Cloud & Tech Architecture Icon Library (`Alt + I`)**: 40+ curated icons (AWS, GCP, Azure, Kubernetes, Docker, PostgreSQL, Redis, Kafka, etc.) with vector SVG and Mermaid export.
+- [x] **Command Palette & Spotlight Search (`Ctrl/Cmd + K`)**: Rapid keyboard command execution, element search, tool switching, and direct camera focus.
 
 ### 4. 📄 Import, Export & Interoperability
-* **SVG & PDF Vector Export**: Multi-page PDF export (one page per presentation slide/frame) and resolution-independent vector SVG export.
-* **Direct Excalidraw (`.excalidraw`) & Mermaid.js Import/Export**:
-  * Import and export `.excalidraw` JSON files for instant interoperability with the Excalidraw ecosystem.
-  * Paste a Mermaid markdown script (`graph TD; A-->B`) and render it as editable canvas shapes.
-* **Lottie / Animated GIF Support**: Embed animated icons and GIFs on the canvas.
-* **Clipboard Image Paste (`Ctrl+V`)**: Paste images directly from the OS clipboard without having to open the file picker dialog.
+- [x] **Scalable Vector SVG Export**: High-fidelity vector export preserving paths, fills, and icon badges.
+- [x] **Multi-Page Presentation PDF Export**: Export presentation frames (`F`) as sequential PDF slides.
+- [x] **High-Res PNG Export**: Render canvas at high DPI with transparent or solid background.
+- [x] **Bidirectional Mermaid Flowcharts (`.mmd`)**: Convert Mermaid markdown to visual canvas elements and export visual diagrams back to clean Mermaid syntax.
+- [x] **Excalidraw (`.excalidraw`) Import**: Load and inspect Excalidraw JSON documents.
+- [x] **Clipboard System Integration**: Copy/paste shapes, text, images, and Mermaid definitions seamlessly.
+
+### 5. 🖊️ Performance, Gestures & Layers
+- [x] **Feature-First Clean Architecture + BLoC**: Decoupled domain models (`@freezed`), `CanvasBloc`, `BoardsCubit`, and GetIt + Injectable DI.
+- [x] **Layers Sidebar & Element Locking (`Alt + L`)**: Reorder Z-indices, toggle visibility, and lock/unlock elements (`Ctrl/Cmd + L`).
+- [x] **Smart Magnetic Snapping Guidelines (`S`) & 24px Grid Snap (`G`)**: Real-time bounding-box alignment guides with equal spacing hints.
+- [x] **Animated Dark & Light Mode (`Alt + Shift + D`)**: Circular clip reveal transition with high-contrast text and palette handling.
 
 ---
 
-### 5. 🖊️ Stylus, Touch & Performance Enhancements
-* **Pressure-Sensitive Apple Pencil & Stylus Support**: Utilize `PointerEvent.pressure` and tilt angle for calligraphy, variable stroke thickness, and palm rejection on iPad / Android tablets.
-* **Element Locking & Layer Hierarchy Panel**:
-  * Lock elements (`Ctrl + L`) to prevent accidental dragging or selection.
-  * A sidebar showing the visual layer tree (Z-index, visibility toggle, lock toggle, renaming).
-* **Canvas Alignment & Distribution Tools**:
-  * Smart alignment guidelines (magnetic red/blue alignment and equal spacing snap lines when dragging).
-  * One-click toolbar actions: Align Left/Center/Right, Distribute Horizontally/Vertically.
+## 🔮 Future Roadmap & Next Milestones
 
----
+### 1. Cloud-Hosted Multiplayer Sync (CRDT)
+- Seamless real-time multiplayer editing across the internet using **Yjs / Automerge CRDTs** or **Supabase Realtime / WebSockets**.
+- Live multiplayer cursors with collaborator names and custom cursor colors.
 
-### 6. 💻 Developer & Architecture Tooling
-* **UML & Database Schema (ERD) Generator**: Pre-made entity-relationship diagram shapes (tables with typed columns, primary/foreign key connector points).
-* **Syntax-Highlighted Code Blocks**: Add dedicated code snippet cards with syntax highlighting for 30+ languages.
-* **Export as Flutter Code / Widget Tree**: Right-click a UI wireframe drawn on the canvas and export it directly as Flutter `Container`, `Row`, and `Column` widget code!
+### 2. Export as Flutter Code / Widget Tree
+- Right-click a UI wireframe drawn on the canvas and export it directly as Flutter `Container`, `Row`, `Column`, `Stack`, and `Text` widget code!
 
----
+### 3. LaTeX / Math Equation Rendering
+- Render LaTeX mathematical formulas ($E = mc^2$, matrices, integrals) directly inside sticky notes, cards, and text labels using KaTeX.
 
-### 💡 Recommended Next Steps (Quick Wins vs Major Upgrades)
+### 4. Pressure-Sensitive Stylus & Tablet Enhancements
+- Utilize `PointerEvent.pressure` and tilt angle for variable calligraphy stroke thickness and palm rejection on iPad / Android tablets.
 
-| Effort | Feature | Impact |
-| :--- | :--- | :--- |
-| 🟢 **Quick Win** | **Clipboard Image Paste (`Ctrl+V`)** | ⭐⭐⭐⭐⭐ Huge UX upgrade for web/desktop |
-| 🟢 **Quick Win** | **Smart Alignment Guidelines & Distribute Tools** | ⭐⭐⭐⭐ Polishes the diagramming feel |
-| 🟡 **Medium** | **Elbow / Orthogonal Connectors & Labels** | ⭐⭐⭐⭐⭐ Essential for technical flowcharts |
-| 🟡 **Medium** | **SVG / Vector PDF Export** | ⭐⭐⭐⭐ High utility for documentation & reports |
-| 🔴 **Major** | **Real-Time Multiplayer Sync (Supabase / WebSockets)** | ⭐⭐⭐⭐⭐ Turns FlutCanvas into a full Miro/Mural competitor |
-| 🔴 **Major** | **AI Text-to-Diagram / Smart Mind Map Generation** | ⭐⭐⭐⭐⭐ Differentiating cutting-edge feature |
-
-Would you like to explore or implement any of these specific features?
+### 5. Audio / Voice Notes & Live Transcripts
+- Attach ephemeral voice memos to review pins or presentation frames for asynchronous design critiques.

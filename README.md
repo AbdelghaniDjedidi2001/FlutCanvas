@@ -1,145 +1,171 @@
 # 🎨 FlutCanvas
 
-> An infinite virtual whiteboard, diagramming, and sketching canvas built with Flutter.
+> An infinite virtual whiteboard, diagramming, and visual thinking canvas built with Flutter, Clean Architecture, and BLoC.
 
-FlutCanvas is a modern, lightweight, and feature-rich digital whiteboard built using Flutter and Dart. Designed for visual thinkers, developers, teams, and presenters, FlutCanvas combines freehand sketching, geometric diagramming, smart magnetic connectors, presentation frames, and template generation on an infinite canvas.
+FlutCanvas is a modern, lightweight, and extensible digital whiteboard designed for visual thinkers, software architects, teams, and presenters. Combining freehand sketching, smart magnetic diagramming, AI-driven generation, local network live broadcasting, presentation frames, and architecture icon libraries, FlutCanvas delivers a seamless visual workspace across Web, Desktop (macOS, Windows, Linux), and Tablets.
 
 ---
 
-## ✨ Features
+## ✨ Features Overview
 
-### 🖌️ Drawing & Diagramming Tools
-- **Shapes & Geometrics**: Rectangles, Rounded Rectangles, Ellipses, Diamonds, Triangles, Stars, Lines, and Arrows.
-- **Freehand & Annotation**: Smooth Pen tool and semi-transparent Highlighter for natural sketching.
-- **Sticky Notes & Text**: Rich inline text editing with customizable fonts, colors, and quick-note cards.
-- **Images**: Pick, import, and embed images directly onto the canvas.
-- **Styling Options**: 
-  - Switch between **Clean** (vector) and **Rough / Sketch** (hand-drawn Excalidraw-like aesthetic).
-  - Customizable stroke width, stroke styles (solid, dashed, dotted), and fill styles (none, semi-transparent, solid).
-  - Full opacity and rotation control.
+### 🤖 AI Text-to-Diagram Generator (`Ctrl/Cmd + Shift + A`)
+- **Natural Language to Visual Diagrams**: Prompt AI to generate flowcharts, cloud architectures, mind maps, sequence diagrams, and process workflows directly onto native canvas nodes.
+- **Multi-Provider Support**: Integrated with **Google Gemini** (defaulting to `gemini-3.8-flash` with automatic fallback chain: `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`, `gemini-1.5-pro`) and zero-configuration browser-native **`window.ai`**.
+- **Real-Time Token Streaming HUD**: Live streaming token preview with interactive terminal output and step-by-step progress tracking (Prompting → Generating → Parsing → Canvas Layout).
+- **Collision-Free Auto-Layout**: Automated layout engine with expanded rank spacing and collision prevention to avoid subgraph and label overlapping.
 
-### 🔗 Smart Magnetic Connectors
-- Automatic anchor point detection (top, bottom, left, right) on shapes.
-- Connectors dynamically adapt and follow connected nodes when moved or resized.
+### ✍️ Freehand & Handwritten Shape Recognition
+- **Smooth Pen & High-Vibrance Highlighter**: High-performance drawing brushes with opacity and dark/light mode contrast preservation.
+- **Smart Shape Auto-Correction**: Draw rough hand-sketched shapes (rectangles, rounded boxes, circles, ellipses, triangles, diamonds, stars, arrows) and hold for ~380ms to automatically snap into clean, crisp geometric vectors.
 
-### 📑 Multi-Board Workspace & Persistence
-- **Board Tabs**: Create, rename, duplicate, and switch between multiple independent whiteboard tabs.
-- **Auto-Save**: Automatic debounced state persistence via local storage (`shared_preferences`).
-- **History**: Full multi-level Undo / Redo (`Ctrl/Cmd + Z`, `Ctrl/Cmd + Y`).
-
-### 📐 Infinite Canvas & Navigation
-- **Smooth Navigation**: Pan freely with middle-click, Space + Drag, or the Hand tool (`H`).
-- **Zoom Range**: Zoom smoothly from 10% to 800% with mouse wheel or on-screen controls.
-- **Minimap**: Interactive minimap preview for instant spatial awareness.
-- **Grid Snapping & Smart Guides**: Toggleable 24px coordinate grid snapping (`G`) and real-time **Dynamic Magnetic Snapping Guidelines** when moving objects.
-- **Align & Distribute**: One-click alignment (Left, Center, Right, Top, Middle, Bottom) and equal spacing distribution (Horizontally and Vertically) for multi-selection.
-
-### 📦 Pre-Built Diagram Templates
-Instant one-click diagram generators for rapid brainstorming:
-- 🔀 **Flowcharts**: Process logic, decision diamonds, and directional connectors.
-- 🧠 **Mind Maps**: Central concept branching into subtopics.
-- 📋 **Kanban Boards**: To-Do, In-Progress, and Done columns with sticky notes.
-- ☁️ **System Architecture**: Client, API Gateway, Backend Services, and Database layouts.
-
-### 🎭 Presentation Mode & Laser Pointer
-- **Slide Frames (`F`)**: Define presentation frames and slide boundaries on your canvas.
-- **Presentation Viewer (`F5`)**: Step sequentially through slides with animated zoom-to-fit camera framing.
-- **Laser Pointer (`K`)**: Ephemeral glowing laser trail with auto-decay for live walkthroughs and demos.
+### 📡 Zero-Cloud LAN Live Broadcast & Presenter Sync (`Alt + B`)
+- **Desktop Host Engine (macOS, Windows, Linux)**: Presenters host directly from the desktop application using an embedded native HTTP and WebSocket server (`dart:io`) on your local Wi-Fi / LAN (default port 4040, automatic fallback to 4041–4049). *(Note: Web browsers cannot host because browser sandboxes prevent binding raw local network server sockets).*
+- **Universal Cross-Platform Audience Viewer**: Audience members can join from **any device** (iOS, Android, macOS, Windows, Linux, Chromebooks) via any standard web browser with zero app installation.
+- **100% Offline & Private**: Zero external CDN scripts or cloud servers required; works completely offline on local Wi-Fi routers or mobile hotspots.
+- **Real-Time Camera & Pointer Tracking**: Audience view smoothly tracks presenter pan, zoom, and framing with interpolated camera LERP, interactive "Follow Presenter" toggle, and live laser pointer sync (`K`).
+- **Scan-to-Join QR Code Modal**: Instant QR code dialog allowing colleagues or students in meeting rooms and lecture halls to join instantly by scanning with their phone camera or opening the link.
+- **Live Status HUD**: Pulsing emerald indicator with live connected viewer counter.
 
 ### ☁️ Cloud & Architecture Icon Library (`Alt + I`)
-- **40+ Curated Components**: Cloud & Compute (AWS Lambda, EC2, Cloud Run, Azure Functions), Databases (PostgreSQL, MySQL, Redis, MongoDB, Cassandra, S3, DynamoDB), Messaging & Networking (Kafka, RabbitMQ, GraphQL, NGINX, Cloudflare, Webhooks), DevOps (Docker, Kubernetes, Jenkins, GitLab, GitHub, Terraform), and Client Devices (Web, Mobile, Desktop, IoT, IAM).
-- **Searchable Slide-Out Drawer**: Instant real-time search, category chips, and one-click insertion onto the infinite canvas.
-- **First-Class Architecture Nodes**: Rendered with brand color badges, vector icons, auto-contrast backgrounds, and editable labels.
-- **Export & CLI Integration**: Fully supported in Vector SVG export, directional Mermaid export, and Spotlight Command Palette (`Cmd + K`).
+- **40+ Curated Architecture Components**: Cloud & Compute (AWS Lambda, EC2, Cloud Run, Azure Functions), Databases (PostgreSQL, MySQL, Redis, MongoDB, Cassandra, DynamoDB, S3), Messaging & Networking (Kafka, RabbitMQ, GraphQL, NGINX, Cloudflare, Webhooks), DevOps (Docker, Kubernetes, Jenkins, GitLab, GitHub, Terraform), and Client Devices (Web, Mobile, Desktop, IoT, IAM).
+- **Instant Search Drawer**: Category filters, real-time query search, and one-click insertion.
+- **Vector & Mermaid Interoperability**: Icons render with brand color badges and export cleanly to Vector SVG, Mermaid markdown, and PNG.
 
-### 📡 Local Network Live Broadcast & Presenter Sync (`Alt + B`)
-- **Zero-Cloud & 100% Offline**: Embedded native HTTP and WebSocket server hosted directly on your local Wi-Fi / LAN (`dart:io` `HttpServer` & `WebSocketTransformer`) on port 4040 with automatic fallback to 4041–4049.
-- **Self-Contained Audience Web Viewer**: Served directly at `http://<lan-ip>:<port>` with zero external CDN scripts or dependencies. Works completely offline on local Wi-Fi routers or mobile hotspots.
-- **Real-Time Presenter Camera Tracking**: Audience view smoothly tracks presenter pan, zoom, and framing with interpolated camera LERP and interactive "Follow Presenter" toggle.
-- **Laser Pointer & Slide Deck Sync**: Real-time streaming of glowing laser pointer trails (`K`) and presentation deck slide jumps (`F5`).
-- **Scan-to-Join QR Code Dialog**: Built-in QR code modal (`Alt + B`) allowing audience members in meeting rooms or lecture halls to scan and connect instantly with smartphones or laptops.
-- **Top Bar Live HUD**: Pulsing emerald live indicator badge with active connected viewer count.
-
-### 🚀 Import & Export
-- **High-Res PNG Export**: Render the entire board or selected areas at high resolution (with transparent or solid background options).
-- **Vector SVG & Presentation PDF**: High-quality scalable vector SVG and multi-page PDF presentation deck exports.
-- **Bidirectional Mermaid Flowcharts**: Parse Mermaid markdown into editable canvas elements and export visual diagrams back to clean Mermaid flowchart syntax (`.mmd`).
-- **JSON Serialization**: Export boards to formatted JSON files or import existing diagrams.
-
-### 🔍 Command Palette & Spotlight (`Cmd + K`)
+### 🔍 Command Palette & Spotlight (`Ctrl/Cmd + K`)
 - Fast keyboard-driven command runner to switch tools, invoke actions, toggle theme/grid/layers/icons, insert architecture components directly, and search on-canvas text with instant camera zoom-and-focus.
+
+### 📊 Tables & Tabular Grid Elements
+- **Native Table Blocks**: Create customizable tabular grids for architecture comparison matrices, data dictionaries, and feature checklists.
+- **Interactive Cell Editing**: Double-click or press `Tab` to navigate and edit cell text.
+- **Configurable Geometry & Styles**: Add/remove rows and columns, adjust borders, padding, and fills directly from the toolbar.
+
+### 💬 Canvas Comments & Review Pins
+- **Threaded Review Notes**: Drop review pins anywhere on the canvas or attach them to specific elements.
+- **Discussion Threads**: Add replies, mark comments as resolved, and track feedback directly in the visual workspace.
+
+### 🗂️ Layers Sidebar & Element Locking (`Alt + L`)
+- **Visual Object Tree**: Inspect all canvas elements, their z-index hierarchy, types, and labels.
+- **Element Locking (`Ctrl/Cmd + L`)**: Lock elements to prevent accidental dragging, deletion, or resizing.
+- **Visibility & Z-Order Management**: One-click toggle for visibility and quick bring-to-front / send-to-back controls.
+
+### 🔗 Smart Magnetic Connectors & Routing
+- **Magnetic Anchors**: Automatic anchor detection (top, bottom, left, right) on all shapes.
+- **Dynamic Follow-Through**: Connectors dynamically follow connected nodes when moved or resized.
+- **Routing Modes**: Straight lines, orthogonal / elbow step routing, and smooth curved Bézier connectors.
+
+### 📐 Infinite Canvas, Navigation & Alignment
+- **Infinite Viewport**: Pan freely with middle-click, `Space + Drag`, or the Hand tool (`H`).
+- **Zoom Range**: Zoom smoothly from 10% to 800% with mouse wheel or on-screen controls.
+- **Minimap**: Interactive minimap for instant spatial awareness and quick jumping.
+- **Grid Snapping (`G`) & Smart Guides (`S`)**: 24px coordinate grid snapping and real-time magnetic alignment guidelines with equal-spacing hints.
+- **Align & Distribute**: One-click alignment (Left, Center, Right, Top, Middle, Bottom) and equal spacing distribution (Horizontally and Vertically).
+
+### 🎭 Presentation Mode & Laser Pointer (`F5`, `K`)
+- **Slide Frames (`F`)**: Define presentation frames and slide boundaries on your canvas.
+- **Presentation Deck Viewer (`F5`)**: Step sequentially through slides with animated zoom-to-fit camera framing.
+- **Laser Pointer (`K`)**: Ephemeral glowing laser trail with auto-decay for live walkthroughs and demos.
+
+### 🌓 Animated High-Contrast Dark & Light Mode (`Alt + Shift + D`)
+- **Circular Clip Reveal Animation**: Smooth circular transition when toggling between dark and light themes.
+- **Smart Contrast Handling**: Pure white and dark palette preservation, high-contrast text contrast inversion, and adaptive toolbar icons.
+
+### 🚀 Import, Export & Interoperability
+- **High-Res PNG**: Export full board or selection with transparent or solid background.
+- **Scalable Vector SVG**: Crisp, resolution-independent vector export preserving shapes, strokes, and tech icons.
+- **Multi-Page Presentation PDF**: Export frames as sequential presentation slides.
+- **Bidirectional Mermaid Flowcharts (`.mmd`)**: Parse Mermaid markdown into editable canvas elements and export visual diagrams back to clean Mermaid flowchart syntax.
+- **Excalidraw Import**: Open and load `.excalidraw` JSON diagrams.
+- **Clipboard Integration**: Copy/paste shapes, text, images, and Mermaid definitions across boards or system clipboard.
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## ⌨️ Keyboard Shortcuts Reference
 
 | Shortcut | Action |
 | :--- | :--- |
+| **`Ctrl/Cmd + Shift + A`** | **AI Text-to-Diagram Prompt Bar** |
 | **`Ctrl/Cmd + K`** | **Command Palette / Spotlight Search** |
 | **`Alt + B`** | **Toggle LAN Live Broadcast Dialog** |
 | **`Alt + I`** | **Toggle Cloud & Tech Icon Library** |
-| **`Alt + L`** | Toggle Layers & Object Tree Sidebar |
+| **`Alt + L`** | **Toggle Layers & Object Tree Sidebar** |
+| **`Alt + Shift + D`** | **Toggle Light / Dark Theme** |
 | **`V`** | Select / Transform Tool |
 | **`H`** / **`Space + Drag`** | Hand / Pan Canvas |
 | **`R`** / **`Shift + R`** | Rectangle / Rounded Box |
-| **`O`** | Ellipse |
+| **`O`** | Ellipse / Circle |
 | **`D`** | Diamond |
 | **`Shift + T`** | Triangle |
 | **`L`** / **`A`** | Line / Arrow Connector |
 | **`P`** / **`M`** | Pen / Highlighter |
 | **`T`** / **`N`** | Text / Sticky Note |
+| **`C`** | Syntax-Highlighted Code Block |
 | **`E`** | Eraser |
 | **`K`** | Laser Pointer |
-| **`F`** | Frame / Slide |
+| **`F`** | Slide Frame |
 | **`I`** | Insert Image |
-| **`G`** | Toggle Grid Snapping |
+| **`G`** | Toggle Grid Snapping (24px) |
+| **`S`** | Toggle Smart Magnetic Alignment Guides |
 | **`Ctrl/Cmd + Z`** | Undo |
 | **`Ctrl/Cmd + Shift + Z`** / **`Ctrl/Cmd + Y`** | Redo |
 | **`Ctrl/Cmd + C`** / **`Ctrl/Cmd + V`** | Copy / Paste |
 | **`Ctrl/Cmd + D`** | Duplicate Selected |
-| **`Ctrl/Cmd + G`** / **`Ctrl/Cmd + Shift + G`** | Group / Ungroup |
+| **`Ctrl/Cmd + A`** | Select All |
+| **`Ctrl/Cmd + L`** | Lock / Unlock Selected Elements |
+| **`Ctrl/Cmd + G`** / **`Ctrl/Cmd + Shift + G`** | Group / Ungroup Selected |
 | **`Ctrl/Cmd + ]`** / **`Ctrl/Cmd + [`** | Bring to Front / Send to Back |
 | **`Delete`** / **`Backspace`** | Delete Selected |
+| **`Ctrl/Cmd + O`** | Open Diagram Templates Dialog |
+| **`Ctrl/Cmd + E`** | Open Export Dialog |
 | **`F5`** | Start Presentation Mode |
-| **`Alt + Shift + D`** | Toggle Light / Dark Theme |
+| **`?`** / **`Shift + /`** | Open Keyboard Shortcuts Help |
+| **`Esc`** | Exit Presentation / Deselect All / Close Dialogs |
 
 ---
 
-## 📁 Project Architecture
+## 🏛️ Clean Architecture & Project Structure
+
+FlutCanvas is structured using **Feature-First Clean Architecture** with **BLoC** for state management, **Freezed** for immutable domain models, and **GetIt + Injectable** for dependency injection.
 
 ```
 lib/
-├── main.dart                   # Application entry point & theme configuration
-├── models/
-│   ├── board_colors.dart       # Palette & color presets
-│   ├── board_document.dart     # Multi-board data document model
-│   ├── board_element.dart      # Core element representation & hit-testing
-│   ├── connection_binding.dart # Anchor points & dynamic connector bindings
-│   ├── shape_type.dart         # Shape enumeration & element types
-│   ├── stroke_fill_style.dart  # Stroke, fill, and draw style definitions
-│   ├── templates.dart          # Pre-built diagram templates (Flowchart, Mindmap, etc.)
-│   ├── tool.dart               # Toolbar tools & shortcut definitions
-│   └── transform_handle.dart   # Hit-testing for resize & rotation handles
-├── painters/
-│   ├── board_painter.dart      # Main CustomPainter orchestrating layers
-│   ├── connection_anchor_painter.dart # Dynamic anchor highlight rendering
-│   ├── element_renderer.dart   # Element drawing logic
-│   ├── grid_painter.dart       # Background grid pattern renderer
-│   ├── laser_painter.dart      # Glowing laser trail rendering
-│   ├── rough_sketch_painter.dart # Hand-drawn / sketchy stroke generator
-│   └── selection_painter.dart  # Multi-select bounding box & transform handles
-├── services/
-│   ├── clipboard_service.dart  # Element clipboard copy/paste logic
-│   ├── export_service.dart     # High-res PNG & JSON export/import
-│   ├── history_manager.dart    # Undo/Redo stack manager
-│   ├── image_service.dart      # Base64 image picking & conversion
-│   └── storage_service.dart    # Local workspace persistence
-└── ui/
-    ├── inline_text_editor.dart # On-canvas text & sticky note overlay editor
-    ├── presentation/           # Presentation mode UI overlay & controls
-    ├── toolbar/                # Main toolbar, properties drawer & board tabs
-    ├── widgets/                # Minimap, zoom controls, template picker, export dialog
-    └── whiteboard_page.dart    # Main interactive whiteboard controller & gestures
+├── main.dart                               # Application entry point & service bootstrap
+├── app/
+│   ├── app.dart                            # Root MaterialApp & theme setup
+│   ├── providers/                          # MultiBlocProvider configuration
+│   └── view/                               # Root AppView with ScreenUtil initialization
+│
+├── core/                                   # Cross-cutting foundational modules
+│   ├── constants/                          # BoardColors and canvas palette constants
+│   ├── di/                                 # GetIt + Injectable configuration
+│   ├── error/                              # Failure definitions & domain errors
+│   ├── extensions/                         # Rect, Offset, and Matrix4 math helpers
+│   ├── services/                           # Platform services (clipboard, downloader, media)
+│   ├── theme/                              # AppTheme & color schemes
+│   ├── utils/                              # Result<T> and pure geometric utilities
+│   └── widgets/                            # CircularThemeReveal animation widget
+│
+└── features/                               # Self-contained business capability modules
+    ├── ai_diagram/                         # AI text-to-diagram generation
+    │   ├── data/                           # Gemini API client, window.ai service & templates
+    │   ├── domain/                         # AI diagram models & repository contract
+    │   └── presentation/                   # AiDiagramCubit & prompt bar dialog with streaming HUD
+    │
+    ├── broadcast/                          # Local network live presenter sync
+    │   ├── data/                           # Embedded HTTP & WebSocket server, IP resolver
+    │   ├── domain/                         # Broadcast messages & models
+    │   └── presentation/                   # BroadcastCubit, QR modal & viewer count HUD
+    │
+    ├── canvas/                             # Core infinite canvas engine
+    │   ├── data/                           # SharedPreferences repo, routing, Mermaid & shape recognition
+    │   ├── domain/                         # Freezed models (BoardElement, etc.), commands & use cases
+    │   └── presentation/                   # CanvasBloc, Viewport & Interaction controllers, tools, painters
+    │
+    ├── clipboard/                          # Cross-platform clipboard coordination
+    ├── comments/                           # Threaded comments, pins & popovers
+    ├── export/                             # PNG, SVG, PDF, Mermaid & JSON export services & dialog
+    ├── layers/                             # Layers sidebar, object tree, lock/visibility toggles
+    ├── presentation_mode/                  # Slide deck viewer & camera zoom-to-fit
+    └── toolbar/                            # Main toolbar & responsive properties panel
 ```
 
 ---
@@ -149,6 +175,7 @@ lib/
 ### Prerequisites
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (`>=3.13.3`)
 - [Dart SDK](https://dart.dev/get-dart) (`>=3.13.3`)
+- For macOS: Xcode & CocoaPods (`sudo gem install cocoapods`)
 
 ### Installation & Run
 
@@ -163,7 +190,12 @@ lib/
    flutter pub get
    ```
 
-3. **Run on your target platform:**
+3. **Generate code (Freezed & Injectable):**
+   ```bash
+   dart run build_runner build --delete-conflicting-outputs
+   ```
+
+4. **Run on your target platform:**
    - **Web:**
      ```bash
      flutter run -d chrome
@@ -177,10 +209,21 @@ lib/
      flutter run -d windows # or linux
      ```
 
-4. **Build for production:**
+5. **Build for production:**
    ```bash
    flutter build web --release
+   flutter build macos --release
    ```
+
+---
+
+## 🧪 Testing
+
+FlutCanvas features a comprehensive test suite covering domain use cases, BLoC state transitions, shape recognition accuracy, live broadcast message framing, and widget interactions:
+
+```bash
+flutter test
+```
 
 ---
 

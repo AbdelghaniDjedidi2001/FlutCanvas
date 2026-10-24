@@ -16,27 +16,39 @@ lib/
 │   ├── error/                      # Failures & Result<T> pattern
 │   ├── extensions/                 # Geometry extensions (Rect, Offset, Matrix4)
 │   ├── services/                   # Infrastructure services (clipboard, downloader, media, text)
+│   ├── theme/                      # AppTheme & color schemes
 │   └── utils/                      # Pure mathematical & geometric algorithms
 │
 └── features/
+    ├── ai_diagram/                 # AI text-to-diagram generation
+    │   ├── data/                   # Gemini API client, window.ai service, prompt templates
+    │   ├── domain/                 # AI models & repository contract
+    │   └── presentation/           # AiDiagramCubit & prompt bar dialog with streaming HUD
+    │
+    ├── broadcast/                  # Zero-cloud LAN live presenter broadcast
+    │   ├── data/                   # Embedded dart:io HTTP & WebSocket server, IP resolver
+    │   ├── domain/                 # Live broadcast models & packet framing
+    │   └── presentation/           # BroadcastCubit, QR modal & live viewer count HUD
+    │
     ├── canvas/                     # Core infinite whiteboard canvas
+    │   ├── data/                   # Data sources (shared_prefs) & geometric services
     │   ├── domain/                 # Pure models, commands, repositories, use cases
     │   │   ├── commands/           # Command Pattern for undo/redo (CanvasCommand)
     │   │   ├── models/             # Immutable Freezed entities (BoardElement, etc.)
     │   │   └── usecases/           # SaveWorkspace, AlignElements, GroupElements...
-    │   ├── data/                   # Data sources & repository implementations
     │   └── presentation/           # Viewports, tools, renderers, painters, BLoC
-    │       ├── bloc/               # CanvasBloc (committed state)
+    │       ├── bloc/               # CanvasBloc (committed state) & BoardsCubit
     │       ├── controllers/        # ViewportController & InteractionController (60/120fps)
     │       ├── tools/              # Strategy Pattern for canvas tools (CanvasTool)
     │       ├── renderers/          # Modular Shape Renderers (ShapeRendererRegistry)
     │       └── widgets/            # Multi-layer canvas widgets & gesture dispatcher
     │
-    ├── toolbar/                    # Main toolbar & Properties panel
-    ├── comments/                   # Sticky comments & pins
+    ├── clipboard/                  # System & internal clipboard synchronization
+    ├── comments/                   # Sticky comments & canvas review pins
+    ├── export/                     # PNG, SVG, PDF, Mermaid & JSON export
     ├── layers/                     # Layer reordering, locking, visibility
-    ├── export/                     # PNG, SVG, PDF, JSON export
-    └── presentation_mode/          # Frame/slide presentation mode
+    ├── presentation_mode/          # Frame/slide presentation mode
+    └── toolbar/                    # Main toolbar & Properties panel
 ```
 
 ---
@@ -144,13 +156,23 @@ Mutations on the canvas follow the **Command Pattern** (`CanvasCommand`):
 
 ---
 
+### 4. How to Extend AI Text-to-Diagram Generation
+
+The AI diagram generation pipeline (`lib/features/ai_diagram/`) uses a modular service architecture:
+- **`GeminiDiagramService`**: Calls Gemini models via `google_generative_ai` with streaming response parsing and fallback chaining.
+- **`AiPromptTemplates`**: Houses system prompts and diagram generation instructions for converting user prompts into strict Mermaid flowcharts and graph definitions.
+- **`MermaidParserService`**: Automatically converts Mermaid code into positioned native canvas elements with collision prevention and rank spacing.
+
+---
+
 ## 🧪 Testing Guidelines
 
 - **Domain Use Cases & Commands**: Write pure Dart unit tests verifying input/output transformations without Flutter UI bindings.
 - **Tools & Strategies**: Mock `CanvasToolContext` with `mocktail` to test pointer down, move, and up lifecycles.
-- **BLoCs**: Use `bloc_test` for verifying states emitted for each event.
+- **BLoCs & Cubits**: Use `bloc_test` for verifying states emitted for each event.
+- **Live Broadcast**: Test network packet framing and WebSocket handlers with mocked socket connections.
 
-Run tests:
+Run the test suite:
 ```bash
 flutter test
 ```
@@ -167,4 +189,4 @@ flutter test
 - Keep UI widgets decoupled from business logic:
   - High-frequency drawing/transient gestures -> `CanvasViewportController` & `CanvasInteractionController`.
   - Committed document state -> `CanvasBloc` & `BoardsCubit`.
-  - Feature UI options -> Feature Cubits (`ToolCubit`, `CommentsCubit`, `LayersCubit`, `ExportCubit`).
+  - Feature UI options -> Feature Cubits (`ToolCubit`, `AiDiagramCubit`, `BroadcastCubit`, `CommentsCubit`, `LayersCubit`, `ExportCubit`).
