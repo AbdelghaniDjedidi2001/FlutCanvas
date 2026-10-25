@@ -6,6 +6,14 @@
   <img src="assets/images/main.gif" alt="FlutCanvas Preview" width="100%" />
 </p>
 
+<p align="center">
+  <a href="https://flutcanvas.abdelghanidjedidi7.workers.dev" target="_blank">
+    <img src="https://img.shields.io/badge/Live%20Demo-Try%20FlutCanvas%20Online-3B5BDB?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Live Demo" />
+  </a>
+</p>
+
+> 🚀 **Live Web App**: Try FlutCanvas right in your browser with zero installation: **[flutcanvas.abdelghanidjedidi7.workers.dev](https://flutcanvas.abdelghanidjedidi7.workers.dev)**
+
 FlutCanvas is a modern, lightweight, and extensible digital whiteboard designed for visual thinkers, software architects, teams, and presenters. Combining freehand sketching, smart magnetic diagramming, AI-driven generation, local network live broadcasting, presentation frames, and architecture icon libraries, FlutCanvas delivers a seamless visual workspace across Web, Desktop (macOS, Windows, Linux), and Tablets.
 
 ---
@@ -175,6 +183,10 @@ lib/
 ---
 
 ## 🛠️ Getting Started
+
+### 🌐 Try Online (No Setup Required)
+You can test the latest release directly in your web browser:
+👉 **[https://flutcanvas.abdelghanidjedidi7.workers.dev](https://flutcanvas.abdelghanidjedidi7.workers.dev)**
 
 ### Prerequisites
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (`>=3.13.3`)

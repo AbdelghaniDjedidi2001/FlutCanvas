@@ -1,0 +1,8 @@
+{
+  "name": "flutcanvas",
+  "compatibility_date": "2026-10-25",
+  "assets": {
+    "directory": "./build/web",
+    "not_found_handling": "single-page-application"
+  }
+}

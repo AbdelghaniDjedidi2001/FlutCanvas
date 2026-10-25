@@ -18,21 +18,291 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="FlutCanvas - Interactive Infinite Whiteboard & Diagram Studio">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="flutcanvas">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FlutCanvas">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Theme Color for Browser Header -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F8F9FA">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>flutcanvas</title>
+  <title>FlutCanvas</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* FlutCanvas Seamless Preloader */
+    :root {
+      --fc-bg: #F8F9FA;
+      --fc-text: #1A1D20;
+      --fc-subtext: #707784;
+      --fc-primary: #3B5BDB;
+      --fc-card-bg: rgba(255, 255, 255, 0.92);
+      --fc-card-border: rgba(59, 91, 219, 0.12);
+      --fc-card-shadow: 0 16px 40px -4px rgba(59, 91, 219, 0.12), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+      --fc-track: rgba(59, 91, 219, 0.12);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fc-bg: #121212;
+        --fc-text: #F1F3F5;
+        --fc-subtext: #9096A2;
+        --fc-primary: #4C6EF5;
+        --fc-card-bg: rgba(26, 27, 30, 0.92);
+        --fc-card-border: rgba(76, 110, 245, 0.2);
+        --fc-card-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.6), 0 4px 16px -2px rgba(76, 110, 245, 0.1);
+        --fc-track: rgba(76, 110, 245, 0.2);
+      }
+    }
+
+    html, body {
+      background-color: var(--fc-bg);
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #flutcanvas-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--fc-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #flutcanvas-loader.loaded {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .fc-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 44px;
+      background: var(--fc-card-bg);
+      border: 1px solid var(--fc-card-border);
+      border-radius: 28px;
+      box-shadow: var(--fc-card-shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      text-align: center;
+      animation: fc-card-intro 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .fc-logo-container {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .fc-logo-pulse {
+      position: absolute;
+      inset: -6px;
+      border-radius: 26px;
+      background: var(--fc-primary);
+      opacity: 0.16;
+      animation: fc-pulse 2.2s infinite ease-in-out;
+    }
+
+    .fc-logo-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--fc-primary), #273ea5);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 24px rgba(59, 91, 219, 0.32);
+      overflow: hidden;
+    }
+
+    .fc-logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 22px;
+    }
+
+    .fc-logo-svg {
+      width: 44px;
+      height: 44px;
+      color: #ffffff;
+    }
+
+    .fc-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--fc-text);
+      margin: 0 0 6px 0;
+      letter-spacing: -0.025em;
+    }
+
+    .fc-subtitle {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--fc-subtext);
+      margin: 0 0 24px 0;
+      letter-spacing: 0.01em;
+    }
+
+    .fc-progress-bar {
+      width: 170px;
+      height: 4px;
+      background: var(--fc-track);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .fc-progress-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 40%;
+      background: var(--fc-primary);
+      border-radius: 999px;
+      animation: fc-progress 1.6s infinite ease-in-out;
+    }
+
+    @keyframes fc-progress {
+      0% {
+        left: -40%;
+        width: 40%;
+      }
+      50% {
+        left: 25%;
+        width: 55%;
+      }
+      100% {
+        left: 100%;
+        width: 40%;
+      }
+    }
+
+    @keyframes fc-pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.15;
+      }
+      50% {
+        transform: scale(1.12);
+        opacity: 0.28;
+      }
+    }
+
+    @keyframes fc-card-intro {
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Seamless Branded Loading Screen -->
+  <div id="flutcanvas-loader">
+    <div class="fc-card">
+      <div class="fc-logo-container">
+        <div class="fc-logo-pulse"></div>
+        <div class="fc-logo-box">
+          <img
+            src="icons/Icon-192.png"
+            alt="FlutCanvas Logo"
+            class="fc-logo-img"
+            onerror="this.style.display='none'; document.getElementById('fc-svg-fallback').style.display='block';"
+          />
+          <svg
+            id="fc-svg-fallback"
+            class="fc-logo-svg"
+            style="display:none;"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 6.99 6.99 8 5.41 6.41a2 2 0 0 0-2.82 0L1 8l4 4 11-11a2 2 0 0 1 2.83 0l.54.54a2 2 0 0 1 0 2.82L13 20.66" />
+            <path d="m14 17 5 5" />
+            <path d="M3 21h18" />
+          </svg>
+        </div>
+      </div>
+      <div class="fc-title">FlutCanvas</div>
+      <div class="fc-subtitle">Infinite Canvas & Whiteboard</div>
+      <div class="fc-progress-bar">
+        <div class="fc-progress-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function removeFlutcanvasLoader() {
+      const loader = document.getElementById('flutcanvas-loader');
+      if (loader && !loader.classList.contains('loaded')) {
+        loader.classList.add('loaded');
+        setTimeout(function() {
+          if (loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 450);
+      }
+    }
+
+    // Dismiss when Flutter engine paints the first frame
+    window.addEventListener('flutter-first-frame', removeFlutcanvasLoader);
+
+    // Fallback watcher: if Flutter canvas / glass pane mounts in DOM
+    window.addEventListener('DOMContentLoaded', function() {
+      const checkTimer = setInterval(function() {
+        const fltView = document.querySelector('flutter-view, flt-glass-pane');
+        if (fltView) {
+          clearInterval(checkTimer);
+          setTimeout(removeFlutcanvasLoader, 200);
+        }
+      }, 100);
+
+      // Safety timeout after 12s in case of unexpected errors
+      setTimeout(function() {
+        clearInterval(checkTimer);
+        removeFlutcanvasLoader();
+      }, 12000);
+    });
+  </script>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

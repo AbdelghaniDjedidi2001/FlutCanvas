@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+# Cloudflare Wrangler
+.wrangler/
+
 # IntelliJ related
 *.iml
 *.ipr
